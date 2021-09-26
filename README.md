@@ -5,3 +5,6 @@ Here is the list of patches
 * Shader Scopes by CrookR (https://www.moddb.com/mods/stalker-anomaly/addons/shader-based-2d-scopes-151dx11engine-mod)
 * Artefact Degradation and loose particles load patch by Feel_Fried (https://www.moddb.com/mods/stalker-anomaly/addons/yet-another-artifacts-degradation)
   
+By demand exes with Artefact Degradation are optional and moved in separate folder, if you don't want those, grab from root folder instead
+
+Patches folder contains diffs used to create new exes
