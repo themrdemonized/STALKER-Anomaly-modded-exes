@@ -4,7 +4,15 @@ Here is the list of patches
 * DLTX by MerelyMezz (https://www.moddb.com/mods/stalker-anomaly/addons/dltx-differential-ltx-loading)
 * Shader Scopes by CrookR (https://www.moddb.com/mods/stalker-anomaly/addons/shader-based-2d-scopes-151dx11engine-mod)
 * Artefact Degradation and loose particles load patch by Feel_Fried (https://www.moddb.com/mods/stalker-anomaly/addons/yet-another-artifacts-degradation)
+
+The exes were created to make those mods work together. **Attempting to download exes without mods themselves will result in undefined behaviour or crashes**
   
 By demand exes with Artefact Degradation are optional and moved in separate folder, if you don't want those, grab from root folder instead
 
-Patches folder contains diffs used to create new exes
+Patches folder contains diffs used to create new exes, they are used to compile your own exes if you need that
+
+## How to make my own modded exe?
+1. git clone https://bitbucket.org/anomalymod/xray-monolith.git
+2. Open cloned repo in git console
+3. apply the patches you want from patches folder of this modded exe repo, git apply <path_to_patch>
+4. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
