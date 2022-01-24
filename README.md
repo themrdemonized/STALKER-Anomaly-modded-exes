@@ -7,7 +7,8 @@ Here is the list of patches
 * Duty Expansion by GhenTuong and Tronex (https://www.moddb.com/mods/stalker-anomaly/addons/duty-expansion)
 
 By default exes for ARX mod is in separate folder, if you dont want them, download STALKER-Anomaly-modded-exes.zip archive
-Unpack both bin and gamedata directories directly into your Anomaly game folder, overwrite files if requested
+Unpack both bin and gamedata directories directly into your Anomaly game folder, overwrite files if requested.
+Delete shader cache in launcher before first launch of the game with new exes. You only have to do it once.
 
 Patches folder contains diffs used to create new exes, they are used to compile your own exes if you need that
 
