@@ -4,8 +4,10 @@ Here is the list of patches
 * DLTX by MerelyMezz (https://www.moddb.com/mods/stalker-anomaly/addons/dltx-differential-ltx-loading)
 * Shader Scopes by CrookR (https://www.moddb.com/mods/stalker-anomaly/addons/shader-based-2d-scopes-151dx11engine-mod)
 * ARX - Artefact & Anomalies Restoration eXperiment (merged exes already included in that mod) (https://www.moddb.com/mods/stalker-anomaly/addons/arx-artefact-anomalies-restoration-experiment)
+* Duty Expansion by GhenTuong and Tronex (https://www.moddb.com/mods/stalker-anomaly/addons/duty-expansion)
 
-The exes were created to make those mods work together. **Attempting to download exes without mods themselves will result in undefined behaviour or crashes**
+By default exes for ARX mod is in separate folder, if you dont want them, download STALKER-Anomaly-modded-exes.zip archive
+Unpack both bin and gamedata directories directly into your Anomaly game folder, overwrite files if requested
 
 Patches folder contains diffs used to create new exes, they are used to compile your own exes if you need that
 
