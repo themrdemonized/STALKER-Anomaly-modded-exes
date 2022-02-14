@@ -53,7 +53,7 @@ index 2dd66da..1d9ce8d 100644
  	std::sort(m_PGDs.begin(), m_PGDs.end(), pgd_sort_pred);
  
 diff --git a/src/xrCore/Xr_ini.cpp b/src/xrCore/Xr_ini.cpp
-index 3f5ac84..ab15555 100644
+index 3f5ac84..664017d 100644
 --- a/src/xrCore/Xr_ini.cpp
 +++ b/src/xrCore/Xr_ini.cpp
 @@ -3,6 +3,12 @@
@@ -228,7 +228,7 @@ index 3f5ac84..ab15555 100644
 -						R_ASSERT3(I, "Can't find include file:", name);
 -						Load(I, inc_path, allow_include_func);
 -						FS.r_close(I);
-+						Debug.fatal(DEBUG_INFO, "Duplicate section '%s' wasn't marked as an override. Override section by prefixing it with '!' (![%s]) or give it a unique name.", *Current->Name, *Current->Name);
++						Debug.fatal(DEBUG_INFO, "Duplicate section '%s' wasn't marked as an override. Override section by prefixing it with '!' (![%s]) or give it a unique name. Check this file and its DLTX mods: %s", *Current->Name, *Current->Name, m_file_name);
  					}
 -				};
  
@@ -713,7 +713,7 @@ index 3f5ac84..ab15555 100644
 -							//#endif
 -					)
 -						insert_item(Current, I);
-+					Debug.fatal(DEBUG_INFO, "Section '%s' has cyclical dependencies. Ensure that sections with parents don't inherit in a loop.", ParentSectionName.c_str());
++					Debug.fatal(DEBUG_INFO, "Section '%s' has cyclical dependencies. Ensure that sections with parents don't inherit in a loop. Check this file and its DLTX mods: %s", ParentSectionName.c_str(), m_file_name);
  				}
  			}
 +
@@ -723,7 +723,7 @@ index 3f5ac84..ab15555 100644
 +
 +			if (ParentIt == FinalData.end())
 +			{
-+				Debug.fatal(DEBUG_INFO, "Section '%s' inherits from non-existent section '%s'.", SectionName.c_str(), ParentSectionName.c_str());
++				Debug.fatal(DEBUG_INFO, "Section '%s' inherits from non-existent section '%s'. Check this file and its DLTX mods: %s", SectionName.c_str(), ParentSectionName.c_str(), m_file_name);
 +			}
 +
 +			Sect* ParentSec = &ParentIt->second;
@@ -789,7 +789,7 @@ index 3f5ac84..ab15555 100644
 -		if ((I != DATA.end()) && ((*I)->Name == Current->Name))
 -			Debug.fatal(DEBUG_INFO, "Duplicate section '%s' found.", *Current->Name);
 -		DATA.insert(I, Current);
-+		Debug.fatal(DEBUG_INFO, "Attemped to override section '%s', which doesn't exist. Ensure that a base section with the same name is loaded first.", OverrideData.begin()->first.c_str());
++		Debug.fatal(DEBUG_INFO, "Attemped to override section '%s', which doesn't exist. Ensure that a base section with the same name is loaded first. Check this file and its DLTX mods: %s", OverrideData.begin()->first.c_str(), m_file_name);
  	}
  }
  
@@ -854,6 +854,46 @@ index 0000000..9f42203
 +	uint32_t BufferSize;
 +};
 \ No newline at end of file
+diff --git a/src/xrCore/xrCore.vcxproj b/src/xrCore/xrCore.vcxproj
+index 209d066..2d57efb 100644
+--- a/src/xrCore/xrCore.vcxproj
++++ b/src/xrCore/xrCore.vcxproj
+@@ -330,6 +330,7 @@
+     <ClCompile Include="memory_allocation_stats.cpp" />
+     <ClCompile Include="memory_monitor.cpp" />
+     <ClCompile Include="memory_usage.cpp" />
++    <ClCompile Include="mezz_stringbuffer.cpp" />
+     <ClCompile Include="Model.cpp">
+       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+       </PrecompiledHeader>
+@@ -443,6 +444,7 @@
+     <ClInclude Include="lzhuf.h" />
+     <ClInclude Include="lzo_compressor.h" />
+     <ClInclude Include="memory_monitor.h" />
++    <ClInclude Include="mezz_stringbuffer.h" />
+     <ClInclude Include="net_utils.h" />
+     <ClInclude Include="os_clipboard.h" />
+     <ClInclude Include="PPMd.h" />
+diff --git a/src/xrCore/xrCore.vcxproj.filters b/src/xrCore/xrCore.vcxproj.filters
+index dd3958c..f39a6c6 100644
+--- a/src/xrCore/xrCore.vcxproj.filters
++++ b/src/xrCore/xrCore.vcxproj.filters
+@@ -280,6 +280,7 @@
+     <ClCompile Include="ScopeLock.cpp">
+       <Filter>Threading</Filter>
+     </ClCompile>
++    <ClCompile Include="mezz_stringbuffer.cpp" />
+   </ItemGroup>
+   <ItemGroup>
+     <ClInclude Include="FTimer.h">
+@@ -589,6 +590,7 @@
+     <ClInclude Include="ScopeLock.hpp">
+       <Filter>Threading</Filter>
+     </ClInclude>
++    <ClInclude Include="mezz_stringbuffer.h" />
+   </ItemGroup>
+   <ItemGroup>
+     <ResourceCompile Include="xrCore.rc">
 diff --git a/src/xrGame/player_hud.cpp b/src/xrGame/player_hud.cpp
 index 99f0e5d..f2a2c0a 100644
 --- a/src/xrGame/player_hud.cpp
