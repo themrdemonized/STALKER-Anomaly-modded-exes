@@ -939,3 +939,76 @@ index 9a25130..dd47dbc 100644
  	CObjectAnimator* anm;
  	float blend_amount;
  	float m_power;
+diff --git a/src/xrServerEntities/script_storage.cpp b/src/xrServerEntities/script_storage.cpp
+index 860e11a..3c4fb25 100644
+--- a/src/xrServerEntities/script_storage.cpp
++++ b/src/xrServerEntities/script_storage.cpp
+@@ -494,22 +494,20 @@ void CScriptStorage::print_stack()
+ 		lua_getinfo(L, "nSlu", &l_tDebugInfo);
+ 		if (!l_tDebugInfo.name)
+ 		{
+-			script_log_no_stack(ScriptStorage::eLuaMessageTypeError, "%2d : [%s] %s(%d) : %s", i, l_tDebugInfo.what,
+-			                    l_tDebugInfo.short_src, l_tDebugInfo.currentline, "");
+-			//script_log(ScriptStorage::eLuaMessageTypeError, "%2d : [%s] %s(%d) : %s", i, l_tDebugInfo.what, l_tDebugInfo.short_src, l_tDebugInfo.currentline, "");
++			//script_log_no_stack(ScriptStorage::eLuaMessageTypeError, "%2d : [%s] %s(%d) : %s", i, l_tDebugInfo.what, l_tDebugInfo.short_src, l_tDebugInfo.currentline, "");
++			script_log(ScriptStorage::eLuaMessageTypeError, "%2d : [%s] %s(%d) : %s", i, l_tDebugInfo.what, l_tDebugInfo.short_src, l_tDebugInfo.currentline, "");
+ 		}
+ 		else
+ 		{
+ 			if (!xr_strcmp(l_tDebugInfo.what, "C"))
+ 			{
+-				script_log_no_stack(ScriptStorage::eLuaMessageTypeError, "%2d : [C  ] %s", i, l_tDebugInfo.name);
+-				//script_log(ScriptStorage::eLuaMessageTypeError, "%2d : [C  ] %s", i, l_tDebugInfo.name);  
++				//script_log_no_stack(ScriptStorage::eLuaMessageTypeError, "%2d : [C  ] %s", i, l_tDebugInfo.name);
++				script_log(ScriptStorage::eLuaMessageTypeError, "%2d : [C  ] %s", i, l_tDebugInfo.name);  
+ 			}
+ 			else
+ 			{
+-				script_log_no_stack(ScriptStorage::eLuaMessageTypeError, "%2d : [%s] %s(%d) : %s", i, l_tDebugInfo.what,
+-				                    l_tDebugInfo.short_src, l_tDebugInfo.currentline, l_tDebugInfo.name);
+-				//script_log(ScriptStorage::eLuaMessageTypeError, "%2d : [%s] %s(%d) : %s", i, l_tDebugInfo.what, l_tDebugInfo.short_src, l_tDebugInfo.currentline, l_tDebugInfo.name);
++				//script_log_no_stack(ScriptStorage::eLuaMessageTypeError, "%2d : [%s] %s(%d) : %s", i, l_tDebugInfo.what, l_tDebugInfo.short_src, l_tDebugInfo.currentline, l_tDebugInfo.name);
++				script_log(ScriptStorage::eLuaMessageTypeError, "%2d : [%s] %s(%d) : %s", i, l_tDebugInfo.what, l_tDebugInfo.short_src, l_tDebugInfo.currentline, l_tDebugInfo.name);
+ 			}
+ 		}
+ 	}
+@@ -536,18 +534,27 @@ int __cdecl CScriptStorage::script_log(ScriptStorage::ELuaMessageType tLuaMessag
+ 	int result = vscript_log(tLuaMessageType, caFormat, marker);
+ 	va_end(marker);
+ 
+-#ifdef PRINT_CALL_STACK
+-#	ifndef ENGINE_BUILD
+-    static bool	reenterability = false;
+-    if (!reenterability)
+-    {
+-        reenterability = true;
+-        if (eLuaMessageTypeError == tLuaMessageType)
+-            ai().script_engine().print_stack();
+-        reenterability = false;
+-    }
+-#	endif //!ENGINE_BUILD
+-#endif //-PRINT_CALL_STACK
++	static bool reenterability = false;
++	if (!reenterability)
++	{
++		reenterability = true;
++		if (tLuaMessageType == ScriptStorage::eLuaMessageTypeError)
++			ai().script_engine().print_stack();
++		reenterability = false;
++	}
++
++	// #ifdef PRINT_CALL_STACK
++	// #	ifndef ENGINE_BUILD
++	//     static bool	reenterability = false;
++	//     if (!reenterability)
++	//     {
++	//         reenterability = true;
++	//         if (eLuaMessageTypeError == tLuaMessageType)
++	//             ai().script_engine().print_stack();
++	//         reenterability = false;
++	//     }
++	// #	endif //!ENGINE_BUILD
++	// #endif //-PRINT_CALL_STACK
+ 
+ 	return (result);
+ }
