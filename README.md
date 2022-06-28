@@ -8,9 +8,10 @@ Here is the list of patches
   * Print of class and script errors in console
   
 * Shader Scopes by CrookR (https://www.moddb.com/mods/stalker-anomaly/addons/shader-based-2d-scopes-151dx11engine-mod)
-* ARX - Artefact & Anomalies Restoration eXperiment (merged exes already included in that mod) (https://www.moddb.com/mods/stalker-anomaly/addons/arx-artefact-anomalies-restoration-experiment)
+* ARX - Artefact & Anomalies Restoration eXperiment by Jurkonov (https://www.moddb.com/mods/stalker-anomaly/addons/arx-artefact-anomalies-restoration-experiment)
 * Duty Expansion by GhenTuong and Tronex (https://www.moddb.com/mods/stalker-anomaly/addons/duty-expansion)
 * Boomsticks And Sharpsticks by Mortan, Mich and co. (https://www.moddb.com/mods/stalker-anomaly/addons/boomsticks-and-sharpsticks)
+* Screen Space Shaders by Ascii1457 (https://www.moddb.com/mods/stalker-anomaly/addons/screen-space-shaders)
 
 # Read the description PLEASE!!!
 By default exes for ARX mod is in separate folder, if you dont want them, download STALKER-Anomaly-modded-exes.zip archive.
