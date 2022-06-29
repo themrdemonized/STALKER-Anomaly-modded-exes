@@ -7,10 +7,21 @@ Here is the list of patches
   * Fix of getting non-existing restrictor objects, observed by DAO mod (https://www.moddb.com/mods/stalker-anomaly/addons/dynamic-anomalies-overhaul-dao-read-description-please)
   * Print of class and script errors in console
   
-* Shader Scopes by CrookR (https://www.moddb.com/mods/stalker-anomaly/addons/shader-based-2d-scopes-151dx11engine-mod)
+* Shader Scopes by CrookR and enhanced by Edzan, comes ready to use in the archive
+  * Dynamic zoom is disabled by default for alternative sights (can be enabled by adding scope_dynamic_zoom_alt = true to the weapon section). For example, if you take SVD Lynx or SVD PMC with March Tactical (or other sights with adjustable zoom) and switch to alternate sight, they wont have dynamic zoom anymore
+  * The main sights with dynamic zoom and binoculars now normally remember their state.
+  * Added console command sds_enable [on (default)/off] to enable/disable Shader Based 2D Scopes.
+  * Added sds_speed_enable [on (default)/off] console command to disable/enable mouse speed (sensitivity) effect of scope_factor when aiming.
+  * Added console command sds_zoom_enable [on (default)/off] with which you can disable /enable correction of max. zoom with scope_factor, if this option is enabled then max. zoom will be such as prescribed in settings regardless of scope_factor value, if this option is disabled then max. zoom will be sum of value prescribed in settings and the increase that gives scope_factor.
+Above mentioned options are applicable only for scopes which have prescribed values in file scoperadii.script
+ * Added alternative zoom control (toggle with new_zoom_enable [on/off (default)]
+    * Minimal zoom is equal to either mechanical zoom or the one prescribed in section min_scope_zoom_factor.
+    * The step of zoom adjustment is more precise. Also, it's possible to adjust the step of zoom with the console command zoom_step_count [1.0, 10.0], this option is also applicable to the binoculars.
+ * In the new version all implementations from fakelens.script have moved directly to the engine. fakelens.script remained as a layer between the engine and scopeRadii.script
+ 
 * ARX - Artefact & Anomalies Restoration eXperiment by Jurkonov (https://www.moddb.com/mods/stalker-anomaly/addons/arx-artefact-anomalies-restoration-experiment)
 * Duty Expansion by GhenTuong and Tronex (https://www.moddb.com/mods/stalker-anomaly/addons/duty-expansion)
-* Boomsticks And Sharpsticks by Mortan, Mich and co. (https://www.moddb.com/mods/stalker-anomaly/addons/boomsticks-and-sharpsticks)
+* Boomsticks And Sharpsticks by Mortan, Mich and co. (https://www.moddb.com/mods/stalker-anomaly/addons/boomsticks-and-sharpsticks) (in separate archives)
 * Screen Space Shaders by Ascii1457 (https://www.moddb.com/mods/stalker-anomaly/addons/screen-space-shaders)
 
 # Read the description PLEASE!!!
