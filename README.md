@@ -7,7 +7,7 @@ Here is the list of patches
   * Fix of getting non-existing restrictor objects, observed by DAO mod (https://www.moddb.com/mods/stalker-anomaly/addons/dynamic-anomalies-overhaul-dao-read-description-please)
   * Print of class and script errors in console
   
-* Shader Scopes by CrookR and enhanced by Edzan, comes ready to use in the archive
+* Shader Scopes by CrookR and enhanced by Edzan, comes ready to use in the archive, delete old version first
   * Dynamic zoom is disabled by default for alternative sights (can be enabled by adding scope_dynamic_zoom_alt = true to the weapon section). For example, if you take SVD Lynx or SVD PMC with March Tactical (or other sights with adjustable zoom) and switch to alternate sight, they wont have dynamic zoom anymore
   * The main sights with dynamic zoom and binoculars now normally remember their state.
   * Added console command sds_enable [on (default)/off] to enable/disable Shader Based 2D Scopes.
@@ -26,7 +26,7 @@ Above mentioned options are applicable only for scopes which have prescribed val
 
 # Read the description PLEASE!!!
 By default exes for ARX mod is in separate folder, if you dont want them, download STALKER-Anomaly-modded-exes.zip archive.
-Unpack both bin and db directories directly into your Anomaly game folder, overwrite files if requested.
+Unpack all directories directly into your Anomaly game folder, overwrite files if requested.
 Delete shader cache in launcher before first launch of the game with new exes. You only have to do it once.
 
 Patches folder contains diffs used to create new exes, they are used to compile your own exes if you need that
