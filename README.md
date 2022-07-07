@@ -21,7 +21,6 @@ Above mentioned options are applicable only for scopes which have prescribed val
  
 * ARX - Artefact & Anomalies Restoration eXperiment by Jurkonov (https://www.moddb.com/mods/stalker-anomaly/addons/arx-artefact-anomalies-restoration-experiment)
 * Duty Expansion by GhenTuong and Tronex (https://www.moddb.com/mods/stalker-anomaly/addons/duty-expansion)
-* Boomsticks And Sharpsticks by Mortan, Mich and co. (https://www.moddb.com/mods/stalker-anomaly/addons/boomsticks-and-sharpsticks) (in separate archives)
 * Screen Space Shaders by Ascii1457 (https://www.moddb.com/mods/stalker-anomaly/addons/screen-space-shaders)
 
 # Read the description PLEASE!!!
