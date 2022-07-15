@@ -21,7 +21,7 @@ Above mentioned options are applicable only for scopes which have prescribed val
 * Screen Space Shaders by Ascii1457 (https://www.moddb.com/mods/stalker-anomaly/addons/screen-space-shaders)
 
 # Read the description PLEASE!!!
-By default exes for ARX mod is in separate folder, if you dont want them, download STALKER-Anomaly-modded-exes.zip archive.
+Download STALKER-Anomaly-modded-exes.zip archive.
 Unpack all directories directly into your Anomaly game folder, overwrite files if requested.
 Delete shader cache in launcher before first launch of the game with new exes. You only have to do it once.
 
