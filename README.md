@@ -4,7 +4,6 @@ Here is the list of patches
 * DLTX by MerelyMezz with my edits and bugfixes (https://www.moddb.com/mods/stalker-anomaly/addons/dltx-differential-ltx-loading), differences compare to original:
   * Attempting to override sections no longer crash the game, but prints the message into the log. All sections that triggers that error will be printed
   * Duplicate section errors now prints the root file where the error happened for easier checking mod_... ltxes
-  * Fix of getting non-existing restrictor objects, observed by DAO mod (https://www.moddb.com/mods/stalker-anomaly/addons/dynamic-anomalies-overhaul-dao-read-description-please)
   * Print of class and script errors in console
   
 * Shader Scopes by CrookR and enhanced by Edzan, comes ready to use in the archive, delete old version first
@@ -19,8 +18,6 @@ Above mentioned options are applicable only for scopes which have prescribed val
     * The step of zoom adjustment is more precise. Also, it's possible to adjust the step of zoom with the console command zoom_step_count [1.0, 10.0], this option is also applicable to the binoculars.
  * In the new version all implementations from fakelens.script have moved directly to the engine. fakelens.script remained as a layer between the engine and scopeRadii.script
  
-* ARX - Artefact & Anomalies Restoration eXperiment by Jurkonov (https://www.moddb.com/mods/stalker-anomaly/addons/arx-artefact-anomalies-restoration-experiment)
-* Duty Expansion by GhenTuong and Tronex (https://www.moddb.com/mods/stalker-anomaly/addons/duty-expansion)
 * Screen Space Shaders by Ascii1457 (https://www.moddb.com/mods/stalker-anomaly/addons/screen-space-shaders)
 
 # Read the description PLEASE!!!

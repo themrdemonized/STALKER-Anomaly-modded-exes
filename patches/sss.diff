@@ -1,7 +1,3 @@
- .../xrRender/Blender_Recorder_StandartBinding.cpp     | 19 +++++++++++++++++++
- src/Layers/xrRenderPC_R4/r4.cpp                       |  6 ++++++
- 2 files changed, 25 insertions(+)
-
 diff --git a/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp b/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
 index 5035624..6e972e7 100644
 --- a/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
@@ -40,7 +36,7 @@ index 5035624..6e972e7 100644
  	// other common
  	for (u32 it = 0; it < DEV->v_constant_setup.size(); it++)
 diff --git a/src/Layers/xrRenderPC_R4/r4.cpp b/src/Layers/xrRenderPC_R4/r4.cpp
-index 8ec2b1b..ee92013 100644
+index 77fb925..667a128 100644
 --- a/src/Layers/xrRenderPC_R4/r4.cpp
 +++ b/src/Layers/xrRenderPC_R4/r4.cpp
 @@ -1680,6 +1680,12 @@ HRESULT CRender::shader_compile(
