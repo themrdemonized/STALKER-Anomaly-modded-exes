@@ -788,7 +788,7 @@ index a1ec515..7c8e94f 100644
      extern BOOL debug_destroy;
      CMD4(CCC_Integer, "debug_destroy", &debug_destroy, FALSE, TRUE);
 diff --git a/src/xrGame/ActorInput.cpp b/src/xrGame/ActorInput.cpp
-index 55854f2..a53471c 100644
+index 8499334..48becf2 100644
 --- a/src/xrGame/ActorInput.cpp
 +++ b/src/xrGame/ActorInput.cpp
 @@ -433,7 +433,7 @@ void CActor::IR_OnMouseMove(int dx, int dy)
@@ -821,7 +821,7 @@ index 0000000..ec29839
 +//
 \ No newline at end of file
 diff --git a/src/xrGame/Weapon.cpp b/src/xrGame/Weapon.cpp
-index be96dfa..d435740 100644
+index 080f84d..c6025e3 100644
 --- a/src/xrGame/Weapon.cpp
 +++ b/src/xrGame/Weapon.cpp
 @@ -42,6 +42,47 @@
@@ -963,7 +963,7 @@ index be96dfa..d435740 100644
  	}
  
  	UpdateUIScope();
-@@ -1607,6 +1679,17 @@ void GetZoomData(const float scope_factor, float& delta, float& min_zoom_factor)
+@@ -1616,6 +1688,17 @@ float CWeapon::CurrentZoomFactor()
  
  void CWeapon::OnZoomIn()
  {
@@ -981,7 +981,7 @@ index be96dfa..d435740 100644
  	m_zoom_params.m_bIsZoomModeNow = true;
  	if (m_zoom_params.m_bUseDynamicZoom)
  		SetZoomFactor(m_fRTZoomFactor);
-@@ -1641,7 +1724,11 @@ void CWeapon::OnZoomIn()
+@@ -1650,7 +1733,11 @@ void CWeapon::OnZoomIn()
  void CWeapon::OnZoomOut()
  {
  	m_zoom_params.m_bIsZoomModeNow = false;
@@ -994,7 +994,7 @@ index be96dfa..d435740 100644
  	m_zoom_params.m_fCurrentZoomFactor = g_fov;
  
  	GamePersistent().RestoreEffectorDOF();
-@@ -1659,6 +1746,11 @@ void CWeapon::OnZoomOut()
+@@ -1668,6 +1755,11 @@ void CWeapon::OnZoomOut()
  	}
  
  	g_player_hud->updateMovementLayerState();
@@ -1006,7 +1006,7 @@ index be96dfa..d435740 100644
  }
  
  CUIWindow* CWeapon::ZoomTexture()
-@@ -1666,7 +1758,10 @@ CUIWindow* CWeapon::ZoomTexture()
+@@ -1675,7 +1767,10 @@ CUIWindow* CWeapon::ZoomTexture()
  	if (UseScopeTexture())
  		return m_UIScope;
  	else
@@ -1017,7 +1017,7 @@ index be96dfa..d435740 100644
  }
  
  void CWeapon::SwitchState(u32 S)
-@@ -2507,6 +2602,9 @@ void CWeapon::render_item_ui()
+@@ -2516,6 +2611,9 @@ void CWeapon::render_item_ui()
  
  	ZoomTexture()->Update();
  	ZoomTexture()->Draw();
@@ -1027,7 +1027,7 @@ index be96dfa..d435740 100644
  }
  
  bool CWeapon::unlimited_ammo()
-@@ -2688,16 +2786,43 @@ bool CWeapon::IsHudModeNow()
+@@ -2697,16 +2795,43 @@ bool CWeapon::IsHudModeNow()
  	return (HudItemData() != NULL);
  }
  
@@ -1073,7 +1073,7 @@ index be96dfa..d435740 100644
  }
  
  void CWeapon::ZoomDec()
-@@ -2705,11 +2830,19 @@ void CWeapon::ZoomDec()
+@@ -2714,11 +2839,19 @@ void CWeapon::ZoomDec()
  	if (!IsScopeAttached()) return;
  	if (!m_zoom_params.m_bUseDynamicZoom) return;
  	float delta, min_zoom_factor;
@@ -1096,7 +1096,7 @@ index be96dfa..d435740 100644
  
  u32 CWeapon::Cost() const
 diff --git a/src/xrGame/Weapon.h b/src/xrGame/Weapon.h
-index ffbc3aa..fc7a3d6 100644
+index 9880065..f97248f 100644
 --- a/src/xrGame/Weapon.h
 +++ b/src/xrGame/Weapon.h
 @@ -14,6 +14,8 @@
@@ -1128,7 +1128,7 @@ index ffbc3aa..fc7a3d6 100644
  		bool m_bZoomEnabled;
  		bool m_bHideCrosshairInZoom;
  		bool m_bZoomDofEnabled;
-@@ -875,4 +883,6 @@ public:
+@@ -878,4 +886,6 @@ public:
  	{
  		return cNameSect();
  	};
@@ -1205,10 +1205,10 @@ index 21be7d1..768462e 100644
  
  void CWeaponBinoculars::save(NET_Packet& output_packet)
 diff --git a/src/xrGame/WeaponMagazined.cpp b/src/xrGame/WeaponMagazined.cpp
-index 8b3dfa1..412b61c 100644
+index b933f2a..6c97431 100644
 --- a/src/xrGame/WeaponMagazined.cpp
 +++ b/src/xrGame/WeaponMagazined.cpp
-@@ -1329,6 +1329,7 @@ bool CWeaponMagazined::Detach(const char* item_section_name, bool b_spawn_item)
+@@ -1316,6 +1316,7 @@ bool CWeaponMagazined::Detach(const char* item_section_name, bool b_spawn_item)
  		return inherited::Detach(item_section_name, b_spawn_item);;
  }
  
@@ -1216,7 +1216,7 @@ index 8b3dfa1..412b61c 100644
  void CWeaponMagazined::InitAddons()
  {
  	if (IsScopeAttached())
-@@ -1345,6 +1346,7 @@ void CWeaponMagazined::InitAddons()
+@@ -1332,6 +1333,7 @@ void CWeaponMagazined::InitAddons()
  			if (m_UIScope)
  			{
  				xr_delete(m_UIScope);
@@ -1224,7 +1224,7 @@ index 8b3dfa1..412b61c 100644
  			}
  
  			if (!g_dedicated_server && scope_tex_name != NULL)
-@@ -1361,6 +1363,7 @@ void CWeaponMagazined::InitAddons()
+@@ -1348,6 +1350,7 @@ void CWeaponMagazined::InitAddons()
  		if (m_eScopeStatus != ALife::eAddonPermanent && m_UIScope)
  		{
  			xr_delete(m_UIScope);
@@ -1233,7 +1233,7 @@ index 8b3dfa1..412b61c 100644
  		ResetScopeKoeffs();
  	}
 diff --git a/src/xrGame/console_commands.cpp b/src/xrGame/console_commands.cpp
-index 523dd0b..e38db5a 100644
+index 2841970..ff9c11a 100644
 --- a/src/xrGame/console_commands.cpp
 +++ b/src/xrGame/console_commands.cpp
 @@ -60,6 +60,9 @@
@@ -1246,7 +1246,7 @@ index 523dd0b..e38db5a 100644
  string_path g_last_saved_game;
  
  #ifdef DEBUG
-@@ -2509,4 +2512,16 @@ void CCC_RegisterCommands()
+@@ -2512,4 +2515,16 @@ void CCC_RegisterCommands()
  		CMD4(CCC_Float, "g_streff", &streff, -10.f, 10.f);
  	//No need for server commands in a singleplayer-only mod
  	//register_mp_console_commands();
@@ -1277,7 +1277,7 @@ index 0000000..229a8a3
 +std::map<shared_str, float> listScopeRadii;
 \ No newline at end of file
 diff --git a/src/xrGame/xrGame.vcxproj b/src/xrGame/xrGame.vcxproj
-index 354fb82..36999f3 100644
+index c8e93f0..728e067 100644
 --- a/src/xrGame/xrGame.vcxproj
 +++ b/src/xrGame/xrGame.vcxproj
 @@ -1228,6 +1228,8 @@
