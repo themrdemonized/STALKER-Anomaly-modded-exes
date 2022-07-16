@@ -1,7 +1,7 @@
 # STALKER-Anomaly-modded-exes
 Here is list of exe files for Anomaly 1.5.1 that contains all engine patches by community required for some advanced mods to work.
 Here is the list of patches
-* DLTX by MerelyMezz with my edits and bugfixes (https://www.moddb.com/mods/stalker-anomaly/addons/dltx-differential-ltx-loading), differences compare to original:
+* DLTX by MerelyMezz with my edits and bugfixes, differences compare to original:
   * Attempting to override sections no longer crash the game, but prints the message into the log. All sections that triggers that error will be printed
   * Duplicate section errors now prints the root file where the error happened for easier checking mod_... ltxes
   * Print of class and script errors in console
