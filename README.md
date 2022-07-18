@@ -1,5 +1,5 @@
 # STALKER-Anomaly-modded-exes
-Here is list of exe files for Anomaly 1.5.1 that contains all engine patches by community required for some advanced mods to work.
+Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by community required for some advanced mods to work.
 Here is the list of patches
 * DLTX by MerelyMezz with my edits and bugfixes, differences compare to original:
   * Attempting to override sections no longer crash the game, but prints the message into the log. All sections that triggers that error will be printed
