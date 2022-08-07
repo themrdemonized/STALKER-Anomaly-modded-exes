@@ -26,9 +26,10 @@ Download STALKER-Anomaly-modded-exes.zip archive.
 Unpack all directories directly into your Anomaly game folder, overwrite files if requested.
 Delete shader cache in launcher before first launch of the game with new exes. You only have to do it once.
 
+## How to make my own modded exe?
 Patches folder contains diffs used to create new exes, they are used to compile your own exes if you need that
 
-## How to make my own modded exe?
+How to compile exes:
 1. git clone https://bitbucket.org/anomalymod/xray-monolith.git
 2. Open cloned repo in git console
 3. apply the patches you want from patches folder of this modded exe repo, git apply <path_to_patch>
