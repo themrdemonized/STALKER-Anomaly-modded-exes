@@ -857,10 +857,27 @@ index 96fae36..7b7f47f 100644
  	res->section = section;
  	res->pm.load(m_model, section);
 diff --git a/src/xrGame/ui/UILogsWnd.cpp b/src/xrGame/ui/UILogsWnd.cpp
-index cda3adc..87a1a7b 100644
+index cda3adc..6d1fad1 100644
 --- a/src/xrGame/ui/UILogsWnd.cpp
 +++ b/src/xrGame/ui/UILogsWnd.cpp
-@@ -178,6 +178,14 @@ void CUILogsWnd::ReLoadNews()
+@@ -76,6 +76,16 @@ void CUILogsWnd::Update()
+ 
+ 	if (!m_items_ready.empty())
+ 	{
++		// Sort news by date correctly
++		struct {
++			bool operator()(CUIWindow* x, CUIWindow* y) {
++				CUINewsItemWnd* a = smart_cast<CUINewsItemWnd*>(x);
++				CUINewsItemWnd* b = smart_cast<CUINewsItemWnd*>(y);
++				return a->receive_time > b->receive_time;
++			}
++		} sortNewsDesc;
++		std::sort(m_items_ready.begin(), m_items_ready.end(), sortNewsDesc);
++
+ 		WINDOW_LIST::iterator it = m_items_ready.begin();
+ 		WINDOW_LIST::iterator it_e = m_items_ready.end();
+ 		for (; it != it_e; ++it)
+@@ -178,6 +188,14 @@ void CUILogsWnd::ReLoadNews()
  	VERIFY(m_filter_news && m_filter_talk);
  	GAME_NEWS_VECTOR& news_vector = Actor()->game_news_registry->registry().objects();
  
@@ -875,6 +892,41 @@ index cda3adc..87a1a7b 100644
  	//	u32 currentNews = 0;
  
  	bool filter_news = m_filter_news->GetCheck();
+diff --git a/src/xrGame/ui/UINewsItemWnd.cpp b/src/xrGame/ui/UINewsItemWnd.cpp
+index 86180d2..2d8eac6 100644
+--- a/src/xrGame/ui/UINewsItemWnd.cpp
++++ b/src/xrGame/ui/UINewsItemWnd.cpp
+@@ -33,6 +33,7 @@ void CUINewsItemWnd::Init(CUIXml& uiXml, LPCSTR start_from)
+ 
+ void CUINewsItemWnd::Setup(GAME_NEWS_DATA& news_data)
+ {
++	receive_time = news_data.receive_time;
+ 	shared_str time_str = InventoryUtilities::GetTimeAndDateAsString(news_data.receive_time);
+ 	u32 sz = (time_str.size() + 5) * sizeof(char);
+ 	PSTR str = (PSTR)_alloca(sz);
+diff --git a/src/xrGame/ui/UINewsItemWnd.h b/src/xrGame/ui/UINewsItemWnd.h
+index 464c410..e7f0642 100644
+--- a/src/xrGame/ui/UINewsItemWnd.h
++++ b/src/xrGame/ui/UINewsItemWnd.h
+@@ -2,6 +2,7 @@
+ 
+ #include "UIWindow.h"
+ #include "xrUIXmlParser.h"
++#include "../alife_time_manager.h"
+ class CUIStatic;
+ class CUITextWnd;
+ struct GAME_NEWS_DATA;
+@@ -15,6 +16,10 @@ class CUINewsItemWnd : public CUIWindow
+ 	CUITextWnd* m_UIText;
+ 	CUIStatic* m_UIImage;
+ 
++	// Store GAME_NEWS_DATA time
++public:
++	ALife::_TIME_ID receive_time = 0;
++
+ public:
+ 	CUINewsItemWnd();
+ 	virtual ~CUINewsItemWnd();
 diff --git a/src/xrServerEntities/script_storage.cpp b/src/xrServerEntities/script_storage.cpp
 index 450b304..6a932db 100644
 --- a/src/xrServerEntities/script_storage.cpp
