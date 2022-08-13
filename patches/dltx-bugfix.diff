@@ -856,6 +856,25 @@ index 96fae36..7b7f47f 100644
  	hand_motions* res = xr_new<hand_motions>();
  	res->section = section;
  	res->pm.load(m_model, section);
+diff --git a/src/xrGame/ui/UILogsWnd.cpp b/src/xrGame/ui/UILogsWnd.cpp
+index cda3adc..87a1a7b 100644
+--- a/src/xrGame/ui/UILogsWnd.cpp
++++ b/src/xrGame/ui/UILogsWnd.cpp
+@@ -178,6 +178,14 @@ void CUILogsWnd::ReLoadNews()
+ 	VERIFY(m_filter_news && m_filter_talk);
+ 	GAME_NEWS_VECTOR& news_vector = Actor()->game_news_registry->registry().objects();
+ 
++	// Sort news by date correctly
++	struct {
++		bool operator()(GAME_NEWS_DATA& a, GAME_NEWS_DATA& b) {
++			return a.receive_time < b.receive_time;
++		}
++	} sortNewsDesc;
++	std::sort(news_vector.begin(), news_vector.end(), sortNewsDesc);
++
+ 	//	u32 currentNews = 0;
+ 
+ 	bool filter_news = m_filter_news->GetCheck();
 diff --git a/src/xrServerEntities/script_storage.cpp b/src/xrServerEntities/script_storage.cpp
 index 450b304..6a932db 100644
 --- a/src/xrServerEntities/script_storage.cpp
