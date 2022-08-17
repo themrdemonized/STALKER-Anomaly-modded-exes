@@ -873,6 +873,32 @@ index dd3958c..f39a6c6 100644
    </ItemGroup>
    <ItemGroup>
      <ResourceCompile Include="xrCore.rc">
+diff --git a/src/xrGame/level_script.cpp b/src/xrGame/level_script.cpp
+index c16d21c..ae3827f 100644
+--- a/src/xrGame/level_script.cpp
++++ b/src/xrGame/level_script.cpp
+@@ -1762,6 +1762,21 @@ void CLevel::script_register(lua_State* L)
+ 		.def_readonly("object", &script_rq_result::O)
+ 		.def_readonly("range", &script_rq_result::range)
+ 		.def_readonly("element", &script_rq_result::element)
++		.def_readonly("material_name", &script_rq_result::pMaterialName)
++		.def_readonly("material_flags", &script_rq_result::pMaterialFlags)
++		.def_readonly("material_phfriction", &script_rq_result::fPHFriction)
++		.def_readonly("material_phdamping", &script_rq_result::fPHDamping)
++		.def_readonly("material_phspring", &script_rq_result::fPHSpring)
++		.def_readonly("material_phbounce_start_velocity", &script_rq_result::fPHBounceStartVelocity)
++		.def_readonly("material_phbouncing", &script_rq_result::fPHBouncing)
++		.def_readonly("material_flotation_factor", &script_rq_result::fFlotationFactor)
++		.def_readonly("material_shoot_factor", &script_rq_result::fShootFactor)
++		.def_readonly("material_shoot_factor_mp", &script_rq_result::fShootFactorMP)
++		.def_readonly("material_bounce_damage_factor", &script_rq_result::fBounceDamageFactor)
++		.def_readonly("material_injurious_speed", &script_rq_result::fInjuriousSpeed)
++		.def_readonly("material_vis_transparency_factor", &script_rq_result::fVisTransparencyFactor)
++		.def_readonly("material_snd_occlusion_factor", &script_rq_result::fSndOcclusionFactor)
++		.def_readonly("material_density_factor", &script_rq_result::fDensityFactor)
+ 		.def(constructor<>()),
+ 		class_<enum_exporter<collide::rq_target>>("rq_target")
+ 		.enum_("targets")
 diff --git a/src/xrGame/player_hud.cpp b/src/xrGame/player_hud.cpp
 index 96fae36..7b7f47f 100644
 --- a/src/xrGame/player_hud.cpp
@@ -886,6 +912,80 @@ index 96fae36..7b7f47f 100644
  	hand_motions* res = xr_new<hand_motions>();
  	res->section = section;
  	res->pm.load(m_model, section);
+diff --git a/src/xrGame/raypick.cpp b/src/xrGame/raypick.cpp
+index 8fd463b..a07bb0c 100644
+--- a/src/xrGame/raypick.cpp
++++ b/src/xrGame/raypick.cpp
+@@ -1,6 +1,7 @@
+ #include "stdafx.h"
+ #include "raypick.h"
+ #include "level.h"
++#include "material_manager.h"
+ 
+ CRayPick::CRayPick()
+ {
+@@ -28,6 +29,30 @@ bool CRayPick::query()
+ 	if (Level().ObjectSpace.RayPick(start_position, direction, range, flags, R, ignore))
+ 	{
+ 		result.set(R);
++		if (!R.O) {
++			//Msg("no object, check material");
++			auto pTri = Level().ObjectSpace.GetStaticTris() + R.element;
++			auto pMaterial = GMLib.GetMaterialByIdx(pTri->material);
++			auto pMaterialFlags = pMaterial->Flags;
++			//result.pTri = pTri;
++			//result.pMaterial = pMaterial;
++			result.pMaterialFlags = pMaterialFlags.flags;
++			result.pMaterialName = pMaterial->m_Name.c_str();
++
++			result.fPHFriction = pMaterial->fPHFriction;
++			result.fPHDamping = pMaterial->fPHDamping;
++			result.fPHSpring = pMaterial->fPHSpring;
++			result.fPHBounceStartVelocity = pMaterial->fPHBounceStartVelocity;
++			result.fPHBouncing = pMaterial->fPHBouncing;
++			result.fFlotationFactor = pMaterial->fFlotationFactor;
++			result.fShootFactor = pMaterial->fShootFactor;
++			result.fShootFactorMP = pMaterial->fShootFactorMP;
++			result.fBounceDamageFactor = pMaterial->fBounceDamageFactor;
++			result.fInjuriousSpeed = pMaterial->fInjuriousSpeed;
++			result.fVisTransparencyFactor = pMaterial->fVisTransparencyFactor;
++			result.fSndOcclusionFactor = pMaterial->fSndOcclusionFactor;
++			result.fDensityFactor = pMaterial->fDensityFactor;
++		}
+ 		return true;
+ 	}
+ 	else
+diff --git a/src/xrGame/raypick.h b/src/xrGame/raypick.h
+index 81e990e..ff36f04 100644
+--- a/src/xrGame/raypick.h
++++ b/src/xrGame/raypick.h
+@@ -9,6 +9,26 @@ struct script_rq_result
+ 	float range;
+ 	int element;
+ 
++	// Material of tri of ray query result
++	str_c pMaterialName;
++	u32 pMaterialFlags;
++
++	// physics part
++	float fPHFriction; // ?
++	float fPHDamping; // ?
++	float fPHSpring; // ?
++	float fPHBounceStartVelocity; // ?
++	float fPHBouncing; // ?
++					   // shoot&bounce&visibility&flotation
++	float fFlotationFactor; // 0.f - 1.f (1.f-полностью проходимый)
++	float fShootFactor; // 0.f - 1.f (1.f-полностью простреливаемый)
++	float fShootFactorMP; // 0.f - 1.f (1.f-полностью простреливаемый)
++	float fBounceDamageFactor; // 0.f - 100.f
++	float fInjuriousSpeed; // 0.f - ... (0.f-не отбирает здоровье (скорость уменьшения здоровья))
++	float fVisTransparencyFactor; // 0.f - 1.f (1.f-полностью прозрачный)
++	float fSndOcclusionFactor; // 0.f - 1.f (1.f-полностью слышен)
++	float fDensityFactor;
++
+ 	script_rq_result()
+ 	{
+ 		O = 0;
 diff --git a/src/xrGame/ui/UILogsWnd.cpp b/src/xrGame/ui/UILogsWnd.cpp
 index cda3adc..6d1fad1 100644
 --- a/src/xrGame/ui/UILogsWnd.cpp
