@@ -873,6 +873,74 @@ index dd3958c..f39a6c6 100644
    </ItemGroup>
    <ItemGroup>
      <ResourceCompile Include="xrCore.rc">
+diff --git a/src/xrGame/GamePersistent.cpp b/src/xrGame/GamePersistent.cpp
+index 7087c3a..a45da94 100644
+--- a/src/xrGame/GamePersistent.cpp
++++ b/src/xrGame/GamePersistent.cpp
+@@ -529,6 +529,14 @@ void CGamePersistent::game_loaded()
+ 			m_intro->Start("game_loaded");
+ 			Msg("intro_start game_loaded");
+ 			m_intro->m_on_destroy_event.bind(this, &CGamePersistent::update_game_loaded);
++
++			// demonized
++			// Callback for when loading screen happens and "Press Any Key to Continue" prompt appears
++			luabind::functor<void> funct;
++			if (ai().script_engine().functor("_G.OnLoadingScreenKeyPrompt", funct))
++			{
++				funct();
++			}
+ 		}
+ 		m_intro_event = 0;
+ 	}
+@@ -539,6 +547,14 @@ void CGamePersistent::update_game_loaded()
+ 	xr_delete(m_intro);
+ 	Msg("intro_delete ::update_game_loaded");
+ 	start_game_intro();
++
++	// demonized
++	// Callback for when player dismisses loading screen after "Press Any Key to Continue" pressed
++	luabind::functor<void> funct;
++	if (ai().script_engine().functor("_G.OnLoadingScreenDismissed", funct))
++	{
++		funct();
++	}
+ }
+ 
+ void CGamePersistent::start_game_intro()
+diff --git a/src/xrGame/ScriptXMLInit.cpp b/src/xrGame/ScriptXMLInit.cpp
+index 3c89e6d..6e490ca 100644
+--- a/src/xrGame/ScriptXMLInit.cpp
++++ b/src/xrGame/ScriptXMLInit.cpp
+@@ -37,6 +37,29 @@ void _attach_child(CUIWindow* _child, CUIWindow* _parent)
+ 		_parent->AttachChild(_child);
+ }
+ 
++// demonized
++// Clear XML from BOM
++LPCSTR clearBOM(LPCSTR s) {
++	if (s[0] == (char)0xEF && s[1] == (char)0xBB && s[2] == (char)0xBF) {
++		LPCSTR new_s = s + 3;
++		return new_s;
++	}
++	return s;
++}
++
++// demonized
++// Send XML file contents to Lua for edit
++void XMLLuaCallback(CXml &m_xml, LPCSTR xml_string) {
++	xml_string = clearBOM(xml_string);
++	luabind::functor<LPCSTR> funct;
++	if (ai().script_engine().functor("_G.COnXmlRead", funct))
++	{
++		LPCSTR res = funct(m_xml.m_xml_file_name, xml_string);
++		//Msg("XMLLuaCallback, xml %s, contents %s", m_xml.m_xml_file_name, res);
++		m_xml.LoadFromString(res);
++	}
++}
++
+ void CScriptXmlInit::ParseFile(LPCSTR xml_file)
+ {
+ 	m_xml.Load(CONFIG_PATH, UI_PATH, xml_file);
 diff --git a/src/xrGame/level_script.cpp b/src/xrGame/level_script.cpp
 index c16d21c..ae3827f 100644
 --- a/src/xrGame/level_script.cpp
@@ -899,6 +967,113 @@ index c16d21c..ae3827f 100644
  		.def(constructor<>()),
  		class_<enum_exporter<collide::rq_target>>("rq_target")
  		.enum_("targets")
+diff --git a/src/xrGame/level_sounds.cpp b/src/xrGame/level_sounds.cpp
+index 28718aa..8ea30cb 100644
+--- a/src/xrGame/level_sounds.cpp
++++ b/src/xrGame/level_sounds.cpp
+@@ -1,4 +1,6 @@
+ #include "stdafx.h"
++#include <random>
++#include <algorithm>
+ #pragma hdrstop
+ 
+ #include "level.h"
+@@ -188,6 +190,9 @@ void CLevelSoundManager::Load()
+ 				Msg("- Loading music tracks from '%s'...",music_sect);
+ #endif // #ifdef DEBUG
+ 				CInifile::Sect& S = gameLtx.r_section(music_sect);
++				std::random_device rd;
++				std::mt19937 g(rd());
++				std::shuffle(S.Data.begin(), S.Data.end(), g);
+ 				CInifile::SectCIt it = S.Data.begin(), end = S.Data.end();
+ 				m_MusicTracks.reserve(S.Data.size());
+ 				for (; it != end; it++)
+@@ -206,6 +211,7 @@ void CLevelSoundManager::Unload()
+ 	m_StaticSounds.clear();
+ 	// music
+ 	m_MusicTracks.clear();
++	m_PlayedMusicIndices.clear();
+ }
+ 
+ void CLevelSoundManager::Update()
+@@ -228,32 +234,46 @@ void CLevelSoundManager::Update()
+ 		if (m_CurrentTrack < 0 && engine_time > m_NextTrackTime)
+ 		{
+ 			U32Vec indices;
+-			for (u32 k = 0; k < m_MusicTracks.size(); ++k)
++			for (u32 k = 0; k < m_MusicTracks.size(); k++)
+ 			{
++				// Msg("Checking track %d", k);
+ 				SMusicTrack& T = m_MusicTracks[k];
+-				if (T.IsPlaying())
++				if (T.IsPlaying()) {
+ 					T.Stop();
+-
+-				if (T.in(game_time))
++					// Msg("Stopping track %d", k);
++				}
++				if ((T.in(game_time) && m_PlayedMusicIndices.empty()) || 
++					(T.in(game_time) && !(std::find(m_PlayedMusicIndices.begin(), m_PlayedMusicIndices.end(), k) != m_PlayedMusicIndices.end()))) {
+ 					indices.push_back(k);
+-				/*
+-								if ((0==T.m_ActiveTime.x) && (0==T.m_ActiveTime.y)||
+-									((int(game_time)>=T.m_ActiveTime.x)&&(int(game_time)<T.m_ActiveTime.y)))
+-									indices.push_back	(k);
+-				*/
++					// Msg("Pushing track %d", k);
++					/*
++									if ((0==T.m_ActiveTime.x) && (0==T.m_ActiveTime.y)||
++										((int(game_time)>=T.m_ActiveTime.x)&&(int(game_time)<T.m_ActiveTime.y)))
++										indices.push_back	(k);
++					*/
++				}
+ 			}
+ 			if (!indices.empty())
+ 			{
+-				u32 idx = Random.randI(indices.size());
++				//u32 idx = Random.randI(indices.size());
++				u32 idx = 0;
+ 				m_CurrentTrack = indices[idx];
+ 				SMusicTrack& T = m_MusicTracks[m_CurrentTrack];
+ 				T.Play();
++				m_PlayedMusicIndices.push_back(indices[idx]);
++				// Msg("Starting track %d", indices[idx]);
+ #ifdef DEBUG
+ 				Log				("- Play music track:",T.m_DbgName.c_str());
+ #endif
+ 			}
+ 			else
+ 			{
++				// Msg("m_PlayedMusicIndices.size %d", m_PlayedMusicIndices.size());
++				m_PlayedMusicIndices.clear();
++				std::random_device rd;
++				std::mt19937 g(rd());
++				std::shuffle(m_MusicTracks.begin(), m_MusicTracks.end(), g);
++				// Msg("Refreshing tracks");
+ 				m_NextTrackTime = engine_time + 10000; // next check after 10 sec
+ 			}
+ 		}
+@@ -262,7 +282,7 @@ void CLevelSoundManager::Update()
+ 		{
+ 			SMusicTrack& T = m_MusicTracks[m_CurrentTrack];
+ 			if (!T.IsPlaying())
+-			{
++			{	
+ 				m_CurrentTrack = -1;
+ 				m_NextTrackTime = engine_time;
+ 
+diff --git a/src/xrGame/level_sounds.h b/src/xrGame/level_sounds.h
+index 596cc31..79359b6 100644
+--- a/src/xrGame/level_sounds.h
++++ b/src/xrGame/level_sounds.h
+@@ -44,6 +44,7 @@ class CLevelSoundManager
+ 	StaticSoundsVec m_StaticSounds;
+ 	DEFINE_VECTOR(SMusicTrack, MusicTrackVec, MusicTrackVecIt);
+ 	MusicTrackVec m_MusicTracks;
++	U32Vec m_PlayedMusicIndices; //Already played music array
+ 	u32 m_NextTrackTime;
+ 	int m_CurrentTrack;
+ public:
 diff --git a/src/xrGame/player_hud.cpp b/src/xrGame/player_hud.cpp
 index 96fae36..7b7f47f 100644
 --- a/src/xrGame/player_hud.cpp
@@ -1101,3 +1276,175 @@ index 450b304..6a932db 100644
  
  	return (result);
  }
+diff --git a/src/xrServerEntities/specific_character.cpp b/src/xrServerEntities/specific_character.cpp
+index 9029b27..02517bc 100644
+--- a/src/xrServerEntities/specific_character.cpp
++++ b/src/xrServerEntities/specific_character.cpp
+@@ -5,6 +5,8 @@
+ #include "PhraseDialog.h"
+ #include "string_table.h"
+ 
++#include "ai_space.h"
++#include "Script_Game_Object.h"
+ 
+ SSpecificCharacterData::SSpecificCharacterData()
+ {
+@@ -125,6 +127,32 @@ void CSpecificCharacter::load_shared(LPCSTR)
+ 		data()->m_ActorDialogs.push_back(dialog_name);
+ 	}
+ 
++	luabind::functor<luabind::object> funct;
++	if (ai().script_engine().functor("_G.CSpecificCharacterDialogList", funct))
++	{
++		luabind::object table = luabind::newtable(ai().script_engine().lua());
++		int i = 1;
++		for (auto const &dialog : data()->m_ActorDialogs) {
++			table[i] = dialog.c_str();
++			i++;
++		}
++		auto character_name = item_data.id.c_str();
++		luabind::object output = funct(character_name, table);
++		if (output && output.type() == LUA_TTABLE) {
++			data()->m_ActorDialogs.clear();
++			luabind::object::iterator i = output.begin();
++			luabind::object::iterator e = output.end();
++			for (; i != e; ++i) {
++				luabind::object v = *i;
++				if (v.type() == LUA_TSTRING) {
++					shared_str dialog_name = luabind::object_cast<LPCSTR>(v);
++					//Msg("character_id %s, dialog_name %s", character_name, dialog_name.c_str());
++					data()->m_ActorDialogs.push_back(dialog_name);
++				}
++			}
++		}
++	}
++
+ 	data()->m_icon_name = pXML->Read("icon", 0, "ui_npc_u_barman");
+ 
+ 
+@@ -240,6 +268,78 @@ void CSpecificCharacter::load_shared(LPCSTR)
+ 		MoneyDef().inf_money = false;
+ 	}
+ 
++	luabind::functor<luabind::object> init_funct;
++	if (ai().script_engine().functor("_G.CSpecificCharacterInit", init_funct))
++	{
++		luabind::object table = luabind::newtable(ai().script_engine().lua());
++		table["name"] = Name();
++		table["bio"] = Bio().c_str();
++		table["community"] = Community().id().c_str();
++		table["icon"] = data()->m_icon_name.c_str();
++		table["start_dialog"] = data()->m_StartDialog.c_str();
++		table["panic_threshold"] = panic_threshold();
++		table["hit_probability_factor"] = hit_probability_factor();
++		table["crouch_type"] = crouch_type();
++		table["mechanic_mode"] = upgrade_mechanic();
++		table["critical_wound_weights"] = critical_wound_weights();
++		table["supplies"] = SupplySpawn();
++		table["visual"] = Visual();
++		table["npc_config"] = NpcConfigSect();
++		table["snd_config"] = sound_voice_prefix();
++		table["terrain_sect"] = terrain_sect().c_str();
++		table["rank_min"] = RankDef().min;
++		table["rank_max"] = RankDef().max;
++		table["reputation_min"] = ReputationDef().min;
++		table["reputation_max"] = ReputationDef().max;
++		table["money_min"] = MoneyDef().min_money;
++		table["money_max"] = MoneyDef().max_money;
++		table["money_infinitive"] = MoneyDef().inf_money;
++		auto character_name = item_data.id.c_str();
++		luabind::object output = init_funct(character_name, table);
++		if (output && output.type() == LUA_TTABLE) {
++			data()->m_sGameName = luabind::object_cast<LPCSTR>(output["name"]);
++			data()->m_sBioText = CStringTable().translate(luabind::object_cast<LPCSTR>(output["bio"]));
++
++			data()->m_Community.set(luabind::object_cast<LPCSTR>(output["community"]));
++			if (data()->m_Community.index() == NO_COMMUNITY_INDEX)
++				Debug.fatal(DEBUG_INFO, "wrong 'community' '%s' in specific character %s ", luabind::object_cast<LPCSTR>(output["community"]), *m_OwnId);
++
++			data()->m_icon_name = luabind::object_cast<LPCSTR>(output["icon"]);
++			data()->m_StartDialog = output["start_dialog"].type() == LUA_TSTRING ? luabind::object_cast<LPCSTR>(output["start_dialog"]) : NULL;
++			data()->m_fPanic_threshold = luabind::object_cast<float>(output["panic_threshold"]);
++			data()->m_fHitProbabilityFactor = luabind::object_cast<float>(output["hit_probability_factor"]);
++			data()->m_crouch_type = luabind::object_cast<int>(output["crouch_type"]);
++			data()->m_upgrade_mechanic = luabind::object_cast<bool>(output["mechanic_mode"]);
++			data()->m_critical_wound_weights = luabind::object_cast<LPCSTR>(output["critical_wound_weights"]);
++			data()->m_sVisual = luabind::object_cast<LPCSTR>(output["visual"]);
++			data()->m_sNpcConfigSect = luabind::object_cast<LPCSTR>(output["npc_config"]);
++			data()->m_sound_voice_prefix = luabind::object_cast<LPCSTR>(output["snd_config"]);
++			data()->m_terrain_sect = luabind::object_cast<LPCSTR>(output["terrain_sect"]);
++
++			data()->m_sSupplySpawn = luabind::object_cast<LPCSTR>(output["supplies"]);
++			if (!data()->m_sSupplySpawn.empty())
++			{
++				xr_string& str = data()->m_sSupplySpawn;
++				xr_string::size_type pos = str.find("\\n");
++				while (xr_string::npos != pos)
++				{
++					str.replace(pos, 2, "\n");
++					pos = str.find("\\n", pos + 1);
++				}
++			}
++
++			RankDef().min = _min(luabind::object_cast<int>(output["rank_min"]), luabind::object_cast<int>(output["rank_max"]));
++			RankDef().max = _max(luabind::object_cast<int>(output["rank_min"]), luabind::object_cast<int>(output["rank_max"]));
++
++			ReputationDef().min = _min(luabind::object_cast<int>(output["reputation_min"]), luabind::object_cast<int>(output["reputation_max"]));
++			ReputationDef().max = _max(luabind::object_cast<int>(output["reputation_min"]), luabind::object_cast<int>(output["reputation_max"]));
++
++			MoneyDef().min_money = _min(luabind::object_cast<int>(output["money_min"]), luabind::object_cast<int>(output["money_max"]));
++			MoneyDef().max_money = _max(luabind::object_cast<int>(output["money_min"]), luabind::object_cast<int>(output["money_max"]));
++			MoneyDef().inf_money = luabind::object_cast<bool>(output["money_infinitive"]);
++		}
++	}
++
+ #endif
+ 
+ #if 0
+diff --git a/src/xrXMLParser/xrXMLParser.cpp b/src/xrXMLParser/xrXMLParser.cpp
+index 1d69c77..1cde914 100644
+--- a/src/xrXMLParser/xrXMLParser.cpp
++++ b/src/xrXMLParser/xrXMLParser.cpp
+@@ -3,6 +3,7 @@
+ 
+ #include "xrXMLParser.h"
+ 
++extern void XMLLuaCallback(CXml &m_xml, LPCSTR xml_string);
+ 
+ XRXMLPARSER_API CXml::CXml()
+ 	: m_root(NULL),
+@@ -138,6 +139,21 @@ void CXml::Load(LPCSTR path, LPCSTR xml_filename)
+ 		R_ASSERT2(false, str);
+ 	}
+ 
++	m_root = m_Doc.FirstChildElement();
++	XMLLuaCallback(*this, (LPCSTR)W.pointer());
++}
++
++void CXml::LoadFromString(LPCSTR xml_string)
++{
++	ClearInternal();
++	m_Doc.Parse(&m_Doc, xml_string);
++	if (m_Doc.Error())
++	{
++		string1024 str;
++		xr_sprintf(str, "XML file:%s value:%s errDescr:%s", m_xml_file_name, m_Doc.Value(), m_Doc.ErrorDesc());
++		R_ASSERT2(false, str);
++	}
++
+ 	m_root = m_Doc.FirstChildElement();
+ }
+ 
+diff --git a/src/xrXMLParser/xrXMLParser.h b/src/xrXMLParser/xrXMLParser.h
+index 3a13303..fcdc789 100644
+--- a/src/xrXMLParser/xrXMLParser.h
++++ b/src/xrXMLParser/xrXMLParser.h
+@@ -31,7 +31,7 @@ public:
+ 	void ClearInternal();
+ 
+ 	void Load(LPCSTR path_alias, LPCSTR path, LPCSTR xml_filename);
+-
++	void LoadFromString(LPCSTR xml_string);
+ 
+ 	//чтение элементов
+ 	LPCSTR Read(LPCSTR path, int index, LPCSTR default_str_val);
