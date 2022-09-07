@@ -13,13 +13,13 @@ Then, in this file, type:
 function on_xml_read()
     RegisterScriptCallback("on_xml_read", function(xml_file_name, xml_obj)
         -- XML file i want to change
-        local xml_to_change == [[text\eng\_game_version.xml]]
+        local xml_to_change = [[text\eng\_game_version.xml]]
 
         -- Check if its the file i want to change
         if xml_file_name == xml_to_change then
             -- Here is my code to change XML
         end
-    end
+    end)
 end
 ```
 
@@ -42,7 +42,7 @@ To do this, you can use `xml_obj:insertFromXMLString` function as in example bel
 function on_xml_read()
     RegisterScriptCallback("on_xml_read", function(xml_file_name, xml_obj)
         -- XML file i want to change
-        local xml_to_change == [[ui\scopes.xml]]
+        local xml_to_change = [[ui\scopes.xml]]
 
         -- Check if its the file i want to change
         if xml_file_name == xml_to_change then
@@ -57,7 +57,7 @@ function on_xml_read()
 ]]
             xml_obj:insertFromXMLString(my_new_scope)
         end
-    end
+    end)
 end
 ```
 
@@ -107,7 +107,7 @@ Full code would be:
 function on_xml_read()
     RegisterScriptCallback("on_xml_read", function(xml_file_name, xml_obj)
         -- XML file i want to change
-        local xml_to_change == [[ui\scopes.xml]]
+        local xml_to_change = [[ui\ui_mm_main.xml]]
 
         -- Check if its the file i want to change
         if xml_file_name == xml_to_change then
@@ -119,7 +119,7 @@ function on_xml_read()
                 xml_obj:insertFromXMLString(mcm_menu, el, #el.kids)
             end
         end
-    end
+    end)
 end
 ```
 But, if there is already an MCM menu, then you might get duplicated element inside. So we have to check if its already exists before insertion. We can check if element `<btn name="btn_mcm">` exists before proceeding by utilizing `query` again.
