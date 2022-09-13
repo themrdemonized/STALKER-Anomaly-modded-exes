@@ -2,6 +2,10 @@
 
 ## Intro
 
+DXML by demonized#1084
+
+DXML is a part of modded exes repo ([https://github.com/themrdemonized/STALKER-Anomaly-modded-exes](https://github.com/themrdemonized/STALKER-Anomaly-modded-exes))
+
 DXML allows to manipulate XML files before they loaded into the engine or scripts by utilizing Lua
 The engine sends XML string to Lua where it is transformed into DOM-like object (from now on lets call it xml_obj) that can be manipulated by Lua methods and then it is converted back to XML string and sent back to engine
 
@@ -122,6 +126,7 @@ function on_xml_read()
     end)
 end
 ```
+
 But, if there is already an MCM menu, then you might get duplicated element inside. So we have to check if its already exists before insertion. We can check if element `<btn name="btn_mcm">` exists before proceeding by utilizing `query` again.
 
 Here, similar to CSS, we want to find `<btn>` element with attribute `name="btn_mcm"` first. if its found - then make early return from the function
@@ -132,7 +137,9 @@ Here, similar to CSS, we want to find `<btn>` element with attribute `name="btn_
         return
     end
 ```
+
 Full list of available CSS-like selectors are:
+
 * " " (space) - find children of elemenents (can be any depth inside)
 * ">" - find direct children
 * "+" - find first sibling of element
@@ -169,22 +176,26 @@ end
 ```
 
 ## Case 4: changing attribute of element
+
 **Example: change position of money display in ui\ui_inventory.xml**
 
 First, find `<money>` element inside `<player>` element and then change its x, y attributes by using `setElementAttr` function
 
 `setElementAttr(el, args)`
+
 * el - element found using `query`
 * args - table of attributes ({attr1 = value1, attr2 = value2})
 
 To get attributes of element, use `getElementAttr` function, it returns a table of attributes described above
 
 `getElementAttr(el)`
+
 * el - element found using `query`
 
 To remove attributes of element, use `removeElementAttr` function
 
 `removeElementAttr(el, args)`
+
 * el - element found using `query`
 * args - list of attributes to remove ({attr1, attr2})
 
@@ -203,5 +214,7 @@ function on_xml_read()
 	end)
 end
 ```
+
 ## PS
-Full list of methods is described in _g.script in COnXmlRead function
+
+Full list of methods is described in _g.script in `COnXmlRead` function
