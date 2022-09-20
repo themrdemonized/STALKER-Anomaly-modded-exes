@@ -1,10 +1,12 @@
 # DXML
 
+___
+
 ## Intro
 
 DXML by demonized#1084
 
-DXML is a part of modded exes repo ([https://github.com/themrdemonized/STALKER-Anomaly-modded-exes](https://github.com/themrdemonized/STALKER-Anomaly-modded-exes))
+DXML is a part of [modded exes repo](https://github.com/themrdemonized/STALKER-Anomaly-modded-exes)
 
 DXML allows to manipulate XML files before they loaded into the engine or scripts by utilizing Lua
 The engine sends XML string to Lua where it is transformed into DOM-like object (from now on lets call it xml_obj) that can be manipulated by Lua methods and then it is converted back to XML string and sent back to engine
@@ -33,6 +35,8 @@ What this does is creating a function on_xml_read that will be auto-called from 
 * xml_obj - the object described above
 
 To understand, what can be done with xml_obj and what functions it provides, let's take a look at typical usecases:
+
+___
 
 ### Case 1: inserting new XML data
 
@@ -74,6 +78,8 @@ insertFromXMLString method has these arguments:
 * "pos" argument is optional and specifies position to insert (default - to the end)
 
 The function returns the position of first inserted element in "where"
+
+___
 
 ## Case 2: inserting new XML data in specified element
 
@@ -146,6 +152,8 @@ Full list of available CSS-like selectors are:
 * "~" - find all siblings
 * "[attr1=value1]" - describes attribute `attr1` with value `value1`. To find element that matches multiple attributes you can use `[attr1=value1][attr2=value2]` and so on
 
+___
+
 ## Case 3: Change text inside element
 
 **Example: change text of game version in text\eng\\_game_version.xml**
@@ -174,6 +182,8 @@ function on_xml_read()
 	end)
 end
 ```
+
+___
 
 ## Case 4: changing attribute of element
 
@@ -214,6 +224,8 @@ function on_xml_read()
 	end)
 end
 ```
+
+___
 
 ## PS
 
