@@ -45,7 +45,10 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
 Patches folder contains diffs used to create new exes, they are used to compile your own exes if you need that
 
 How to compile exes:
-1. git clone https://bitbucket.org/anomalymod/xray-monolith.git
-2. Open cloned repo in git console
-3. apply the patches you want from patches folder of this modded exe repo, git apply <path_to_patch>
-4. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
+1. Git clone XRay-Monolith engine repository https://bitbucket.org/anomalymod/xray-monolith.git
+2. Open cloned repo in git console or in application of your choice (Sourcetree (recommended), Github Desktop)
+3. Make new branch from "master" branch
+4. From newly created branch make additional branches for each .diff file in "patches" folder of this repo that you want to apply
+5. Apply patches in those branches via `git apply <path_to_patch>` command
+6. Merge those branches back into your branch created in p.3
+7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
