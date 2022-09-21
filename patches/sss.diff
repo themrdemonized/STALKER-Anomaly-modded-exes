@@ -1,3 +1,24 @@
+ src/Layers/xrRender/Blender_BmmD.cpp | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/Layers/xrRender/Blender_BmmD.cpp b/src/Layers/xrRender/Blender_BmmD.cpp
+index 02e36cb..9a452e9 100644
+--- a/src/Layers/xrRender/Blender_BmmD.cpp
++++ b/src/Layers/xrRender/Blender_BmmD.cpp
+@@ -257,6 +257,10 @@ void CBlender_BmmD::Compile(CBlender_Compile& C)
+ 		C.r_dx10Texture("s_dn_b", strconcat(sizeof(mask), mask, oB_Name, "_bump"));
+ 		C.r_dx10Texture("s_dn_a", strconcat(sizeof(mask), mask, oA_Name, "_bump"));
+ 
++		C.r_dx10Texture("s_puddles_normal", "fx\\water_normal");
++		C.r_dx10Texture("s_puddles_perlin", "fx\\puddles_perlin");
++		C.r_dx10Texture("s_puddles_mask", strconcat(sizeof(mask), mask, C.L_textures[0].c_str(), "_puddles_mask"));
++
+ 		C.r_dx10Sampler("smp_base");
+ 		C.r_dx10Sampler("smp_linear");
+ 
+ .../xrRender/Blender_Recorder_StandartBinding.cpp     | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
 diff --git a/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp b/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
 index 5035624..6e972e7 100644
 --- a/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
@@ -35,8 +56,11 @@ index 5035624..6e972e7 100644
  
  	// other common
  	for (u32 it = 0; it < DEV->v_constant_setup.size(); it++)
+ src/Layers/xrRenderPC_R4/r4.cpp | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
 diff --git a/src/Layers/xrRenderPC_R4/r4.cpp b/src/Layers/xrRenderPC_R4/r4.cpp
-index 77fb925..667a128 100644
+index 8ec2b1b..ee92013 100644
 --- a/src/Layers/xrRenderPC_R4/r4.cpp
 +++ b/src/Layers/xrRenderPC_R4/r4.cpp
 @@ -1680,6 +1680,12 @@ HRESULT CRender::shader_compile(
@@ -52,3 +76,54 @@ index 77fb925..667a128 100644
  
  	//Be carefull!!!!! this should be at the end to correctly generate
  	//compiled shader name;
+ src/xrEngine/Environment_misc.cpp | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/xrEngine/Environment_misc.cpp b/src/xrEngine/Environment_misc.cpp
+index bb5c882..eca3900 100644
+--- a/src/xrEngine/Environment_misc.cpp
++++ b/src/xrEngine/Environment_misc.cpp
+@@ -14,6 +14,7 @@
+ 
+ extern float ps_r2_sun_shafts_min;
+ extern float ps_r2_sun_shafts_value;
++extern Fvector3 ssfx_wetness_multiplier;
+ 
+ void CEnvModifier::load(IReader* fs, u32 version)
+ {
+@@ -505,9 +506,9 @@ void CEnvDescriptorMixer::lerp(CEnvironment* env, CEnvDescriptor& A, CEnvDescrip
+ 	sun_color.lerp(A.sun_color, B.sun_color, f);
+ 
+ 	if (rain_density > 0.f)
+-		env->wetness_factor += rain_density / 10000.f;
++		env->wetness_factor += ( rain_density * ssfx_wetness_multiplier.x) / 10000.f;
+ 	else
+-		env->wetness_factor -= 0.00001f;
++		env->wetness_factor -= 0.0001f * ssfx_wetness_multiplier.y;
+ 
+ 	clamp(env->wetness_factor, 0.f, 1.f);
+ 
+ src/xrEngine/xr_ioc_cmd.cpp | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/xrEngine/xr_ioc_cmd.cpp b/src/xrEngine/xr_ioc_cmd.cpp
+index a1ec515..3539662 100644
+--- a/src/xrEngine/xr_ioc_cmd.cpp
++++ b/src/xrEngine/xr_ioc_cmd.cpp
+@@ -864,6 +864,8 @@ Ivector4 g_crosshair_color_temp;
+ float g_freelook_z_offset;
+ float g_ironsights_factor = 1.25f;
+ 
++Fvector3 ssfx_wetness_multiplier = Fvector3().set(1.0f, 0.3f, 0.0f);
++
+ void CCC_Register()
+ {
+ 	// General
+@@ -1023,6 +1025,7 @@ void CCC_Register()
+ 		CMD4(CCC_Float, "g_freelook_z_offset_factor", &g_freelook_z_offset, -3.f, 3.f);
+ 
+ 	CMD4(CCC_Float, "g_ironsights_zoom_factor", &g_ironsights_factor, 1.f, 2.f);
++	CMD4(CCC_Vector3, "ssfx_wetness_multiplier", &ssfx_wetness_multiplier, Fvector3().set(0.1f, 0.1f, 0.0f), Fvector3().set(20.0f, 20.0f, 0.0f));
+ 	
+ #ifdef DEBUG
+     extern BOOL debug_destroy;
