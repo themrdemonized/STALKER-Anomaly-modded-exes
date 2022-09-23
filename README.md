@@ -39,6 +39,8 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
     * The step of zoom adjustment is more precise. Also, it's possible to adjust the step of zoom with the console command zoom_step_count [1.0, 10.0], this option is also applicable to the binoculars.
   * In the new version all implementations from fakelens.script have moved directly to the engine. fakelens.script remained as a layer between the engine and scopeRadii.script
  
+* Fix of using `%c[color]` tag with multibyte font causing unexpected line ending by DPurple
+
 * Screen Space Shaders by Ascii1457 (https://www.moddb.com/mods/stalker-anomaly/addons/screen-space-shaders)
 
 ## How to make my own modded exe?
