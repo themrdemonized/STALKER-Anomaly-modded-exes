@@ -1,0 +1,141 @@
+diff --git a/src/xrCore/xrDebugNew.cpp b/src/xrCore/xrDebugNew.cpp
+index dd65e49..ed72b7a 100644
+--- a/src/xrCore/xrDebugNew.cpp
++++ b/src/xrCore/xrDebugNew.cpp
+@@ -67,6 +67,20 @@ XRCORE_API xrDebug Debug;
+ 
+ static bool error_after_dialog = false;
+ 
++namespace crash_saving
++{
++    void (*save_impl)() = nullptr;
++    bool enabled = true;
++
++    void save()
++    {
++        if (enabled && save_impl != nullptr)
++        {
++            (*save_impl)();
++        }
++    }
++}
++
+ //extern void BuildStackTrace();
+ //extern char g_stackTrace[100][4096];
+ //extern int g_stackTraceCount;
+@@ -206,6 +220,9 @@ void xrDebug::do_exit(const std::string& message)
+ void xrDebug::backend(const char* expression, const char* description, const char* argument0, const char* argument1,
+                       const char* file, int line, const char* function, bool& ignore_always)
+ {
++    // we save first
++    crash_saving::save();
++    
+ 	static xrCriticalSection CS
+ #ifdef PROFILE_CRITICAL_SECTIONS
+         (MUTEX_PROFILE_ID(xrDebug::backend))
+diff --git a/src/xrGame/Level.cpp b/src/xrGame/Level.cpp
+index 2f93a35..519ce9d 100644
+--- a/src/xrGame/Level.cpp
++++ b/src/xrGame/Level.cpp
+@@ -97,6 +97,30 @@ u16	GetSpawnInfo(NET_Packet &P, u16 &parent_id)
+ //-AVO
+ 
+ 
++namespace crash_saving {
++	extern void(*save_impl)();
++	static bool g_isSaving = false;
++	static int saveCount = 0;
++
++	void _save_impl()
++	{
++		if (g_isSaving) return;
++		g_isSaving = true;
++		NET_Packet net_packet;
++		net_packet.w_begin(M_SAVE_GAME);
++		char path[] = { "FATAL_CTD_SAVE_X" };
++		path[15] = '0' + saveCount++;
++		net_packet.w_stringZ(path);
++		net_packet.w_u8(1);
++		CLevel& level = Level();
++		if (&level != nullptr)
++		{
++			level.Send(net_packet, net_flags(1));
++		}
++
++	}
++}
++
+ CLevel::CLevel() :
+ 	IPureClient(Device.GetTimerGlobal())
+ #ifdef PROFILE_CRITICAL_SECTIONS
+@@ -141,12 +165,14 @@ CLevel::CLevel() :
+ 	g_player_hud = xr_new<player_hud>();
+ 	g_player_hud->load_default();
+ 	Msg("%s", Core.Params);
++	crash_saving::save_impl = crash_saving::_save_impl; // CLevel ready, we can save now
+ }
+ 
+ extern CAI_Space* g_ai_space;
+ 
+ CLevel::~CLevel()
+ {
++	crash_saving::save_impl = nullptr; // CLevel not available, disable crash save
+ 	xr_delete(g_player_hud);
+ 	delete_data(hud_zones_list);
+ 	hud_zones_list = nullptr;
+diff --git a/src/xrGame/console_commands.cpp b/src/xrGame/console_commands.cpp
+index ff9c11a..02fcf9d 100644
+--- a/src/xrGame/console_commands.cpp
++++ b/src/xrGame/console_commands.cpp
+@@ -2001,6 +2001,43 @@ public:
+ 	}
+ };
+ 
++namespace crash_saving {
++	extern bool enabled;
++}
++
++class CCC_ToggleCrashSaving : public IConsole_Command
++{
++public:
++	CCC_ToggleCrashSaving(LPCSTR N) : IConsole_Command(N) { bEmptyArgsHandled = false; };
++
++	virtual void Execute(LPCSTR args)
++	{
++		if (EQ(args, "on")) crash_saving::enabled = true;
++		else if (EQ(args, "off")) crash_saving::enabled = false;
++		else if (EQ(args, "1")) crash_saving::enabled = true;
++		else if (EQ(args, "0")) crash_saving::enabled = false;
++		else InvalidSyntax();
++	}
++
++	virtual void Status(TStatus& S)
++	{
++		xr_strcpy(S, crash_saving::enabled ? "on" : "off");
++	}
++
++	virtual void Info(TInfo& I)
++	{
++		xr_strcpy(I, "'on/off' or '1/0'");
++	}
++
++	virtual void fill_tips(vecTips& tips, u32 mode)
++	{
++		TStatus str;
++		xr_sprintf(str, sizeof(str), "%s (current) [on/off]", crash_saving::enabled ? "on" : "off");
++		tips.push_back(str);
++	}
++};
++
++
+ void CCC_RegisterCommands()
+ {
+ 	//Not needed for a singleplayer-only mod
+@@ -2527,4 +2564,7 @@ void CCC_RegisterCommands()
+     CMD3(CCC_Mask, "sds_enable", &zoomFlags, SDS);
+ 
+     CMD4(CCC_Float, "zoom_step_count", &n_zoom_step_count, 1.0f, 10.0f);
++
++	//Toggle crash saving
++	CMD1(CCC_ToggleCrashSaving, "crash_save");
+ }
