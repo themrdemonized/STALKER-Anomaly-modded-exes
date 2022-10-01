@@ -1,0 +1,887 @@
+diff --git a/src/Layers/xrRender/SkeletonCustom.cpp b/src/Layers/xrRender/SkeletonCustom.cpp
+index b738622..3267696 100644
+--- a/src/Layers/xrRender/SkeletonCustom.cpp
++++ b/src/Layers/xrRender/SkeletonCustom.cpp
+@@ -542,6 +542,7 @@ void CKinematics::Visibility_Update()
+ 			children_invisible.push_back(children[c_it]);
+ 			swap(children[c_it], children.back());
+ 			children.pop_back();
++			Update_Visibility = TRUE;
+ 		}
+ 	}
+ 
+@@ -556,6 +557,7 @@ void CKinematics::Visibility_Update()
+ 			children.push_back(children_invisible[_it]);
+ 			swap(children_invisible[_it], children_invisible.back());
+ 			children_invisible.pop_back();
++			Update_Visibility = TRUE;
+ 		}
+ 	}
+ }
+diff --git a/src/xrGame/Weapon.cpp b/src/xrGame/Weapon.cpp
+index 080f84d..392bc0a 100644
+--- a/src/xrGame/Weapon.cpp
++++ b/src/xrGame/Weapon.cpp
+@@ -101,6 +101,10 @@ CWeapon::CWeapon()
+ 
+ 	//PP.RQ.range = 0.f;
+ 	//PP.RQ.set(NULL, 0.f, -1);
++
++	bHasBulletsToHide = false;
++	bullet_cnt = 0;
++	IsCustomReloadAvaible = false;
+ }
+ 
+ CWeapon::~CWeapon()
+@@ -1150,11 +1154,22 @@ bool CWeapon::Action(u16 cmd, u32 flags)
+ 						{
+ 							if (pActor && pActor->is_safemode())
+ 								pActor->set_safemode(false);
++
++							if (GetState() != eAimStart && HudAnimationExist("anm_idle_aim_start"))
++								SwitchState(eAimStart);
++							else if (GetState() != eIdle)
++								SwitchState(eIdle);
++
+ 							OnZoomIn();
+ 						}
+ 					}
+ 					else
++					{
++						if (GetState() != eAimEnd && HudAnimationExist("anm_idle_aim_end"))
++							SwitchState(eAimEnd);
++
+ 						OnZoomOut();
++					}
+ 				}
+ 			}
+ 			else
+@@ -1165,11 +1180,21 @@ bool CWeapon::Action(u16 cmd, u32 flags)
+ 					{
+ 						if (pActor && pActor->is_safemode())
+ 							pActor->set_safemode(false);
++
++						if (GetState() != eAimStart && HudAnimationExist("anm_idle_aim_start"))
++							SwitchState(eAimStart);
++						else if (GetState() != eIdle)
++							SwitchState(eIdle);
++
+ 						OnZoomIn();
+ 					}
+ 				}
+ 				else if (IsZoomed())
++				{
++					if (GetState() != eAimEnd && HudAnimationExist("anm_idle_aim_end"))
++						SwitchState(eAimEnd);
+ 					OnZoomOut();
++				}
+ 			}
+ 			return true;
+ 		}
+@@ -1430,6 +1455,30 @@ void CWeapon::Reload()
+ 	OnZoomOut();
+ }
+ 
++void CWeapon::HUD_VisualBulletUpdate(bool force, int force_idx)
++{
++	if (!bHasBulletsToHide)
++		return;
++
++	if (!GetHUDmode())	return;
++
++	bool hide = true;
++
++	//Msg("Print %d bullets", last_hide_bullet);
++
++	if (last_hide_bullet == bullet_cnt || force) hide = false;
++
++	for (u8 b = 0; b < bullet_cnt; b++)
++	{
++		u16 bone_id = HudItemData()->m_model->LL_BoneID(bullets_bones[b]);
++
++		if (bone_id != BI_NONE)
++			HudItemData()->set_bone_visible(bullets_bones[b], !hide);
++
++		if (b == last_hide_bullet) hide = false;
++	}
++}
++
+ bool CWeapon::IsGrenadeLauncherAttached() const
+ {
+ 	return (ALife::eAddonAttachable == m_eGrenadeLauncherStatus &&
+diff --git a/src/xrGame/Weapon.h b/src/xrGame/Weapon.h
+index 9880065..1618aea 100644
+--- a/src/xrGame/Weapon.h
++++ b/src/xrGame/Weapon.h
+@@ -81,6 +81,16 @@ public:
+ 	IC float GetSecondVPZoomFactor() const { return m_zoom_params.m_fSecondVPFovFactor; }
+ 	IC float IsSecondVPZoomPresent() const { return GetSecondVPZoomFactor() > 0.005f; }
+ 
++
++	// Up
++	// Magazine system & etc
++	xr_vector<shared_str> bullets_bones;
++	int bullet_cnt;
++	int last_hide_bullet;
++	bool bHasBulletsToHide;
++
++	virtual void HUD_VisualBulletUpdate(bool force = false, int force_idx = -1);
++
+ 	void UpdateSecondVP();
+ 
+ 	virtual void UpdateCL();
+@@ -142,6 +152,8 @@ public:
+ 		eMisfire,
+ 		eSwitch,
+ 		eSwitchMode,
++		eAimStart,
++		eAimEnd,
+ 	};
+ 
+ 	enum EWeaponSubStates
+@@ -149,6 +161,7 @@ public:
+ 		eSubstateReloadBegin = 0,
+ 		eSubstateReloadInProcess,
+ 		eSubstateReloadEnd,
++		eSubstateReloadInProcessEmptyEnd,
+ 	};
+ 
+ 	enum
+@@ -195,6 +208,8 @@ protected:
+ public:
+ 	u8 m_sub_state;
+ 
++	bool IsCustomReloadAvaible;
++
+ 	bool IsGrenadeLauncherAttached() const;
+ 	bool IsScopeAttached() const;
+ 	bool IsSilencerAttached() const;
+diff --git a/src/xrGame/WeaponAutomaticShotgun.cpp b/src/xrGame/WeaponAutomaticShotgun.cpp
+index 0601295..a8b0d07 100644
+--- a/src/xrGame/WeaponAutomaticShotgun.cpp
++++ b/src/xrGame/WeaponAutomaticShotgun.cpp
+@@ -26,6 +26,11 @@ void CWeaponAutomaticShotgun::Load(LPCSTR section)
+ 	{
+ 		m_bTriStateReload = !!pSettings->r_bool(section, "tri_state_reload");
+ 	};
++	if (pSettings->line_exist(section, "bas_state_reload"))
++	{
++		IsCustomReloadAvaible = !!pSettings->r_bool(section, "bas_state_reload");
++	}
++	
+ 	if (m_bTriStateReload)
+ 	{
+ 		m_sounds.LoadSound(section, "snd_open_weapon", "sndOpen", false, m_eSoundOpen);
+@@ -35,6 +40,8 @@ void CWeaponAutomaticShotgun::Load(LPCSTR section)
+ 		m_sounds.LoadSound(section, "snd_close_weapon", "sndClose", false, m_eSoundClose);
+ 
+ 		m_sounds.LoadSound(section, "snd_close_weapon_empty", "sndCloseEmpty", false, m_eSoundClose);
++
++		m_sounds.LoadSound(section, "snd_shoot_last", "sndShootL", false, m_eSoundShot);
+ 	};
+ }
+ 
+@@ -49,10 +56,11 @@ bool CWeaponAutomaticShotgun::Action(u16 cmd, u32 flags)
+ 
+ 	if (m_bTriStateReload && GetState() == eReload &&
+ 		cmd == kWPN_FIRE && flags & CMD_START &&
+-		m_sub_state == eSubstateReloadInProcess) //остановить перезагрузку
+-	{
++		m_sub_state == eSubstateReloadInProcess || m_sub_state == eSubstateReloadInProcessEmptyEnd) //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
++	{	
+ 		AddCartridge(1);
+ 		m_sub_state = eSubstateReloadEnd;
++		if(IsCustomReloadAvaible) SwitchState(eReload);
+ 		return true;
+ 	}
+ 	return false;
+@@ -78,16 +86,28 @@ void CWeaponAutomaticShotgun::OnAnimationEnd(u32 state)
+ 			{
+ 				m_sub_state = eSubstateReloadEnd;
+ 			}
++			else if (BeginReloadWasEmpty && IsCustomReloadAvaible)
++			{
++				m_sub_state = eSubstateReloadInProcessEmptyEnd;
++				
++			}
+ 			SwitchState(eReload);
+ 		}
+ 		break;
+ 
+ 	case eSubstateReloadEnd:
+ 		{
++			BeginReloadWasEmpty = false;
+ 			m_sub_state = eSubstateReloadBegin;
+ 			SwitchState(eIdle);
+ 		}
+ 		break;
++	case eSubstateReloadInProcessEmptyEnd:
++		{
++			m_sub_state = eSubstateReloadBegin;
++			SwitchState(eReload);
++		}
++		break;
+ 	};
+ }
+ 
+@@ -139,9 +159,32 @@ void CWeaponAutomaticShotgun::OnStateSwitch(u32 S, u32 oldState)
+ 	case eSubstateReloadEnd:
+ 		switch2_EndReload();
+ 		break;
++	case eSubstateReloadInProcessEmptyEnd:
++		switch2_EndReload();
++		break;
+ 	};
+ }
+ 
++void CWeaponAutomaticShotgun::PlaySoundShot()
++{
++	// Temp fix for shotguns last shot
++	if (iAmmoElapsed > 1 || !HudAnimationExist("anm_shot_l"))
++	{
++		inherited::PlaySoundShot();
++	}
++	else
++	{
++		if (m_sounds.FindSoundItem("sndShootL", false))
++		{
++			m_sounds.PlaySound("sndShootL", get_LastFP(), H_Root(), !!GetHUDmode(), false, (u8)-1);
++		}
++		else
++		{
++			inherited::PlaySoundShot();
++		}
++	}
++}
++
+ void CWeaponAutomaticShotgun::switch2_StartReload()
+ {
+ 	BeginReloadWasEmpty = !m_magazine.size();
+@@ -161,7 +204,6 @@ void CWeaponAutomaticShotgun::switch2_AddCartgidge()
+ void CWeaponAutomaticShotgun::switch2_EndReload()
+ {
+ 	SetPending(FALSE);
+-
+ 	if (BeginReloadWasEmpty && m_sounds.FindSoundItem("sndCloseEmpty", false))
+ 		PlaySound("sndCloseEmpty", get_LastFP());
+ 	else
+@@ -250,7 +292,7 @@ u8 CWeaponAutomaticShotgun::AddCartridge(u8 cnt)
+ 
+ 	VERIFY((u32)iAmmoElapsed == m_magazine.size());
+ 
+-	//выкинуть коробку патронов, если она пустая
++	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+ 	if (m_pCurrentAmmo && !m_pCurrentAmmo->m_boxCurr && OnServer())
+ 		m_pCurrentAmmo->SetDropManual(TRUE);
+ 
+diff --git a/src/xrGame/WeaponAutomaticShotgun.h b/src/xrGame/WeaponAutomaticShotgun.h
+index 6203831..ad2056d 100644
+--- a/src/xrGame/WeaponAutomaticShotgun.h
++++ b/src/xrGame/WeaponAutomaticShotgun.h
+@@ -31,7 +31,7 @@ protected:
+ 	virtual void OnAnimationEnd(u32 state);
+ 	void TriStateReload();
+ 	virtual void OnStateSwitch(u32 S, u32 oldState);
+-
++	virtual void PlaySoundShot();
+ 	bool HaveCartridgeInInventory(u8 cnt);
+ 	bool BeginReloadWasEmpty;
+ 	virtual u8 AddCartridge(u8 cnt);
+diff --git a/src/xrGame/WeaponMagazineExtended.cpp b/src/xrGame/WeaponMagazineExtended.cpp
+new file mode 100644
+index 0000000..37fdac9
+--- /dev/null
++++ b/src/xrGame/WeaponMagazineExtended.cpp
+@@ -0,0 +1,77 @@
++#include "stdafx.h"
++#include "WeaponMagazined.h"
++#include "WeaponMagazinedWGrenade.h"
++
++void CWeaponMagazined::switch2_StartAim()
++{
++	VERIFY(GetState() == eAimStart);
++
++	if(iAmmoElapsed == 0 && HudAnimationExist("anm_idle_aim_start_empty"))
++		PlayHUDMotion("anm_idle_aim_start_empty", TRUE, this, GetState());
++	else
++		PlayHUDMotion("anm_idle_aim_start", TRUE, this, GetState());
++}
++
++void CWeaponMagazined::switch2_EndAim()
++{
++	VERIFY(GetState() == eAimEnd);
++
++	if (iAmmoElapsed == 0 && HudAnimationExist("anm_idle_aim_end_empty"))
++		PlayHUDMotion("anm_idle_aim_end_empty", TRUE, this, GetState());
++	else
++		PlayHUDMotion("anm_idle_aim_end", TRUE, this, GetState());
++}
++
++void CWeaponMagazinedWGrenade::switch2_StartAim()
++{
++	VERIFY(GetState() == eAimStart);
++
++	if (IsGrenadeLauncherAttached())
++	{
++		if (m_bGrenadeMode)
++		{
++			if (iAmmoElapsed == 0 && HudAnimationExist("anm_idle_aim_start_g_empty"))
++				PlayHUDMotion("anm_idle_aim_start_g_empty", TRUE, this, GetState());
++			else
++				PlayHUDMotion("anm_idle_aim_start_g", TRUE, this, GetState());
++		}
++		else
++		{
++			if (iAmmoElapsed == 0 && HudAnimationExist("anm_idle_aim_start_w_gl_empty"))
++				PlayHUDMotion("anm_idle_aim_start_w_gl_empty", TRUE, this, GetState());
++			else
++				PlayHUDMotion("anm_idle_aim_start_w_gl", TRUE, this, GetState());
++		}
++	}
++	else
++		inherited::switch2_StartAim();
++
++
++	
++}
++
++void CWeaponMagazinedWGrenade::switch2_EndAim()
++{
++	VERIFY(GetState() == eAimEnd);
++
++	if (IsGrenadeLauncherAttached())
++	{
++		if (m_bGrenadeMode)
++		{
++			if (iAmmoElapsed == 0 && HudAnimationExist("anm_idle_aim_end_g_empty"))
++				PlayHUDMotion("anm_idle_aim_end_g_empty", TRUE, this, GetState());
++			else
++				PlayHUDMotion("anm_idle_aim_end_g", TRUE, this, GetState());
++		}
++		else
++		{
++			if (iAmmoElapsed == 0 && HudAnimationExist("anm_idle_aim_end_w_gl_empty"))
++				PlayHUDMotion("anm_idle_aim_end_w_gl_empty", TRUE, this, GetState());
++			else
++				PlayHUDMotion("anm_idle_aim_end_w_gl", TRUE, this, GetState());
++		}
++	}
++	else
++		inherited::switch2_EndAim();
++
++}
+\ No newline at end of file
+diff --git a/src/xrGame/WeaponMagazined.cpp b/src/xrGame/WeaponMagazined.cpp
+index b933f2a..122ffd7 100644
+--- a/src/xrGame/WeaponMagazined.cpp
++++ b/src/xrGame/WeaponMagazined.cpp
+@@ -196,6 +196,20 @@ void CWeaponMagazined::Load(LPCSTR section)
+ 		empty_click_speed = READ_IF_EXISTS(pSettings, r_float, *hud_sect, "empty_click_anm_speed", 1.f);
+ 		empty_click_power = READ_IF_EXISTS(pSettings, r_float, *hud_sect, "empty_click_anm_power", 1.f);
+ 	}
++
++	if (pSettings->line_exist(section, "bullet_bones"))
++	{
++		bHasBulletsToHide = true;
++		LPCSTR str = pSettings->r_string(section, "bullet_bones");
++		for (int i = 0, count = _GetItemCount(str); i < count; ++i)
++		{
++			string128 bullet_bone_name;
++			_GetItem(str, i, bullet_bone_name);
++			bullets_bones.push_back(bullet_bone_name);
++			bullet_cnt++;
++		}
++
++	}
+ }
+ 
+ void CWeaponMagazined::FireStart()
+@@ -343,8 +357,54 @@ void CWeaponMagazined::OnMagazineEmpty()
+ 	inherited::OnMagazineEmpty();
+ }
+ 
++int CWeaponMagazined::CheckAmmoBeforeReload(u8& v_ammoType)
++{
++	if (m_set_next_ammoType_on_reload != undefined_ammo_type)
++		v_ammoType = m_set_next_ammoType_on_reload;
++
++	//Msg("Ammo type in next reload : %d", m_set_next_ammoType_on_reload);
++
++	if (m_ammoTypes.size() <= v_ammoType)
++	{
++		//Msg("Ammo type is wrong : %d", v_ammoType);
++		return 0;
++	}
++
++	LPCSTR tmp_sect_name = m_ammoTypes[v_ammoType].c_str();
++
++	if (!tmp_sect_name)
++	{
++		//Msg("Sect name is wrong");
++		return 0;
++	}
++
++	CWeaponAmmo* ammo = smart_cast<CWeaponAmmo*>(m_pInventory->GetAny(tmp_sect_name));
++
++	if (!ammo && !m_bLockType)
++	{
++		for (u8 i = 0; i < u8(m_ammoTypes.size()); ++i)
++		{
++			//РїСЂРѕРІРµСЂРёС‚СЊ РїР°С‚СЂРѕРЅС‹ РІСЃРµС… РїРѕРґС…РѕРґСЏС‰РёС… С‚РёРїРѕРІ
++			ammo = smart_cast<CWeaponAmmo*>(m_pInventory->GetAny(m_ammoTypes[i].c_str()));
++			if (ammo)
++			{
++				v_ammoType = i;
++				break;
++			}
++		}
++	}
++
++	//Msg("Ammo type %d", v_ammoType);
++
++	return GetAmmoCount(v_ammoType);
++
++}
++
+ void CWeaponMagazined::UnloadMagazine(bool spawn_ammo)
+ {
++	last_hide_bullet = -1;
++	HUD_VisualBulletUpdate();
++
+ 	xr_map<LPCSTR, u16> l_ammo;
+ 
+ 	while (!m_magazine.empty())
+@@ -495,6 +555,7 @@ void CWeaponMagazined::ReloadMagazine()
+ 
+ void CWeaponMagazined::OnStateSwitch(u32 S, u32 oldState)
+ {
++	HUD_VisualBulletUpdate();
+ 	inherited::OnStateSwitch(S, oldState);
+ 	CInventoryOwner* owner = smart_cast<CInventoryOwner*>(this->H_Parent());
+ 	switch (S)
+@@ -509,6 +570,12 @@ void CWeaponMagazined::OnStateSwitch(u32 S, u32 oldState)
+ 		if (smart_cast<CActor*>(this->H_Parent()) && (Level().CurrentViewEntity() == H_Parent()))
+ 			CurrentGameUI()->AddCustomStatic("gun_jammed", true);
+ 		break;
++	case eAimStart:
++		switch2_StartAim();
++		break;
++	case eAimEnd:
++		switch2_EndAim();
++		break;
+ 	case eReload:
+ 		if (owner)
+ 			m_sounds_enabled = owner->CanPlayShHdRldSounds();
+@@ -776,6 +843,9 @@ void CWeaponMagazined::OnShot()
+ 	// Animation
+ 	PlayAnimShoot();
+ 
++	// Update bullets
++	HUD_VisualBulletUpdate();
++
+ 	// Shell Drop
+ 	Fvector vel;
+ 	PHGetLinearVell(vel);
+@@ -845,6 +915,8 @@ void CWeaponMagazined::OnAnimationEnd(u32 state)
+ 		break; // End of Show
+ 	case eIdle: switch2_Idle();
+ 		break; // Keep showing idle
++	case eAimStart: SwitchState(eIdle);		break;
++	case eAimEnd:   SwitchState(eIdle);		break;
+ 	case eSwitchMode: UpdateFireMode();
+ 		SwitchState(eIdle);
+ 		break; // Back to idle
+@@ -1454,6 +1526,9 @@ void CWeaponMagazined::ResetScopeKoeffs()
+ 
+ void CWeaponMagazined::PlayAnimShow()
+ {
++
++	HUD_VisualBulletUpdate();
++
+ 	VERIFY(GetState() == eShowing);
+ 	iAmmoElapsed == 0 && HudAnimationExist("anm_show_empty")
+ 		? PlayHUDMotion("anm_show_empty", FALSE, this, GetState(), 1.f, 0.f, false)
+@@ -1531,17 +1606,24 @@ void CWeaponMagazined::PlayAnimShoot()
+ 	VERIFY(GetState() == eFire);
+ 	if (iAmmoElapsed > 1 || !HudAnimationExist("anm_shot_l"))
+ 	{
+-		PlayHUDMotion("anm_shots", TRUE, this, GetState(), 1.f, 0.f, false);
++		if(!IsZoomed() || !HudAnimationExist("anm_shots_aim"))
++			PlayHUDMotion("anm_shots", TRUE, this, GetState(), 1.f, 0.f, false);
++		else
++			PlayHUDMotion("anm_shots_aim", TRUE, this, GetState(), 1.f, 0.f, false);
+ 	}
+-	else
++	else 
+ 	{
+-		PlayHUDMotion("anm_shot_l", TRUE, this, GetState(), 1.f, 0.f, false);
++		if (!IsZoomed() || !HudAnimationExist("anm_shots_aim_l"))
++			PlayHUDMotion("anm_shot_l", TRUE, this, GetState(), 1.f, 0.f, false);
++		else
++			PlayHUDMotion("anm_shots_aim_l", TRUE, this, GetState(), 1.f, 0.f, false);
+ 	}
+ }
+ 
+ void CWeaponMagazined::OnMotionMark(u32 state, const motion_marks& M)
+ {
+ 	inherited::OnMotionMark(state, M);
++
+ 	if (state == eReload)
+ 	{
+ 		if (bClearJamOnly)
+@@ -1550,9 +1632,26 @@ void CWeaponMagazined::OnMotionMark(u32 state, const motion_marks& M)
+ 			bClearJamOnly = false;
+ 			return;
+ 		}
+-			
+-		if (m_needReload)
+-			ReloadMagazine();
++		
++		if (bHasBulletsToHide && xr_strcmp(M.name.c_str(),"lmg_reload")==0)
++		{
++			u8 ammo_type = m_ammoType;
++			int ae = CheckAmmoBeforeReload(ammo_type);
++
++			if (ammo_type == m_ammoType)
++			{
++				ae += iAmmoElapsed;
++			}
++
++			last_hide_bullet = ae >= bullet_cnt ? bullet_cnt : bullet_cnt - ae - 1;
++
++			HUD_VisualBulletUpdate();
++		}
++		else
++		{
++			if (m_needReload)
++				ReloadMagazine();
++		}
+ 	}
+ }
+ 
+@@ -1691,6 +1790,15 @@ bool CWeaponMagazined::GetBriefInfo(II_BriefInfo& info)
+ 	xr_sprintf(int_str, "%d", ae);
+ 	info.cur_ammo = int_str;
+ 
++	if (bHasBulletsToHide)
++	{
++		last_hide_bullet = ae >= bullet_cnt ? bullet_cnt : bullet_cnt - ae - 1;
++
++		if (ae == 0) last_hide_bullet = -1;
++
++		//HUD_VisualBulletUpdate();
++	}
++
+ 	if (HasFireModes())
+ 	{
+ 		if (m_iQueueSize == WEAPON_ININITE_QUEUE)
+diff --git a/src/xrGame/WeaponMagazined.h b/src/xrGame/WeaponMagazined.h
+index cedd588..e45bdd2 100644
+--- a/src/xrGame/WeaponMagazined.h
++++ b/src/xrGame/WeaponMagazined.h
+@@ -46,6 +46,9 @@ protected:
+ 	virtual void switch2_Hidden();
+ 	virtual void switch2_Showing();
+ 
++	virtual void switch2_StartAim();
++	virtual void switch2_EndAim();
++
+ 	virtual void OnShot();
+ 	virtual void PlaySoundShot();
+ 
+@@ -96,6 +99,7 @@ public:
+ 	virtual void net_Import(NET_Packet& P);
+ 
+ 	virtual void OnMotionMark(u32 state, const motion_marks& M);
++	virtual int     CheckAmmoBeforeReload(u8& v_ammoType);
+ 
+ 	virtual void OnH_A_Chield();
+ 
+diff --git a/src/xrGame/WeaponMagazinedWGrenade.cpp b/src/xrGame/WeaponMagazinedWGrenade.cpp
+index d46318b..9aa4bd3 100644
+--- a/src/xrGame/WeaponMagazinedWGrenade.cpp
++++ b/src/xrGame/WeaponMagazinedWGrenade.cpp
+@@ -1,4 +1,4 @@
+-п»ї#include "stdafx.h"
++#include "stdafx.h"
+ #include "weaponmagazinedwgrenade.h"
+ #include "entity.h"
+ #include "ParticlesObject.h"
+@@ -154,6 +154,36 @@ void CWeaponMagazinedWGrenade::OnShot()
+ 		inherited::OnShot();
+ }
+ 
++void CWeaponMagazinedWGrenade::PlayAnimFireModeSwitch()
++{
++	if (IsGrenadeLauncherAttached())
++	{
++		if (!m_bGrenadeMode)
++		{
++			if (!m_bHasDifferentFireModes) return;
++			if (m_aFireModes.size() <= 1) return;
++			if (GetState() != eIdle) return;
++
++			if (HudAnimationExist("anm_switch_mode_w_gl"))
++			{
++				SetPending(TRUE);
++				iAmmoElapsed == 0 && HudAnimationExist("anm_switch_mode_w_gl_empty")
++					? PlayHUDMotion("anm_switch_mode_w_gl_empty", TRUE, this, eSwitchMode)
++					: PlayHUDMotion("anm_switch_mode_w_gl", TRUE, this, eSwitchMode);
++			}
++			else
++				UpdateFireMode();
++
++			if (m_sounds.FindSoundItem("sndSwitchMode", false))
++				PlaySound("sndSwitchMode", get_LastFP());
++		}
++	}
++	else
++	{
++		inherited::PlayAnimFireModeSwitch();
++	}
++}
++
+ bool CWeaponMagazinedWGrenade::SwitchMode()
+ {
+ 	bool bUsefulStateToSwitch = ((eIdle == GetState()) || (eHidden == GetState()) || (eMisfire == GetState())) && (!IsPending());
+@@ -678,6 +708,9 @@ void CWeaponMagazinedWGrenade::PlayAnimShow()
+ 	VERIFY(GetState() == eShowing);
+ 	if (IsGrenadeLauncherAttached())
+ 	{
++		if (!m_bGrenadeMode)
++			HUD_VisualBulletUpdate();
++
+ 		if (!m_bGrenadeMode)
+ 			iAmmoElapsed == 0 && HudAnimationExist("anm_show_empty_w_gl")
+ 			? PlayHUDMotion("anm_show_empty_w_gl", FALSE, this, GetState(), 1.f, 0.f, false)
+@@ -856,12 +889,18 @@ void CWeaponMagazinedWGrenade::PlayAnimShoot()
+ 	{
+ 		if (iAmmoElapsed > 1 || !HudAnimationExist("anm_shot_g_l"))
+ 		{
+-			PlayHUDMotion("anm_shots_g", TRUE, this, GetState(), 1.f, 0.f, false);
++			if (!IsZoomed() || !HudAnimationExist("anm_shots_g_aim"))
++				PlayHUDMotion("anm_shots_g", TRUE, this, GetState(), 1.f, 0.f, false);
++			else
++				PlayHUDMotion("anm_shots_g_aim", TRUE, this, GetState(), 1.f, 0.f, false);
+ 		}
+ 		else
+ 		{
+-			PlayHUDMotion("anm_shot_g_l", TRUE, this, GetState(), 1.f, 0.f, false);
+-		}
++			if(!IsZoomed() || !HudAnimationExist("anm_shot_g_l_aim"))
++				PlayHUDMotion("anm_shot_g_l", TRUE, this, GetState(), 1.f, 0.f, false);
++			else
++				PlayHUDMotion("anm_shot_g_l_aim", TRUE, this, GetState(), 1.f, 0.f, false);
++		}		
+ 	}
+ 	else
+ 	{
+@@ -869,11 +908,17 @@ void CWeaponMagazinedWGrenade::PlayAnimShoot()
+ 		if (IsGrenadeLauncherAttached())
+ 			if (iAmmoElapsed > 1 || !HudAnimationExist("anm_shot_w_gl_l"))
+ 			{
+-				PlayHUDMotion("anm_shots_w_gl", TRUE, this, GetState(), 1.f, 0.f, false);
++				if (!IsZoomed() || !HudAnimationExist("anm_shots_w_gl_aim"))
++					PlayHUDMotion("anm_shots_w_gl", TRUE, this, GetState(), 1.f, 0.f, false);
++				else
++					PlayHUDMotion("anm_shots_w_gl_aim", TRUE, this, GetState(), 1.f, 0.f, false);
+ 			}
+ 			else
+ 			{
+-				PlayHUDMotion("anm_shot_w_gl_l", TRUE, this, GetState(), 1.f, 0.f, false);
++				if (!IsZoomed() || !HudAnimationExist("anm_shot_w_gl_l_aim"))
++					PlayHUDMotion("anm_shot_w_gl_l", TRUE, this, GetState(), 1.f, 0.f, false);
++				else
++					PlayHUDMotion("anm_shot_w_gl_l_aim", TRUE, this, GetState(), 1.f, 0.f, false);
+ 			}
+ 		else
+ 			inherited::PlayAnimShoot();
+@@ -1116,6 +1161,13 @@ bool CWeaponMagazinedWGrenade::GetBriefInfo(II_BriefInfo& info)
+ 	int ae = GetAmmoElapsed();
+ 	xr_sprintf(int_str, "%d", ae);
+ 	info.cur_ammo._set(int_str);
++
++	if (bHasBulletsToHide && !m_bGrenadeMode)
++	{
++		last_hide_bullet = ae >= bullet_cnt ? bullet_cnt : bullet_cnt - ae - 1;
++		if (ae == 0) last_hide_bullet = -1;
++	}
++
+ 	if (HasFireModes())
+ 	{
+ 		if (m_iQueueSize == WEAPON_ININITE_QUEUE)
+diff --git a/src/xrGame/WeaponMagazinedWGrenade.h b/src/xrGame/WeaponMagazinedWGrenade.h
+index ec9b0b8..f5e014f 100644
+--- a/src/xrGame/WeaponMagazinedWGrenade.h
++++ b/src/xrGame/WeaponMagazinedWGrenade.h
+@@ -41,6 +41,10 @@ public:
+ 	virtual void OnStateSwitch(u32 S, u32 oldState);
+ 
+ 	virtual void switch2_Reload();
++	virtual void switch2_StartAim();
++	virtual void switch2_EndAim();
++
++
+ 	virtual void state_Fire(float dt);
+ 	virtual void OnShot();
+ 	virtual void OnEvent(NET_Packet& P, u16 type);
+@@ -50,7 +54,7 @@ public:
+ 
+ 	virtual void UpdateSounds();
+ 
+-	//переключение в режим подствольника
++	//РїРµСЂРµРєР»СЋС‡РµРЅРёРµ РІ СЂРµР¶РёРј РїРѕРґСЃС‚РІРѕР»СЊРЅРёРєР°
+ 	virtual bool SwitchMode();
+ 	void PerformSwitchGL();
+ 	void OnAnimationEnd(u32 state);
+@@ -59,13 +63,14 @@ public:
+ 
+ 	virtual bool IsNecessaryItem(const shared_str& item_sect);
+ 	virtual float Weight() const;
+-	//виртуальные функции для проигрывания анимации HUD
++	//РІРёСЂС‚СѓР°Р»СЊРЅС‹Рµ С„СѓРЅРєС†РёРё РґР»СЏ РїСЂРѕРёРіСЂС‹РІР°РЅРёСЏ Р°РЅРёРјР°С†РёРё HUD
+ 	virtual void PlayAnimShow();
+ 	virtual void PlayAnimHide();
+ 	virtual void PlayAnimReload();
+ 	virtual void PlayAnimIdle();
+ 	virtual void PlayAnimShoot();
+ 	virtual void PlayAnimModeSwitch();
++	virtual void PlayAnimFireModeSwitch();
+ 	virtual bool TryPlayAnimBore();
+ 
+ 	//Script exports
+@@ -105,8 +110,8 @@ private:
+ 	virtual bool install_upgrade_ammo_class(LPCSTR section, bool test);
+ 
+ public:
+-	//дополнительные параметры патронов 
+-	//для подствольника
++	//РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹ РїР°С‚СЂРѕРЅРѕРІ 
++	//РґР»СЏ РїРѕРґСЃС‚РІРѕР»СЊРЅРёРєР°
+ 	//-	CWeaponAmmo*			m_pAmmo2;
+ 	xr_vector<shared_str> m_ammoTypes2;
+ 	u8 m_ammoType2;
+diff --git a/src/xrGame/WeaponShotgun.cpp b/src/xrGame/WeaponShotgun.cpp
+index dfac63a..a930269 100644
+--- a/src/xrGame/WeaponShotgun.cpp
++++ b/src/xrGame/WeaponShotgun.cpp
+@@ -31,6 +31,10 @@ void CWeaponShotgun::Load(LPCSTR section)
+ 	{
+ 		m_bTriStateReload = !!pSettings->r_bool(section, "tri_state_reload");
+ 	};
++	if (pSettings->line_exist(section, "bas_state_reload"))
++	{
++		IsCustomReloadAvaible = !!pSettings->r_bool(section, "bas_state_reload");
++	}
+ 	if (m_bTriStateReload)
+ 	{
+ 		m_sounds.LoadSound(section, "snd_open_weapon", "sndOpen", false, m_eSoundOpen);
+@@ -56,7 +60,7 @@ bool CWeaponShotgun::Action(u16 cmd, u32 flags)
+ 
+ 	if (m_bTriStateReload && GetState() == eReload &&
+ 		cmd == kWPN_FIRE && flags & CMD_START &&
+-		m_sub_state == eSubstateReloadInProcess) //остановить перезагрузку
++		m_sub_state == eSubstateReloadInProcess || m_sub_state == eSubstateReloadInProcessEmptyEnd) //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+ 	{
+ 		AddCartridge(1);
+ 		m_sub_state = eSubstateReloadEnd;
+@@ -85,16 +89,27 @@ void CWeaponShotgun::OnAnimationEnd(u32 state)
+ 			{
+ 				m_sub_state = eSubstateReloadEnd;
+ 			}
++			else if (BeginReloadWasEmpty && IsCustomReloadAvaible)
++			{
++				m_sub_state = eSubstateReloadInProcessEmptyEnd;
++			}
+ 			SwitchState(eReload);
+ 		}
+ 		break;
+ 
+ 	case eSubstateReloadEnd:
+ 		{
++			BeginReloadWasEmpty = false;
+ 			m_sub_state = eSubstateReloadBegin;
+ 			SwitchState(eIdle);
+ 		}
+ 		break;
++	case eSubstateReloadInProcessEmptyEnd:
++		{	
++			m_sub_state = eSubstateReloadBegin;
++			SwitchState(eReload);
++		}
++		break;
+ 	};
+ }
+ 
+@@ -146,6 +161,9 @@ void CWeaponShotgun::OnStateSwitch(u32 S, u32 oldState)
+ 	case eSubstateReloadEnd:
+ 		switch2_EndReload();
+ 		break;
++	case eSubstateReloadInProcessEmptyEnd:
++		switch2_EndReload();
++		break;
+ 	};
+ }
+ 
+@@ -257,7 +275,7 @@ u8 CWeaponShotgun::AddCartridge(u8 cnt)
+ 
+ 	VERIFY((u32)iAmmoElapsed == m_magazine.size());
+ 
+-	//выкинуть коробку патронов, если она пустая
++	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+ 	if (m_pCurrentAmmo && !m_pCurrentAmmo->m_boxCurr && OnServer())
+ 		m_pCurrentAmmo->SetDropManual(TRUE);
+ 
+diff --git a/src/xrGame/player_hud.cpp b/src/xrGame/player_hud.cpp
+index 96fae36..d05cbf7 100644
+--- a/src/xrGame/player_hud.cpp
++++ b/src/xrGame/player_hud.cpp
+@@ -493,12 +493,16 @@ u32 attachable_hud_item::anim_play(const shared_str& anm_name_b, BOOL bMixIn, co
+ 			strconcat(sizeof(anm_name), anm_name, "camera_effects\\weapon\\", M.name.c_str(), ".anm");
+ 			if (FS.exist(ce_path, "$game_anims$", anm_name))
+ 			{
+-				CAnimatorCamEffector* e = xr_new<CAnimatorCamEffector>();
+-				e->SetType(eCEWeaponAction);
+-				e->SetHudAffect(false);
+-				e->SetCyclic(false);
+-				e->Start(anm_name);
+-				current_actor->Cameras().AddCamEffector(e);
++				if (!(m_attach_place_idx == 1 && m_parent->attached_item(0)))
++				{
++					int rand = ::Random.randI(5000, 10000);
++					CAnimatorCamEffector* e = xr_new<CAnimatorCamEffector>();
++					e->SetType(ECamEffectorType(rand));
++					e->SetHudAffect(false);
++					e->SetCyclic(false);
++					e->Start(anm_name);
++					current_actor->Cameras().AddCamEffector(e);
++				}
+ 			}
+ 		}
+ 	}
+diff --git a/src/xrGame/xrGame.vcxproj b/src/xrGame/xrGame.vcxproj
+index c8e93f0..816bd6c 100644
+--- a/src/xrGame/xrGame.vcxproj
++++ b/src/xrGame/xrGame.vcxproj
+@@ -4092,6 +4092,7 @@
+       <PrecompiledHeaderOutputFile>$(IntDir)$(ProjectName)_script.pch</PrecompiledHeaderOutputFile>
+     </ClCompile>
+     <ClCompile Include="WeaponMagazinedWGrenade.cpp" />
++    <ClCompile Include="WeaponMagazineExtended.cpp" />
+     <ClCompile Include="WeaponPistol.cpp" />
+     <ClCompile Include="WeaponPM.cpp">
+       <PrecompiledHeaderFile>pch_script.h</PrecompiledHeaderFile>
+diff --git a/src/xrGame/xrGame.vcxproj.filters b/src/xrGame/xrGame.vcxproj.filters
+index 9e58e02..9d02177 100644
+--- a/src/xrGame/xrGame.vcxproj.filters
++++ b/src/xrGame/xrGame.vcxproj.filters
+@@ -11037,6 +11037,9 @@
+     <ClCompile Include="script_wallmarks_manager.cpp">
+       <Filter>Core\Client\Effects</Filter>
+     </ClCompile>
++    <ClCompile Include="WeaponMagazineExtended.cpp">
++      <Filter>Core\Client\Objects\items &amp; weapons\Weapons\Custom Weapon\Automatic</Filter>
++    </ClCompile>
+     <ClCompile Include="player_hud_script.cpp">
+       <Filter>Core\Client\Objects\items &amp; weapons\HudItem</Filter>
+     </ClCompile>

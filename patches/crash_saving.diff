@@ -1,5 +1,5 @@
 diff --git a/src/xrCore/xrDebugNew.cpp b/src/xrCore/xrDebugNew.cpp
-index dd65e49..ed72b7a 100644
+index dd65e49..79c6b65 100644
 --- a/src/xrCore/xrDebugNew.cpp
 +++ b/src/xrCore/xrDebugNew.cpp
 @@ -67,6 +67,20 @@ XRCORE_API xrDebug Debug;
@@ -84,10 +84,10 @@ index 2f93a35..519ce9d 100644
  	delete_data(hud_zones_list);
  	hud_zones_list = nullptr;
 diff --git a/src/xrGame/console_commands.cpp b/src/xrGame/console_commands.cpp
-index ff9c11a..02fcf9d 100644
+index 2841970..08ee503 100644
 --- a/src/xrGame/console_commands.cpp
 +++ b/src/xrGame/console_commands.cpp
-@@ -2001,6 +2001,43 @@ public:
+@@ -1998,6 +1998,42 @@ public:
  	}
  };
  
@@ -127,15 +127,15 @@ index ff9c11a..02fcf9d 100644
 +	}
 +};
 +
-+
  void CCC_RegisterCommands()
  {
  	//Not needed for a singleplayer-only mod
-@@ -2527,4 +2564,7 @@ void CCC_RegisterCommands()
-     CMD3(CCC_Mask, "sds_enable", &zoomFlags, SDS);
- 
-     CMD4(CCC_Float, "zoom_step_count", &n_zoom_step_count, 1.0f, 10.0f);
-+
+@@ -2507,6 +2543,8 @@ void CCC_RegisterCommands()
+ 	CMD3(CCC_Token, "g_dead_body_collision", &g_dead_body_collision, dead_body_collision_tokens);
+ 	CMD3(CCC_Mask, "g_feel_grenade", &psDeviceFlags2, rsFeelGrenade);
+ 	CMD3(CCC_Mask, "g_always_active", &psDeviceFlags2, rsAlwaysActive);
 +	//Toggle crash saving
 +	CMD1(CCC_ToggleCrashSaving, "crash_save");
- }
+ 
+ 	if (strstr(Core.Params, "-dbgdev"))
+ 		CMD4(CCC_Float, "g_streff", &streff, -10.f, 10.f);

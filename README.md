@@ -24,6 +24,12 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Added `on_loading_screen_dismissed` callback for when player dismisses loading screen after "Press Any Key to Continue" pressed
   * Added `on_specific_character_dialog_list` callback that allows to manipulate available actor dialog list defined in characted_desc...xml files in `<actor_dialog>` tags
   * Added `on_specific_character_init` callback that allows to manipulate information about specific character such as rank, money, faction, etc.
+
+* BaS engine edits by Mortan
+
+* Fixes and features by DPurple 
+  * Fix of using `%c[color]` tag with multibyte font causing unexpected line ending by DPurple
+  * Ability to autosave the game before crash occurs, can be disabled with console command `crash_save 0` and enabled with `crash_save 1`
   
 * Shader Scopes by CrookR and enhanced by Edzan, comes ready to use in the archive, delete old version first
   * Dynamic zoom is disabled by default for alternative sights (can be enabled by adding scope_dynamic_zoom_alt = true to the weapon section). For example, if you take SVD Lynx or SVD PMC with March Tactical (or other sights with adjustable zoom) and switch to alternate sight, they wont have dynamic zoom anymore
@@ -38,8 +44,6 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
     * Minimal zoom is equal to either mechanical zoom or the one prescribed in section min_scope_zoom_factor.
     * The step of zoom adjustment is more precise. Also, it's possible to adjust the step of zoom with the console command zoom_step_count [1.0, 10.0], this option is also applicable to the binoculars.
   * In the new version all implementations from fakelens.script have moved directly to the engine. fakelens.script remained as a layer between the engine and scopeRadii.script
- 
-* Fix of using `%c[color]` tag with multibyte font causing unexpected line ending by DPurple
 
 * Screen Space Shaders by Ascii1457 (https://www.moddb.com/mods/stalker-anomaly/addons/screen-space-shaders)
 
