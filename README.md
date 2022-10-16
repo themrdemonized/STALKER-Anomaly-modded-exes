@@ -18,6 +18,7 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * For more information see DXML.md guide.
 
 * Additional edits and bugfixes by demonized
+  * Restored "Fatal Error" MessageBox popup in case of encountering fatal engine errors like it was on Windows 7 or lower
   * Fixed sorting news in News Tab in PDA
   * Added getting material of ray_pick() result with all of its properties
   * Added `on_loading_screen_key_prompt` callback for when loading screen happens and "Press Any Key to Continue" prompt appears
