@@ -873,6 +873,19 @@ index dd3958c..f39a6c6 100644
    </ItemGroup>
    <ItemGroup>
      <ResourceCompile Include="xrCore.rc">
+diff --git a/src/xrCore/xrDebugNew.cpp b/src/xrCore/xrDebugNew.cpp
+index dd65e49..6f2f339 100644
+--- a/src/xrCore/xrDebugNew.cpp
++++ b/src/xrCore/xrDebugNew.cpp
+@@ -232,7 +232,7 @@ void xrDebug::backend(const char* expression, const char* description, const cha
+ 	ShowCursor(true);
+ 	ShowWindow(GetActiveWindow(), SW_FORCEMINIMIZE);
+ 	MessageBox(
+-		GetTopWindow(NULL),
++		NULL,
+ 		assertion_info,
+ 		"Fatal Error",
+ 		MB_OK | MB_ICONERROR | MB_SYSTEMMODAL
 diff --git a/src/xrGame/GamePersistent.cpp b/src/xrGame/GamePersistent.cpp
 index 7087c3a..a45da94 100644
 --- a/src/xrGame/GamePersistent.cpp
