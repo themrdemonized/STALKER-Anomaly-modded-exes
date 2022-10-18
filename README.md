@@ -30,7 +30,7 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
 
 * Fixes and features by DPurple 
   * Fix of using `%c[color]` tag with multibyte font causing unexpected line ending by DPurple
-  * Ability to autosave the game before crash occurs, can be disabled with console command `crash_save 0` and enabled with `crash_save 1`
+  * Ability to autosave the game before crash occurs, can be disabled with console command `crash_save 0` and enabled with `crash_save 1`. Maximum amount of saves can be specified with command `crash_save_count <number>`, where number is between 0 to 20 (default is 10)
   
 * Shader Scopes by CrookR and enhanced by Edzan, comes ready to use in the archive, delete old version first
   * Dynamic zoom is disabled by default for alternative sights (can be enabled by adding scope_dynamic_zoom_alt = true to the weapon section). For example, if you take SVD Lynx or SVD PMC with March Tactical (or other sights with adjustable zoom) and switch to alternate sight, they wont have dynamic zoom anymore
