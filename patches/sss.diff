@@ -1,26 +1,27 @@
- src/Layers/xrRender/Blender_BmmD.cpp | 4 ++++
- 1 file changed, 4 insertions(+)
+ src/Layers/xrRender/Blender_BmmD.cpp | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/src/Layers/xrRender/Blender_BmmD.cpp b/src/Layers/xrRender/Blender_BmmD.cpp
-index 02e36cb..9a452e9 100644
+index 02e36cb..381d9ec 100644
 --- a/src/Layers/xrRender/Blender_BmmD.cpp
 +++ b/src/Layers/xrRender/Blender_BmmD.cpp
-@@ -257,6 +257,10 @@ void CBlender_BmmD::Compile(CBlender_Compile& C)
+@@ -257,6 +257,11 @@ void CBlender_BmmD::Compile(CBlender_Compile& C)
  		C.r_dx10Texture("s_dn_b", strconcat(sizeof(mask), mask, oB_Name, "_bump"));
  		C.r_dx10Texture("s_dn_a", strconcat(sizeof(mask), mask, oA_Name, "_bump"));
  
 +		C.r_dx10Texture("s_puddles_normal", "fx\\water_normal");
 +		C.r_dx10Texture("s_puddles_perlin", "fx\\puddles_perlin");
 +		C.r_dx10Texture("s_puddles_mask", strconcat(sizeof(mask), mask, C.L_textures[0].c_str(), "_puddles_mask"));
++		C.r_dx10Texture("s_rainsplash", "fx\\water_sbumpvolume");
 +
  		C.r_dx10Sampler("smp_base");
  		C.r_dx10Sampler("smp_linear");
  
- .../xrRender/Blender_Recorder_StandartBinding.cpp     | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ .../xrRender/Blender_Recorder_StandartBinding.cpp  | 42 ++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
 
 diff --git a/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp b/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
-index 5035624..6e972e7 100644
+index 5035624..89c31c8 100644
 --- a/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
 +++ b/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
 @@ -384,6 +384,23 @@ class cl_hemi_color : public R_constant_setup
@@ -47,15 +48,81 @@ index 5035624..6e972e7 100644
  #endif
  
  static class cl_screen_res : public R_constant_setup
-@@ -689,6 +706,8 @@ void CBlender_Compile::SetMapping()
- 	r_Constant("shader_param_6", &dev_param_6);
- 	r_Constant("shader_param_7", &dev_param_7);
- 	r_Constant("shader_param_8", &dev_param_8);
-+	
-+	r_Constant("sky_color", &binder_sky_color);
+@@ -521,6 +538,10 @@ static class cl_near_far_plane : public R_constant_setup
+ 	}
+ } binder_near_far_plane;
  
- 	// other common
- 	for (u32 it = 0; it < DEV->v_constant_setup.size(); it++)
++// Screen Space Shaders Stuff
++extern Fvector4 ps_ssfx_wpn_dof_1;
++extern float ps_ssfx_wpn_dof_2;
++
+ //Sneaky debug stuff
+ extern Fvector4 ps_dev_param_1;
+ extern Fvector4 ps_dev_param_2;
+@@ -595,6 +616,22 @@ static class dev_param_8 : public R_constant_setup
+ 	}
+ }    dev_param_8;
+ 
++static class ssfx_wpn_dof_1 : public R_constant_setup
++{
++	virtual void setup(R_constant* C)
++	{
++		RCache.set_c(C, ps_ssfx_wpn_dof_1.x, ps_ssfx_wpn_dof_1.y, ps_ssfx_wpn_dof_1.z, ps_ssfx_wpn_dof_1.w);
++	}
++}    ssfx_wpn_dof_1;
++
++static class ssfx_wpn_dof_2 : public R_constant_setup
++{
++	virtual void setup(R_constant* C)
++	{
++		RCache.set_c(C, ps_ssfx_wpn_dof_2, 0, 0, 0);
++	}
++}    ssfx_wpn_dof_2;
++
+ // Standart constant-binding
+ void CBlender_Compile::SetMapping()
+ {
+@@ -680,6 +717,11 @@ void CBlender_Compile::SetMapping()
+ 	// PDA
+ 	r_Constant("pda_params", &binder_pda_params);
+ 
++	// Screen Space Shaders
++	r_Constant("sky_color", &binder_sky_color);
++	r_Constant("ssfx_wpn_dof_1", &ssfx_wpn_dof_1);
++	r_Constant("ssfx_wpn_dof_2", &ssfx_wpn_dof_2);
++
+ 	// Shader stuff
+ 	r_Constant("shader_param_1", &dev_param_1);
+ 	r_Constant("shader_param_2", &dev_param_2);
+ src/Layers/xrRender/xrRender_console.cpp | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/Layers/xrRender/xrRender_console.cpp b/src/Layers/xrRender/xrRender_console.cpp
+index 19cf561..1b19ea6 100644
+--- a/src/Layers/xrRender/xrRender_console.cpp
++++ b/src/Layers/xrRender/xrRender_console.cpp
+@@ -292,6 +292,10 @@ Fvector4 ps_dev_param_8 = { .0f, .0f, .0f, .0f };
+ 
+ /////////////////////////////////
+ 
++// Screen Space Shaders Stuff
++Fvector4 ps_ssfx_wpn_dof_1 = { .0f, .0f, .0f, .0f };
++float ps_ssfx_wpn_dof_2 = 1.0f;
++
+ //	x - min (0), y - focus (1.4), z - max (100)
+ Fvector3 ps_r2_dof = { -1.25f, 0.f, 600.f };
+ float ps_r2_dof_sky = 30; //	distance to sky
+@@ -1070,6 +1074,10 @@ void xrRender_initconsole()
+ 	CMD4(CCC_Vector4, "shader_param_6", &ps_dev_param_6, tw2_min, tw2_max);
+ 	CMD4(CCC_Vector4, "shader_param_7", &ps_dev_param_7, tw2_min, tw2_max);
+ 	CMD4(CCC_Vector4, "shader_param_8", &ps_dev_param_8, tw2_min, tw2_max);
++	
++	// Screen Space Shaders
++	CMD4(CCC_Vector4, "ssfx_wpn_dof_1", &ps_ssfx_wpn_dof_1, tw2_min, tw2_max);
++	CMD4(CCC_Float, "ssfx_wpn_dof_2", &ps_ssfx_wpn_dof_2, 0, 1);
+ 
+ 	// Geometry optimization
+ 	CMD4(CCC_Integer, "r__optimize_static_geom", &opt_static, 0, 4);
  src/Layers/xrRenderPC_R4/r4.cpp | 6 ++++++
  1 file changed, 6 insertions(+)
 
