@@ -886,6 +886,19 @@ index dd65e49..6f2f339 100644
  		assertion_info,
  		"Fatal Error",
  		MB_OK | MB_ICONERROR | MB_SYSTEMMODAL
+diff --git a/src/xrEngine/xr_ioc_cmd.cpp b/src/xrEngine/xr_ioc_cmd.cpp
+index a1ec515..e90899e 100644
+--- a/src/xrEngine/xr_ioc_cmd.cpp
++++ b/src/xrEngine/xr_ioc_cmd.cpp
+@@ -965,6 +965,8 @@ void CCC_Register()
+ 	CMD3(CCC_Mask, "snd_efx", &psSoundFlags, ss_EAX);
+ 	CMD4(CCC_Integer, "snd_targets", &psSoundTargets, 32, 1024);
+ 	CMD4(CCC_Integer, "snd_cache_size", &psSoundCacheSizeMB, 8, 256);
++	// Doppler effect power
++	CMD4(CCC_Float, "snd_doppler_power", &soundSmoothingParams::power, 0.f, 5.f);
+ 
+ #ifdef DEBUG
+     CMD3(CCC_Mask, "snd_stats", &g_stats_flags, st_sound);
 diff --git a/src/xrGame/GamePersistent.cpp b/src/xrGame/GamePersistent.cpp
 index 7087c3a..a45da94 100644
 --- a/src/xrGame/GamePersistent.cpp
@@ -1414,6 +1427,204 @@ index 9029b27..02517bc 100644
  #endif
  
  #if 0
+diff --git a/src/xrSound/Sound.h b/src/xrSound/Sound.h
+index eeb6d58..4b5df10 100644
+--- a/src/xrSound/Sound.h
++++ b/src/xrSound/Sound.h
+@@ -212,17 +212,71 @@ class XRSOUND_API CSound_environment
+ public:
+ };
+ 
++namespace soundSmoothingParams {
++	extern float power;
++	extern int steps;
++	extern float alpha;
++	extern float getTimeDeltaSmoothing();
++	extern float getSmoothedValue(float, float, float);
++};
++
+ /// definition (Sound Params)
+ class XRSOUND_API CSound_params
+ {
++public:
++	CSound_params() :
++		set(false)
++		{
++			position.set(0.0f, 0.0f, 0.0f);
++			velocity.set(0.0f, 0.0f, 0.0f);
++			accVelocity.set(0.f, 0.f, 0.f);
++		}
++
++private:
++	bool set;
++
+ public:
+ 	Fvector position;
++	Fvector velocity;  // Cribbledirge.  Added for doppler effect.
++	Fvector curVelocity;  // Current velocity.
++	Fvector prevVelocity;  // Previous velocity.
++	Fvector accVelocity;  // Velocity accumulator (for moving average).
+ 	float base_volume;
+ 	float volume;
+ 	float freq;
+ 	float min_distance;
+ 	float max_distance;
+ 	float max_ai_distance;
++
++	// Functions added by Cribbledirge for doppler effect.
++	IC virtual void update_position(const Fvector& newPosition)
++	{
++		// If the position has been set already, start getting a moving average of the velocity.
++		if (set)
++		{
++			prevVelocity.set(accVelocity);
++			curVelocity.sub(newPosition, position);
++
++			//accVelocity.set(curVelocity.mul(alpha).add(prevVelocity.mul(1.f - alpha)));
++		}
++		else
++		{
++			set = true;
++		}
++		position.set(newPosition);
++	}
++
++	IC virtual void update_velocity(const float dt)
++	{
++		float a = soundSmoothingParams::getTimeDeltaSmoothing();
++		int p = soundSmoothingParams::power;
++		accVelocity.x = soundSmoothingParams::getSmoothedValue(curVelocity.x * p / dt, accVelocity.x, a);
++		accVelocity.y = soundSmoothingParams::getSmoothedValue(curVelocity.y * p / dt, accVelocity.y, a);
++		accVelocity.z = soundSmoothingParams::getSmoothedValue(curVelocity.z * p / dt, accVelocity.z, a);
++		velocity.set(accVelocity);
++
++		//Msg("VELOC: %f", velocity.magnitude());
++	}
+ };
+ 
+ /// definition (Sound Interface)
+diff --git a/src/xrSound/SoundRender_CoreA.cpp b/src/xrSound/SoundRender_CoreA.cpp
+index 4301be7..1985efd 100644
+--- a/src/xrSound/SoundRender_CoreA.cpp
++++ b/src/xrSound/SoundRender_CoreA.cpp
+@@ -7,6 +7,19 @@
+ #include "../xrEngine/pure.h"
+ #include "../xrEngine/XR_IOConsole.h"
+ 
++namespace soundSmoothingParams {
++	float power = 2.5;
++	int steps = 15;
++	float alpha = 2.0f / (steps + 1);
++	IC float getTimeDeltaSmoothing() {
++		return alpha;
++		//return min(1.0f, alpha * (Device.fTimeDelta / steps));
++	}
++	IC float getSmoothedValue(float target, float current, float smoothing = getTimeDeltaSmoothing()) {
++		return current + smoothing * (target - current);
++	}
++};
++
+ extern CConsole* Console;
+ 
+ CSoundRender_CoreA* SoundRenderA = 0;
+@@ -148,6 +161,14 @@ void CSoundRender_CoreA::_initialize(int stage)
+ 		bEAX = EAXTestSupport(FALSE);
+ 	}
+ 
++	// Init listener struct
++	Listener.position.set(0.0f, 0.0f, 0.0f);
++	Listener.prevVelocity.set(0.0f, 0.0f, 0.0f);
++	Listener.curVelocity.set(0.0f, 0.0f, 0.0f);
++	Listener.accVelocity.set(0.0f, 0.0f, 0.0f);
++	Listener.orientation[0].set(0.0f, 0.0f, 0.0f);
++	Listener.orientation[1].set(0.0f, 0.0f, 0.0f);
++
+ 	inherited::_initialize(stage);
+ 
+ 	if (stage == 1) //first initialize
+@@ -218,6 +239,18 @@ void CSoundRender_CoreA::update_listener(const Fvector& P, const Fvector& D, con
+ {
+ 	inherited::update_listener(P, D, N, dt);
+ 
++	Listener.curVelocity.sub(P, Listener.position);
++
++	float a = soundSmoothingParams::getTimeDeltaSmoothing();
++	int p = soundSmoothingParams::power;
++	Listener.accVelocity.x = soundSmoothingParams::getSmoothedValue(Listener.curVelocity.x * p / dt, Listener.accVelocity.x, a);
++	Listener.accVelocity.y = soundSmoothingParams::getSmoothedValue(Listener.curVelocity.y * p / dt, Listener.accVelocity.y, a);
++	Listener.accVelocity.z = soundSmoothingParams::getSmoothedValue(Listener.curVelocity.z * p / dt, Listener.accVelocity.z, a);
++	
++	Listener.prevVelocity.set(Listener.accVelocity);
++
++	//Msg("listener sound update delta %.3f, velocity %.3f, %.3f, %.3f, power %.1f", dt, Listener.prevVelocity.x, Listener.prevVelocity.y, Listener.prevVelocity.z, soundSmoothingParams::power);
++
+ 	if (!Listener.position.similar(P))
+ 	{
+ 		Listener.position.set(P);
+@@ -227,6 +260,6 @@ void CSoundRender_CoreA::update_listener(const Fvector& P, const Fvector& D, con
+ 	Listener.orientation[1].set(N.x, N.y, -N.z);
+ 
+ 	A_CHK(alListener3f (AL_POSITION,Listener.position.x,Listener.position.y,-Listener.position.z));
+-	A_CHK(alListener3f (AL_VELOCITY,0.f,0.f,0.f));
++	A_CHK(alListener3f (AL_VELOCITY, Listener.prevVelocity.x, Listener.prevVelocity.y, -Listener.prevVelocity.z));
+ 	A_CHK(alListenerfv (AL_ORIENTATION,&Listener.orientation[0].x));
+ }
+diff --git a/src/xrSound/SoundRender_CoreA.h b/src/xrSound/SoundRender_CoreA.h
+index e0eaabd..81d81c3 100644
+--- a/src/xrSound/SoundRender_CoreA.h
++++ b/src/xrSound/SoundRender_CoreA.h
+@@ -26,6 +26,9 @@ class CSoundRender_CoreA : public CSoundRender_Core
+ 	struct SListener
+ 	{
+ 		Fvector position;
++		Fvector prevVelocity;
++		Fvector curVelocity;
++		Fvector accVelocity;
+ 		Fvector orientation[2];
+ 	};
+ 
+diff --git a/src/xrSound/SoundRender_Emitter.cpp b/src/xrSound/SoundRender_Emitter.cpp
+index fa6be85..425130f 100644
+--- a/src/xrSound/SoundRender_Emitter.cpp
++++ b/src/xrSound/SoundRender_Emitter.cpp
+@@ -12,7 +12,7 @@ extern float psSoundVEffects;
+ void CSoundRender_Emitter::set_position(const Fvector& pos)
+ {
+ 	if (source()->channels_num() == 1)
+-		p_source.position = pos;
++		p_source.update_position(pos);
+ 	else
+ 		p_source.position.set(0, 0, 0);
+ 
+diff --git a/src/xrSound/SoundRender_Emitter_FSM.cpp b/src/xrSound/SoundRender_Emitter_FSM.cpp
+index 87a6824..7313308 100644
+--- a/src/xrSound/SoundRender_Emitter_FSM.cpp
++++ b/src/xrSound/SoundRender_Emitter_FSM.cpp
+@@ -333,6 +333,9 @@ float CSoundRender_Emitter::priority()
+ 
+ void CSoundRender_Emitter::update_environment(float dt)
+ {
+-	if (bMoved) e_target = *SoundRender->get_environment(p_source.position);
++	if (bMoved) {
++		e_target = *SoundRender->get_environment(p_source.position);
++		p_source.update_velocity(dt);
++	}
+ 	e_current.lerp(e_current, e_target, dt);
+ }
+diff --git a/src/xrSound/SoundRender_TargetA.cpp b/src/xrSound/SoundRender_TargetA.cpp
+index ef418a7..ba38d6c 100644
+--- a/src/xrSound/SoundRender_TargetA.cpp
++++ b/src/xrSound/SoundRender_TargetA.cpp
+@@ -154,6 +154,9 @@ void CSoundRender_TargetA::fill_parameters()
+ 	A_CHK(alSource3f(pSource, AL_POSITION, m_pEmitter->p_source.position.x,m_pEmitter->p_source.position.y,-m_pEmitter->
+ 		p_source.position.z));
+ 
++	VERIFY2(m_pEmitter, SE->source->file_name());
++	A_CHK(alSource3f(pSource, AL_VELOCITY, m_pEmitter->p_source.velocity.x, m_pEmitter->p_source.velocity.y, -m_pEmitter->p_source.velocity.z));
++
+ 	VERIFY2(m_pEmitter, SE->source()->file_name());
+ 	A_CHK(alSourcei (pSource, AL_SOURCE_RELATIVE, m_pEmitter->b2D));
+ 
 diff --git a/src/xrXMLParser/xrXMLParser.cpp b/src/xrXMLParser/xrXMLParser.cpp
 index 1d69c77..1cde914 100644
 --- a/src/xrXMLParser/xrXMLParser.cpp

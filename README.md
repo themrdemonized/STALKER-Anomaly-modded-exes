@@ -17,6 +17,9 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Allows to modify contents of loaded xml files before processing by engine by utilizing Lua scripts
   * For more information see DXML.md guide.
 
+* Doppler effect of sounds based on code by Cribbledirge and edited by demonized. 
+  * To edit effect strength, type in console `snd_doppler_power [0, 5]`. Choosing power 0 will disable the feature
+
 * Additional edits and bugfixes by demonized
   * Restored "Fatal Error" MessageBox popup in case of encountering fatal engine errors like it was on Windows 7 or lower
   * Fixed sorting news in News Tab in PDA
