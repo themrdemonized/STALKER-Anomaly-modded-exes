@@ -887,15 +887,35 @@ index dd65e49..6f2f339 100644
  		"Fatal Error",
  		MB_OK | MB_ICONERROR | MB_SYSTEMMODAL
 diff --git a/src/xrEngine/xr_ioc_cmd.cpp b/src/xrEngine/xr_ioc_cmd.cpp
-index a1ec515..e90899e 100644
+index a1ec515..b206c4e 100644
 --- a/src/xrEngine/xr_ioc_cmd.cpp
 +++ b/src/xrEngine/xr_ioc_cmd.cpp
-@@ -965,6 +965,8 @@ void CCC_Register()
+@@ -833,6 +833,18 @@ public:
+ 	}
+ };
+ 
++class CCC_SoundParamsSmoothing : public CCC_Integer
++{
++public:
++	CCC_SoundParamsSmoothing(LPCSTR N, int* V, int _min = 0, int _max = 999) : CCC_Integer(N, V, _min, _max) {};
++
++	virtual void Execute(LPCSTR args)
++	{
++		CCC_Integer::Execute(args);
++		soundSmoothingParams::alpha = soundSmoothingParams::getAlpha();
++	}
++};
++
+ ENGINE_API float psHUD_FOV_def = 0.45f;
+ ENGINE_API float psHUD_FOV = psHUD_FOV_def;
+ 
+@@ -965,6 +977,9 @@ void CCC_Register()
  	CMD3(CCC_Mask, "snd_efx", &psSoundFlags, ss_EAX);
  	CMD4(CCC_Integer, "snd_targets", &psSoundTargets, 32, 1024);
  	CMD4(CCC_Integer, "snd_cache_size", &psSoundCacheSizeMB, 8, 256);
 +	// Doppler effect power
 +	CMD4(CCC_Float, "snd_doppler_power", &soundSmoothingParams::power, 0.f, 5.f);
++	CMD4(CCC_SoundParamsSmoothing, "snd_doppler_smoothing", &soundSmoothingParams::steps, 1, 100);
  
  #ifdef DEBUG
      CMD3(CCC_Mask, "snd_stats", &g_stats_flags, st_sound);
@@ -1428,10 +1448,10 @@ index 9029b27..02517bc 100644
  
  #if 0
 diff --git a/src/xrSound/Sound.h b/src/xrSound/Sound.h
-index eeb6d58..4b5df10 100644
+index eeb6d58..9e1ed78 100644
 --- a/src/xrSound/Sound.h
 +++ b/src/xrSound/Sound.h
-@@ -212,17 +212,71 @@ class XRSOUND_API CSound_environment
+@@ -212,17 +212,72 @@ class XRSOUND_API CSound_environment
  public:
  };
  
@@ -1439,6 +1459,7 @@ index eeb6d58..4b5df10 100644
 +	extern float power;
 +	extern int steps;
 +	extern float alpha;
++	extern float getAlpha();
 +	extern float getTimeDeltaSmoothing();
 +	extern float getSmoothedValue(float, float, float);
 +};
@@ -1504,17 +1525,20 @@ index eeb6d58..4b5df10 100644
  
  /// definition (Sound Interface)
 diff --git a/src/xrSound/SoundRender_CoreA.cpp b/src/xrSound/SoundRender_CoreA.cpp
-index 4301be7..1985efd 100644
+index 4301be7..9a8ca18 100644
 --- a/src/xrSound/SoundRender_CoreA.cpp
 +++ b/src/xrSound/SoundRender_CoreA.cpp
-@@ -7,6 +7,19 @@
+@@ -7,6 +7,22 @@
  #include "../xrEngine/pure.h"
  #include "../xrEngine/XR_IOConsole.h"
  
 +namespace soundSmoothingParams {
 +	float power = 2.5;
-+	int steps = 15;
-+	float alpha = 2.0f / (steps + 1);
++	int steps = 20;
++	float alpha = getAlpha();
++	IC float getAlpha() {
++		return 2.0f / (steps + 1);
++	}
 +	IC float getTimeDeltaSmoothing() {
 +		return alpha;
 +		//return min(1.0f, alpha * (Device.fTimeDelta / steps));
@@ -1527,7 +1551,7 @@ index 4301be7..1985efd 100644
  extern CConsole* Console;
  
  CSoundRender_CoreA* SoundRenderA = 0;
-@@ -148,6 +161,14 @@ void CSoundRender_CoreA::_initialize(int stage)
+@@ -148,6 +164,14 @@ void CSoundRender_CoreA::_initialize(int stage)
  		bEAX = EAXTestSupport(FALSE);
  	}
  
@@ -1542,7 +1566,7 @@ index 4301be7..1985efd 100644
  	inherited::_initialize(stage);
  
  	if (stage == 1) //first initialize
-@@ -218,6 +239,18 @@ void CSoundRender_CoreA::update_listener(const Fvector& P, const Fvector& D, con
+@@ -218,6 +242,18 @@ void CSoundRender_CoreA::update_listener(const Fvector& P, const Fvector& D, con
  {
  	inherited::update_listener(P, D, N, dt);
  
@@ -1556,12 +1580,12 @@ index 4301be7..1985efd 100644
 +	
 +	Listener.prevVelocity.set(Listener.accVelocity);
 +
-+	//Msg("listener sound update delta %.3f, velocity %.3f, %.3f, %.3f, power %.1f", dt, Listener.prevVelocity.x, Listener.prevVelocity.y, Listener.prevVelocity.z, soundSmoothingParams::power);
++	// Msg("listener sound update delta %.3f, velocity %.3f, %.3f, %.3f, power %.1f, alpha %.3f", dt, Listener.prevVelocity.x, Listener.prevVelocity.y, Listener.prevVelocity.z, soundSmoothingParams::power, soundSmoothingParams::alpha);
 +
  	if (!Listener.position.similar(P))
  	{
  		Listener.position.set(P);
-@@ -227,6 +260,6 @@ void CSoundRender_CoreA::update_listener(const Fvector& P, const Fvector& D, con
+@@ -227,6 +263,6 @@ void CSoundRender_CoreA::update_listener(const Fvector& P, const Fvector& D, con
  	Listener.orientation[1].set(N.x, N.y, -N.z);
  
  	A_CHK(alListener3f (AL_POSITION,Listener.position.x,Listener.position.y,-Listener.position.z));
