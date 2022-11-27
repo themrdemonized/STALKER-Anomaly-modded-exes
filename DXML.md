@@ -29,7 +29,7 @@ function on_xml_read()
 end
 ```
 
-What this does is creating a function on_xml_read that will be auto-called from _g.script. This function will register function for new callback "on_xml_read", which accepts two arguments:
+What this does is creating a function on_xml_read that will be auto-called from dxml_core.script. This function will register function for new callback "on_xml_read", which accepts two arguments:
 
 * xml_file_name - current XML filename that engine is processing (for example: text\eng\_game_version.xml)
 * xml_obj - the object described above
@@ -229,4 +229,4 @@ ___
 
 ## PS
 
-Full list of methods is described in _g.script in `COnXmlRead` function
+Full list of methods is described in dxml_core.script in `COnXmlRead` function
