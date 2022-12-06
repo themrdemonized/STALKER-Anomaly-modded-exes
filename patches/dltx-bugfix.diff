@@ -1525,7 +1525,7 @@ index eeb6d58..9e1ed78 100644
  
  /// definition (Sound Interface)
 diff --git a/src/xrSound/SoundRender_CoreA.cpp b/src/xrSound/SoundRender_CoreA.cpp
-index 4301be7..9a8ca18 100644
+index 4301be7..6ac1ded 100644
 --- a/src/xrSound/SoundRender_CoreA.cpp
 +++ b/src/xrSound/SoundRender_CoreA.cpp
 @@ -7,6 +7,22 @@
@@ -1533,7 +1533,7 @@ index 4301be7..9a8ca18 100644
  #include "../xrEngine/XR_IOConsole.h"
  
 +namespace soundSmoothingParams {
-+	float power = 2.5;
++	float power = 1.8;
 +	int steps = 20;
 +	float alpha = getAlpha();
 +	IC float getAlpha() {
