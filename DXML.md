@@ -214,7 +214,6 @@ function on_xml_read()
 	RegisterScriptCallback("on_xml_read", function(xml_file_name, xml_obj)
 		if xml_file_name == [[ui\ui_inventory.xml]]
 		then
-			-- Find string element with "id=ui_st_game_version" text inside it
 			local res = xml_obj:query("player > money")
 			if res[1] then
 				el = res[1]
