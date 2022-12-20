@@ -123,6 +123,34 @@ index 19cf561..1b19ea6 100644
  
  	// Geometry optimization
  	CMD4(CCC_Integer, "r__optimize_static_geom", &opt_static, 0, 4);
+ src/Layers/xrRenderDX10/dx10ResourceManager_Scripting.cpp | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/src/Layers/xrRenderDX10/dx10ResourceManager_Scripting.cpp b/src/Layers/xrRenderDX10/dx10ResourceManager_Scripting.cpp
+index 70d8640..e748ddf 100644
+--- a/src/Layers/xrRenderDX10/dx10ResourceManager_Scripting.cpp
++++ b/src/Layers/xrRenderDX10/dx10ResourceManager_Scripting.cpp
+@@ -193,6 +193,12 @@ public:
+ 		return *this;
+ 	}
+ 
++	adopt_compiler& _dx10CullMode(u32 Ref)
++	{
++		C->r_CullMode((D3DCULL)Ref);
++		return *this;
++	}
++
+ 	adopt_compiler& _dx10ATOC(bool Enable)
+ 	{
+ 		C->RS.SetRS(XRDX10RS_ALPHATOCOVERAGE, Enable);
+@@ -389,6 +395,7 @@ void CResourceManager::LS_Load()
+ 		.def("dx10texture", &adopt_compiler::_dx10texture, return_reference_to(_1))
+ 		.def("dx10stencil", &adopt_compiler::_dx10Stencil, return_reference_to(_1))
+ 		.def("dx10stencil_ref", &adopt_compiler::_dx10StencilRef, return_reference_to(_1))
++		.def("dx10cullmode", &adopt_compiler::_dx10CullMode, return_reference_to(_1))
+ 		.def("dx10atoc", &adopt_compiler::_dx10ATOC, return_reference_to(_1))
+ 		.def("dx10zfunc", &adopt_compiler::_dx10ZFunc, return_reference_to(_1))
+ 
  src/Layers/xrRenderPC_R4/r4.cpp | 6 ++++++
  1 file changed, 6 insertions(+)
 
