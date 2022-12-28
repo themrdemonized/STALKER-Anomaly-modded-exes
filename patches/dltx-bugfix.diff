@@ -919,6 +919,36 @@ index a1ec515..b206c4e 100644
  
  #ifdef DEBUG
      CMD3(CCC_Mask, "snd_stats", &g_stats_flags, st_sound);
+diff --git a/src/xrGame/GameObject.cpp b/src/xrGame/GameObject.cpp
+index 1516f8d..1ce2261 100644
+--- a/src/xrGame/GameObject.cpp
++++ b/src/xrGame/GameObject.cpp
+@@ -116,6 +116,13 @@ void CGameObject::net_Destroy()
+ #endif
+ 
+ 	VERIFY(m_spawned);
++
++	luabind::functor<void> funct;
++	if (ai().script_engine().functor("_G.CGameObject_NetDestroy", funct))
++	{
++		funct(this->lua_game_object());
++	}
++
+ 	if (m_anim_mov_ctrl)
+ 		destroy_anim_mov_ctrl();
+ 
+@@ -441,6 +448,11 @@ BOOL CGameObject::net_Spawn(CSE_Abstract* DC)
+ 	}
+ 	BOOL ret =CScriptBinder::net_Spawn(DC);
+ #else
++	luabind::functor<void> funct;
++	if (ai().script_engine().functor("_G.CGameObject_NetSpawn", funct))
++	{
++		funct(this->lua_game_object());
++	}
+ 	return (CScriptBinder::net_Spawn(DC));
+ #endif
+ 
 diff --git a/src/xrGame/GamePersistent.cpp b/src/xrGame/GamePersistent.cpp
 index 7087c3a..a45da94 100644
 --- a/src/xrGame/GamePersistent.cpp
