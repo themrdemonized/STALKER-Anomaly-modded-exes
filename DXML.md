@@ -60,6 +60,7 @@ function on_xml_read()
 <wpn_crosshair_bino x="0" y="0" width="2048" height="1536">
     <auto_static x="0" y="0" width="1024" height="768" stretch="1">
     <texture>wpn_crosshair_bino</texture>
+#include "gameplay\character_criticals.xml"
     </auto_static>
 </wpn_crosshair_bino>
 ]]
@@ -70,6 +71,8 @@ end
 ```
 
 This example adds new scope texture into scopes.xml.
+DXML supports `#include` directive to include other xml files into string. `#include` must start from the beginning of the line like in the example.
+(BTW: For actually adding new scope you don't need include anything, its just an example. The `#include` is necessary when working with adding new special npcs or such)
 
 insertFromXMLString method has these arguments:
 
