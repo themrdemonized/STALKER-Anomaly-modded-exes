@@ -1,6 +1,6 @@
 # DXML
 
-___
+---
 
 ## Intro
 
@@ -36,7 +36,7 @@ What this does is creating a function on_xml_read that will be auto-called from 
 
 To understand, what can be done with xml_obj and what functions it provides, let's take a look at typical usecases:
 
-___
+---
 
 ### Case 1: inserting new XML data
 
@@ -82,7 +82,7 @@ insertFromXMLString method has these arguments:
 
 The function returns the position of first inserted element in "where"
 
-___
+---
 
 ## Case 2: inserting new XML data in specified element
 
@@ -155,7 +155,7 @@ Full list of available CSS-like selectors are:
 * "~" - find all siblings
 * "[attr1=value1]" - describes attribute `attr1` with value `value1`. To find element that matches multiple attributes you can use `[attr1=value1][attr2=value2]` and so on
 
-___
+---
 
 ## Case 3: Change text inside element
 
@@ -186,7 +186,7 @@ function on_xml_read()
 end
 ```
 
-___
+---
 
 ## Case 4: changing attribute of element
 
@@ -227,8 +227,89 @@ function on_xml_read()
 end
 ```
 
-___
+Full list of methods is described in dxml_core.script in `COnXmlRead` function
+
+---
+
+## Additional functions
+
+For now, it is impossible to use xml_obj from DXML to process `gameplay\character_desc_general.xml`. This file includes all information about generic NPCs you see in the Zone (name, bio, community, etc). As an alternative, DXML provides additional callbacks in this case.
+
+### on_specific_character_init
+
+`on_specific_character_init` callback provides possibility to change NPCs' data. An example on how to use it:
+
+```lua
+function on_game_start()
+    RegisterScriptCallback("on_specific_character_init", function(character_id, data)
+  
+        --character_id is the id attribute of <specific_character> tag (ie. "sim_default_csky_0_default_0")
+        if character_id == "sim_default_csky_0_default_0" then
+  
+            -- change appearance of this npc to Beard
+            data.visual = "actors\stalker_neutral\stalker_neutral_3_face_1"
+        end
+    end)
+end
+```
+
+Full list of fields available in "data" table:
+* name
+* bio
+* community
+* icon
+* start_dialog
+* panic_threshold
+* hit_probability_factor
+* crouch_type
+* mechanic_mode
+* critical_wound_weights
+* supplies
+* visual
+* npc_config
+* snd_config
+* terrain_sect
+* rank_min
+* rank_max
+* reputation_min
+* reputation_max
+* money_min
+* money_max
+* money_infinitive
+
+### on_specific_character_dialog_list
+
+`on_specific_character_dialog_list` callback provides possibility to change available dialogs for NPCs. The callback sends character id and dialog list class object, that can be used to manupulate available dialogs. An example on how to use it:
+
+```lua
+function on_game_start()
+    RegisterScriptCallback("on_specific_character_dialog_list", function(character_id, dialog_list)
+
+        --character_id is the id attribute of <specific_character> tag (ie. "sim_default_csky_0_default_0")
+        if character_id == "sim_default_csky_0_default_0" then
+
+            -- Add dialog about playing Blackjack
+            local res = dialog_list:add("cit_killers_minigame")
+
+            if res then
+                printf("adding dialog %s for %s, pos %s", "cit_killers_minigame", character_id, res)
+            end
+        end
+    end)
+end
+```
+
+Full list of methods in dialog_list
+* find(regex) - find existing dialog by regex, returns last found dialog matching regex and its position in the list
+* has(string) - check if dialog by string exists, returns the position of found dialog in the list
+* add(string, pos) - adds new dialog in specified position (by default adds before break dialog string if it exists)
+* add_first(dialog) - adds dialog in the beginning of the list
+* add_last(dialog) - adds dialog in the end of the list
+* remove(string) - removes dialog by the string
+* get_dialogs() - returns the list of all dialogs available
+
+---
 
 ## PS
 
-Full list of methods is described in dxml_core.script in `COnXmlRead` function
+See `dxml_core.script` for all methods and callbacks available
