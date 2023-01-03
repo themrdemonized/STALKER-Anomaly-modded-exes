@@ -62,3 +62,21 @@ How to compile exes:
 5. Apply patches in those branches via `git apply <path_to_patch>` command
 6. Merge those branches back into your branch created in p.3
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
+
+## Changelog
+**2023.01.03**:
+  * Added CGameObject::NetSpawn and NetDestroy callbacks to Lua (file callbacks_gameobject.script), to register callback use ```lua
+    RegisterScriptCallback("game_object_on_net_spawn", function(obj))
+    RegisterScriptCallback("game_object_on_net_destroy", function(obj))
+  ```
+  * DXML will no longer process translation strings of non eng/rus languages, they aren't supported yet
+  * New lua_help_ex.script file where new engine exports will be described
+  * Exported additional CWeapon functions considering weapon's RPM, handling and recoil
+  * Exported functions to get and set actors walk accel and walkback coeff ```lua
+      db.actor:get_actor_walk_accel()
+      db.actor:set_actor_walk_accel(float)
+      db.actor:get_actor_walk_back_coef()
+      db.actor:set_actor_walk_back_coef(float)
+    ```
+  * Exported distance_to_xz_sqr() function of Fvector
+  * Redesigned duplicate section error, it will additionally print what file adds the section in the first place in addition to the file that has the duplicate
