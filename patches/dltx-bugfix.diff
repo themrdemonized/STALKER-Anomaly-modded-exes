@@ -1,8 +1,8 @@
 diff --git a/src/xrCore/Xr_ini.cpp b/src/xrCore/Xr_ini.cpp
-index 3f5ac84..6f36fad 100644
+index 3f5ac84..d269bb5 100644
 --- a/src/xrCore/Xr_ini.cpp
 +++ b/src/xrCore/Xr_ini.cpp
-@@ -3,6 +3,12 @@
+@@ -3,6 +3,14 @@
  
  #include "fs_internal.h"
  
@@ -10,12 +10,34 @@ index 3f5ac84..6f36fad 100644
 +#include <regex>
 +#include <unordered_map>
 +#include <unordered_set>
++#include <vector>
++#include <algorithm>
 +#include "mezz_stringbuffer.h"
 +
  XRCORE_API CInifile const* pSettings = NULL;
  XRCORE_API CInifile const* pSettingsAuth = NULL;
  
-@@ -210,212 +216,610 @@ void CInifile::Load(IReader* F, LPCSTR path
+@@ -177,8 +185,19 @@ CInifile::~CInifile()
+ 		xr_delete(*I);
+ }
+ 
++std::unordered_map<std::string, std::vector<CInifile::Item>> OverrideModifyListData;
++
+ static void insert_item(CInifile::Sect* tgt, const CInifile::Item& I)
+ {
++	// demonized
++	// DLTX: add or remove item from the section parameter if it has a structure of "name = item1, item2, item3, ..."
++	// >name = item will add item to the list
++	// <name = item will remove item from the list
++	if (*I.first && (I.first.c_str()[0] == '<' || I.first.c_str()[0] == '>')) {
++		OverrideModifyListData[std::string(tgt->Name.c_str())].push_back(I);
++		return;
++	}
++
+ 	CInifile::SectIt_ sect_it = std::lower_bound(tgt->Data.begin(), tgt->Data.end(), *I.first, item_pred);
+ 	if (sect_it != tgt->Data.end() && sect_it->first.equal(I.first))
+ 	{
+@@ -210,212 +229,703 @@ void CInifile::Load(IReader* F, LPCSTR path
  )
  {
  	R_ASSERT(F);
@@ -59,6 +81,7 @@ index 3f5ac84..6f36fad 100644
 +
 +	string_path currentFileName;
 +	std::unordered_map<std::string, std::unordered_map<std::string, bool>> OverrideToFilename;
++	std::unordered_map<std::string, std::string> SectionToFilename;
 +
 +	std::function<void
 +		(
@@ -80,14 +103,13 @@ index 3f5ac84..6f36fad 100644
 +		)
 +	{
 +		Sect* Current = 0;
++		MezzStringBuffer str;
++		MezzStringBuffer str2;
  
 -#ifdef DEBUG
 -        LPSTR comment = 0;
 -#endif
 -		if (comm)
-+		MezzStringBuffer str;
-+		MezzStringBuffer str2;
-+
 +		BOOL bInsideSTR = FALSE;
 +
 +		BOOL bIsCurrentSectionOverride = FALSE;
@@ -136,13 +158,9 @@ index 3f5ac84..6f36fad 100644
  
 +			return ParentSet;
 +		};
- 
--		if (str[0] && (str[0] == '#') && strstr(str, "#include")) //handle includes
++
 +		auto GetRegexMatch = [](std::string InputString, std::string PatternString)
- 		{
--			string_path inc_name;
--			R_ASSERT(path&&path[0]);
--			if (_GetItem(str, 1, inc_name, '"'))
++		{
 +			std::regex Pattern = std::regex(PatternString);
 +			std::smatch MatchResult;
 +
@@ -160,9 +178,13 @@ index 3f5ac84..6f36fad 100644
 +		{
 +			return std::regex_match(InputString, std::regex(PatternString));
 +		};
-+
+ 
+-		if (str[0] && (str[0] == '#') && strstr(str, "#include")) //handle includes
 +		const auto loadFile = [&, LTXLoad](const string_path _fn, const string_path inc_path, const string_path name)
-+		{
+ 		{
+-			string_path inc_name;
+-			R_ASSERT(path&&path[0]);
+-			if (_GetItem(str, 1, inc_name, '"'))
 +			if (!allow_include_func || allow_include_func(_fn))
  			{
 -				string_path fn, inc_path, folder;
@@ -171,10 +193,10 @@ index 3f5ac84..6f36fad 100644
 -				xr_strcat(inc_path, sizeof(inc_path), folder);
 +				IReader* I = FS.r_open(_fn);
 +				R_ASSERT3(I, "Can't find include file:", name);
-+
-+				strcpy(currentFileName, name);
  
 -				const auto loadFile = [&](const string_path _fn, const string_path name)
++				strcpy(currentFileName, name);
++
 +				LTXLoad(I, inc_path, OutputData, ParentDataMap, bOverridesOnly, false);
 +
 +				FS.r_close(I);
@@ -196,14 +218,15 @@ index 3f5ac84..6f36fad 100644
 -						R_ASSERT3(I, "Can't find include file:", name);
 -						Load(I, inc_path, allow_include_func);
 -						FS.r_close(I);
-+						Debug.fatal(DEBUG_INFO, "Duplicate section '%s' wasn't marked as an override. Override section by prefixing it with '!' (![%s]) or give it a unique name. Check this file and its DLTX mods: %s, mod file %s", *Current->Name, *Current->Name, m_file_name, currentFileName);
- 					}
+-					}
 -				};
--
+ 
 -				if (strstr(inc_name, "*.ltx"))
 -				{
 -					FS_FileSet fset;
 -					FS.file_list(fset, inc_path, FS_ListFiles, inc_name);
++						Debug.fatal(DEBUG_INFO, "Duplicate section '%s' wasn't marked as an override.\n\nOverride section by prefixing it with '!' (![%s]) or give it a unique name.\n\nCheck this file and its DLTX mods:\n\"%s\",\nfile with section \"%s\",\nfile with duplicate \"%s\"", *Current->Name, *Current->Name, m_file_name, SectionToFilename[std::string(Current->Name.c_str())], currentFileName);
++					}
  
 -					for (FS_FileSet::iterator it = fset.begin(); it != fset.end(); it++)
 +					//Overwrite existing override data
@@ -223,6 +246,7 @@ index 3f5ac84..6f36fad 100644
 +				{
 +					OutputData->emplace(std::pair<std::string, Sect>(std::string(Current->Name.c_str()), *Current));
 +					OverrideToFilename[std::string(Current->Name.c_str())][currentFileName] = true;
++					SectionToFilename[std::string(Current->Name.c_str())] = currentFileName;
 +				}
  			}
 -		}
@@ -703,7 +727,7 @@ index 3f5ac84..6f36fad 100644
 +			{
 +				InsertItemWithDelete(CurrentItem, Parent);
 +			}
-+		}
+ 		}
 +
 +		//Delete entries that are still marked DLTX_DELETE
 +		for (auto It = CurrentSect->Data.rbegin(); It != CurrentSect->Data.rend(); ++It)
@@ -713,6 +737,94 @@ index 3f5ac84..6f36fad 100644
 +				CurrentSect->Data.erase(It.base() - 1);
 +			}
 +		}
++
++		// If there is data to modify parameters lists
++		if (OverrideModifyListData.find(std::string(CurrentSect->Name.c_str())) != OverrideModifyListData.end()) {
++			for (auto It = OverrideModifyListData[std::string(CurrentSect->Name.c_str())].begin(); It != OverrideModifyListData[std::string(CurrentSect->Name.c_str())].end(); ++It) {
++				CInifile::Item &I = *It;
++
++				// If section exists with item list, split list and perform operation
++				char dltx_listmode = I.first[0];
++				I.first = I.first.c_str() + 1;
++
++				CInifile::SectIt_ sect_it = std::lower_bound(CurrentSect->Data.begin(), CurrentSect->Data.end(), *I.first, item_pred);
++				if (sect_it != CurrentSect->Data.end() && sect_it->first.equal(I.first)) {
++
++					//Msg("%s has dltx_listmode %s", I.first.c_str(), std::string(1, dltx_listmode).c_str());
++
++					if (dltx_listmode && sect_it->second != NULL) {
++						// Split list 
++						auto split_list = [](const std::string items, const std::string delimiter = ",") {
++							std::string i = items;
++							std::vector<std::string> vec;
++							size_t pos = 0;
++							std::string token;
++							while ((pos = i.find(delimiter)) != std::string::npos) {
++								token = i.substr(0, pos);
++								vec.push_back(token);
++								i.erase(0, pos + delimiter.length());
++							}
++							vec.push_back(i);
++
++							auto trim = [](std::string &s, const char* t = " \t\n\r\f\v") {
++								s.erase(s.find_last_not_of(t) + 1);
++								s.erase(0, s.find_first_not_of(t));
++							};
++							for (auto &item : vec) {
++								trim(item);
++							}
++							return vec;
++						};
++						std::vector<std::string> sect_it_items_vec = split_list(sect_it->second.c_str());
++						std::vector<std::string> I_items_vec = split_list(I.second.c_str());
++
++						// Add or remove to the list
++						auto find_and_store_index = [](const std::vector<std::string> &items_vec, const std::string item, int &vec_index) {
++							auto it = std::find(items_vec.begin(), items_vec.end(), item);
++							if (it != items_vec.end()) {
++								vec_index = it - items_vec.begin();
++								return true;
++							}
++							else {
++								vec_index = -1;
++								return false;
++							}
++						};
++						int vec_index = -1;
++						for (const auto &item : I_items_vec) {
++							if (dltx_listmode == '>') {
++								sect_it_items_vec.push_back(item);
++							}
++							else if (dltx_listmode == '<') {
++								while (find_and_store_index(sect_it_items_vec, item, vec_index)) {
++									sect_it_items_vec.erase(sect_it_items_vec.begin() + vec_index);
++								}
++							}
++						}
++
++						// Store result back
++						auto join_list = [](const std::vector<std::string> &items_vec, const std::string delimiter = ",") {
++							std::string ret;
++							for (const auto &i : items_vec) {
++								if (!ret.empty()) {
++									ret += delimiter;
++								}
++								ret += i;
++							}
++							return ret;
++						};
++
++						/*std::string c(1, dltx_listmode);
++						Msg("%s has dltx_listmode %s, %s items", I.first.c_str(), c.c_str(), dltx_listmode == '>' ? "adding" : "removing");
++						Msg("old %s", sect_it->second.c_str());
++						Msg("new %s", join_list(sect_it_items_vec).c_str());*/
++
++						sect_it->second = join_list(sect_it_items_vec, ",").c_str();
++					}
++				}
++			}
++		}
++		
 +
 +		//Pop from stack
 +		auto LastElement = PreviousEvaluations->end();
@@ -724,7 +836,7 @@ index 3f5ac84..6f36fad 100644
 +		if (!bDeleteSectionIfEmpty || CurrentSecPair.second.Data.size())
 +		{
 +			FinalData.emplace(CurrentSecPair);
- 		}
++		}
 +
 +		FinalizedSections.insert(SectionName);
 +	};
@@ -740,26 +852,29 @@ index 3f5ac84..6f36fad 100644
 +	for (std::pair<std::string, Sect> SectPair : BaseData)
 +	{
 +		EvaluateSection(SectPair.first, &PreviousEvaluations);
-+	}
-+
-+	//Insert all finalized sections into final container
-+	for (std::pair<std::string, Sect> SectPair : FinalData)
-+	{
-+		Sect* NewSect = xr_new<Sect>();
-+		*NewSect = SectPair.second;
-+
-+		RootIt I = std::lower_bound(DATA.begin(), DATA.end(), SectPair.first.c_str(), sect_pred);
-+		DATA.insert(I, NewSect);
  	}
 -	if (Current)
 +
-+	//throw errors if there are overrides that never got used
-+	if (OverrideData.size())
++	//Insert all finalized sections into final container
++	for (std::pair<std::string, Sect> SectPair : FinalData)
  	{
 -		RootIt I = std::lower_bound(DATA.begin(), DATA.end(), *Current->Name, sect_pred);
 -		if ((I != DATA.end()) && ((*I)->Name == Current->Name))
 -			Debug.fatal(DEBUG_INFO, "Duplicate section '%s' found.", *Current->Name);
 -		DATA.insert(I, Current);
++		Sect* NewSect = xr_new<Sect>();
++		*NewSect = SectPair.second;
++
++		RootIt I = std::lower_bound(DATA.begin(), DATA.end(), SectPair.first.c_str(), sect_pred);
++		DATA.insert(I, NewSect);
++	}
++
++	// Clean modifiers of parameters' lists
++	OverrideModifyListData.clear();
++
++	//throw errors if there are overrides that never got used
++	if (OverrideData.size())
++	{
 +		//Debug.fatal(DEBUG_INFO, "Attemped to override section '%s', which doesn't exist. Ensure that a base section with the same name is loaded first. Check this file and its DLTX mods: %s", OverrideData.begin()->first.c_str(), m_file_name);
 +		for (auto i = OverrideData.begin(); i != OverrideData.end(); i++) {
 +			auto override_filenames = OverrideToFilename.find(i->first);
@@ -919,6 +1034,48 @@ index a1ec515..b206c4e 100644
  
  #ifdef DEBUG
      CMD3(CCC_Mask, "snd_stats", &g_stats_flags, st_sound);
+diff --git a/src/xrGame/Actor_Weapon.cpp b/src/xrGame/Actor_Weapon.cpp
+index 14eefbd..931a042 100644
+--- a/src/xrGame/Actor_Weapon.cpp
++++ b/src/xrGame/Actor_Weapon.cpp
+@@ -287,6 +287,9 @@ void CActor::on_weapon_shot_start(CWeapon* weapon)
+ 		{
+ 			effector->Initialize(camera_recoil);
+ 		}
++		else {
++			effector->UpdateCameraRecoil(camera_recoil);
++		}
+ 	}
+ 
+ 	effector->m_WeaponID = weapon->ID();
+diff --git a/src/xrGame/EffectorShot.cpp b/src/xrGame/EffectorShot.cpp
+index 8ac8fa4..a7ae406 100644
+--- a/src/xrGame/EffectorShot.cpp
++++ b/src/xrGame/EffectorShot.cpp
+@@ -21,6 +21,11 @@ void CWeaponShotEffector::Initialize(const CameraRecoil& cam_recoil)
+ 	Reset();
+ }
+ 
++void CWeaponShotEffector::UpdateCameraRecoil(const CameraRecoil& cam_recoil)
++{
++	m_cam_recoil.Clone(cam_recoil);
++}
++
+ void CWeaponShotEffector::Reset()
+ {
+ 	m_angle_vert = 0.0f;
+diff --git a/src/xrGame/EffectorShot.h b/src/xrGame/EffectorShot.h
+index 451d458..500db02 100644
+--- a/src/xrGame/EffectorShot.h
++++ b/src/xrGame/EffectorShot.h
+@@ -45,6 +45,7 @@ public:
+ 	};
+ 
+ 	void Initialize(const CameraRecoil& cam_recoil);
++	void UpdateCameraRecoil(const CameraRecoil& cam_recoil);
+ 	void Reset();
+ 
+ 	IC bool IsActive() { return m_actived; }
 diff --git a/src/xrGame/GameObject.cpp b/src/xrGame/GameObject.cpp
 index 1516f8d..1ce2261 100644
 --- a/src/xrGame/GameObject.cpp
@@ -1017,6 +1174,320 @@ index 3c89e6d..6e490ca 100644
  void CScriptXmlInit::ParseFile(LPCSTR xml_file)
  {
  	m_xml.Load(CONFIG_PATH, UI_PATH, xml_file);
+diff --git a/src/xrGame/Weapon.h b/src/xrGame/Weapon.h
+index 9880065..428ec4a 100644
+--- a/src/xrGame/Weapon.h
++++ b/src/xrGame/Weapon.h
+@@ -386,7 +386,16 @@ public:
+ 	LPCSTR GetScopeNameScript() const { return *GetScopeName(); }
+ 	float GetFireDispersionScript() const { return fireDispersionBase; }
+ 	float RPMScript() const { return fOneShotTime; }
++	float RealRPMScript() const { return 60.0f / fOneShotTime; } // Return actual RPM like in configs
+ 	float ModeRPMScript() const { return fModeShotTime; }
++	float ModeRealRPMScript() const { return 60.0f / fModeShotTime; }
++
++	//Setters
++	void SetFireDispersionScript(float val) { fireDispersionBase = val; }
++	void SetRPM(float newOneShotTime) { fOneShotTime = newOneShotTime; } // Input - time between shots like received from getter
++	void SetRealRPM(float rpm) { fOneShotTime = 60.0f / rpm; } // Input - actual RPM like in configs
++	void SetModeRPM(float newOneShotTime) { fModeShotTime = newOneShotTime; } // Input - time between shots like received from getter
++	void SetModeRealRPM(float rpm) { fModeShotTime = 60.0f / rpm; } // Input - actual RPM like in configs
+ 
+ 	virtual float Weight() const;
+ 	virtual u32 Cost() const;
+@@ -563,6 +572,42 @@ public:
+ 	CameraRecoil cam_recoil; // simple mode (walk, run)
+ 	CameraRecoil zoom_cam_recoil; // using zoom =(ironsight or scope)
+ 
++	// Getters
++	float GetCamRelaxSpeed() { return cam_recoil.RelaxSpeed; };
++	float GetCamRelaxSpeed_AI() { return cam_recoil.RelaxSpeed_AI; };
++	float GetCamDispersion() { return cam_recoil.Dispersion; };
++	float GetCamDispersionInc() { return cam_recoil.DispersionInc; };
++	float GetCamDispersionFrac() { return cam_recoil.DispersionFrac; };
++	float GetCamMaxAngleVert() { return cam_recoil.MaxAngleVert; };
++	float GetCamMaxAngleHorz() { return cam_recoil.MaxAngleHorz; };
++	float GetCamStepAngleHorz() { return cam_recoil.StepAngleHorz; };
++	float GetZoomCamRelaxSpeed() { return zoom_cam_recoil.RelaxSpeed; };
++	float GetZoomCamRelaxSpeed_AI() { return zoom_cam_recoil.RelaxSpeed_AI; };
++	float GetZoomCamDispersion() { return zoom_cam_recoil.Dispersion; };
++	float GetZoomCamDispersionInc() { return zoom_cam_recoil.DispersionInc; };
++	float GetZoomCamDispersionFrac() { return zoom_cam_recoil.DispersionFrac; };
++	float GetZoomCamMaxAngleVert() { return zoom_cam_recoil.MaxAngleVert; };
++	float GetZoomCamMaxAngleHorz() { return zoom_cam_recoil.MaxAngleHorz; };
++	float GetZoomCamStepAngleHorz() { return zoom_cam_recoil.StepAngleHorz; };
++
++	// Setters
++	void SetCamRelaxSpeed(float val) { cam_recoil.RelaxSpeed = val; };
++	void SetCamRelaxSpeed_AI(float val) { cam_recoil.RelaxSpeed_AI = val; };
++	void SetCamDispersion(float val) { cam_recoil.Dispersion = val; };
++	void SetCamDispersionInc(float val) { cam_recoil.DispersionInc = val; };
++	void SetCamDispersionFrac(float val) { cam_recoil.DispersionFrac = val; };
++	void SetCamMaxAngleVert(float val) { cam_recoil.MaxAngleVert = val; };
++	void SetCamMaxAngleHorz(float val) { cam_recoil.MaxAngleHorz = val; };
++	void SetCamStepAngleHorz(float val) { cam_recoil.StepAngleHorz = val; };
++	void SetZoomCamRelaxSpeed(float val) { zoom_cam_recoil.RelaxSpeed = val; };
++	void SetZoomCamRelaxSpeed_AI(float val) { zoom_cam_recoil.RelaxSpeed_AI = val; };
++	void SetZoomCamDispersion(float val) { zoom_cam_recoil.Dispersion = val; };
++	void SetZoomCamDispersionInc(float val) { zoom_cam_recoil.DispersionInc = val; };
++	void SetZoomCamDispersionFrac(float val) { zoom_cam_recoil.DispersionFrac = val; };
++	void SetZoomCamMaxAngleVert(float val) { zoom_cam_recoil.MaxAngleVert = val; };
++	void SetZoomCamMaxAngleHorz(float val) { zoom_cam_recoil.MaxAngleHorz = val; };
++	void SetZoomCamStepAngleHorz(float val) { zoom_cam_recoil.StepAngleHorz = val; };
++
+ protected:
+ 	//ôàêòîð óâåëè÷åíèÿ äèñïåðñèè ïðè ìàêñèìàëüíîé èçíîøåíîñòè
+ 	//(íà ñêîëüêî ïðîöåíòîâ óâåëè÷èòñÿ äèñïåðñèÿ)
+@@ -590,6 +635,17 @@ public:
+ 		return misfireEndCondition;
+ 	};
+ 
++	// Setters
++	void SetMisfireStartCondition(float val)
++	{
++		misfireStartCondition = val;
++	};
++
++	void SetMisfireEndCondition(float val)
++	{
++		misfireEndCondition = val;
++	};
++
+ protected:
+ 	struct SPDM
+ 	{
+@@ -750,6 +806,107 @@ public:
+ 	{
+ 		return m_first_bullet_controller.get_fire_dispertion();
+ 	};
++
++	// Setters
++	virtual void Set_PDM_Base(float val) 
++	{
++		m_pdm.m_fPDM_disp_base = val;
++	};
++
++	virtual void Set_Silencer_PDM_Base(float val) 
++	{
++		cur_silencer_koef.pdm_base = val;
++	};
++
++	virtual void Set_Scope_PDM_Base(float val) 
++	{
++		cur_scope_koef.pdm_base = val;
++	};
++
++	virtual void Set_Launcher_PDM_Base(float val) 
++	{
++		cur_launcher_koef.pdm_base = val;
++	};
++
++	virtual void Set_PDM_BuckShot(float val) 
++	{
++		m_pdm.m_fPDM_disp_buckShot = val;
++	};
++
++	virtual void Set_PDM_Vel_F(float val) 
++	{
++		m_pdm.m_fPDM_disp_vel_factor = val;
++	};
++
++	virtual void Set_Silencer_PDM_Vel(float val) 
++	{
++		cur_silencer_koef.pdm_vel = val;
++	};
++
++	virtual void Set_Scope_PDM_Vel(float val) 
++	{
++		cur_scope_koef.pdm_vel = val;
++	};
++
++	virtual void Set_Launcher_PDM_Vel(float val) 
++	{
++		cur_launcher_koef.pdm_vel = val;
++	};
++
++	virtual void Set_PDM_Accel_F(float val) 
++	{
++		m_pdm.m_fPDM_disp_accel_factor = val;
++	};
++
++	virtual void Set_Silencer_PDM_Accel(float val) 
++	{
++		cur_silencer_koef.pdm_accel = val;
++	};
++
++	virtual void Set_Scope_PDM_Accel(float val) 
++	{
++		cur_scope_koef.pdm_accel = val;
++	};
++
++	virtual void Set_Launcher_PDM_Accel(float val) 
++	{
++		cur_launcher_koef.pdm_accel = val;
++	};
++
++	virtual void Set_PDM_Crouch(float val) 
++	{
++		m_pdm.m_fPDM_disp_crouch = val;
++	};
++
++	virtual void Set_PDM_Crouch_NA(float val) 
++	{
++		m_pdm.m_fPDM_disp_crouch_no_acc = val;
++	};
++
++	virtual void SetCrosshairInertion(float val) 
++	{
++		m_crosshair_inertion = val;
++	};
++
++	virtual void Set_Silencer_CrosshairInertion(float val) 
++	{
++		cur_silencer_koef.crosshair_inertion = val;
++	};
++
++	virtual void Set_Scope_CrosshairInertion(float val) 
++	{
++		cur_scope_koef.crosshair_inertion = val;
++	};
++
++	virtual void Set_Launcher_CrosshairInertion(float val)
++	{
++		cur_launcher_koef.crosshair_inertion = val;
++	};
++
++	void SetFirstBulletDisp(float val)
++	{
++		m_first_bullet_controller.set_fire_dispertion(val);
++	};
+ protected:
+ 	int iAmmoElapsed; // ammo in magazine, currently
+ 	int iMagazineSize; // size (in bullets) of magazine
+@@ -795,6 +952,20 @@ public:
+ 	virtual float GetHitPowerCritical() { return fvHitPowerCritical[g_SingleGameDifficulty]; };
+ 	virtual float GetHitImpulse() { return fHitImpulse; };
+ 	virtual float GetFireDistance() { return fireDistance; };
++
++	// Setters
++	virtual void SetHitPower(float val) {
++		for (int i = ESingleGameDifficulty::egdNovice; i < ESingleGameDifficulty::egdCount; i++) {
++			fvHitPower[i] = val;
++		}
++	};
++	virtual void SetHitPowerCritical(float val) {
++		for (int i = ESingleGameDifficulty::egdNovice; i < ESingleGameDifficulty::egdCount; i++) {
++			fvHitPowerCritical[i] = val;
++		}
++	};
++	virtual void SetHitImpulse(float val) { fHitImpulse = val; };
++	virtual void SetFireDistance(float val) { fireDistance = val; };
+ 	
+ 	IC u8 GetZoomType() const
+ 	{
+diff --git a/src/xrGame/WeaponAK74.cpp b/src/xrGame/WeaponAK74.cpp
+index 6f55903..5e8a276 100644
+--- a/src/xrGame/WeaponAK74.cpp
++++ b/src/xrGame/WeaponAK74.cpp
+@@ -62,7 +62,9 @@ void CWeaponAK74::script_register	(lua_State *L)
+ 			.def("GetAmmoType", &CWeapon::GetAmmoType)
+ 			.def("AmmoTypeForEach", &CWeapon::AmmoTypeForEach)
+ 			.def("RPM", &CWeapon::RPMScript)
++			.def("RealRPM", &CWeapon::RealRPMScript)
+ 			.def("ModeRPM", &CWeapon::ModeRPMScript)
++			.def("ModeRealRPM", &CWeapon::ModeRealRPMScript)
+ 			.def("GetZoomType", &CWeapon::GetZoomType)
+ 			
+ 			.def("Get_PDM_Base", &CWeapon::Get_PDM_Base)
+@@ -93,6 +95,76 @@ void CWeaponAK74::script_register	(lua_State *L)
+ 			.def("GetFireMode", &CWeapon::GetCurrentFireMode)
+ 
+ 			.def("GetInertionAimFactor", &CWeapon::GetInertionAimFactor)
++
++			// Setters
++			.def("SetFireDispersion", &CWeapon::SetFireDispersionScript)
++			.def("SetMisfireStartCondition", &CWeapon::SetMisfireStartCondition)
++			.def("SetMisfireEndCondition", &CWeapon::SetMisfireEndCondition)
++			.def("SetRPM", &CWeapon::SetRPM)
++			.def("SetRealRPM", &CWeapon::SetRealRPM)
++			.def("SetModeRPM", &CWeapon::SetModeRPM)
++			.def("SetModeRealRPM", &CWeapon::SetModeRealRPM)
++			.def("Set_PDM_Base", &CWeapon::Set_PDM_Base)
++			.def("Set_Silencer_PDM_Base", &CWeapon::Set_Silencer_PDM_Base)
++			.def("Set_Scope_PDM_Base", &CWeapon::Set_Scope_PDM_Base)
++			.def("Set_Launcher_PDM_Base", &CWeapon::Set_Launcher_PDM_Base)
++			.def("Set_PDM_BuckShot", &CWeapon::Set_PDM_BuckShot)
++			.def("Set_PDM_Vel_F", &CWeapon::Set_PDM_Vel_F)
++			.def("Set_Silencer_PDM_Vel", &CWeapon::Set_Silencer_PDM_Vel)
++			.def("Set_Scope_PDM_Vel", &CWeapon::Set_Scope_PDM_Vel)
++			.def("Set_Launcher_PDM_Vel", &CWeapon::Set_Launcher_PDM_Vel)
++			.def("Set_PDM_Accel_F", &CWeapon::Set_PDM_Accel_F)
++			.def("Set_Silencer_PDM_Accel", &CWeapon::Set_Silencer_PDM_Accel)
++			.def("Set_Scope_PDM_Accel", &CWeapon::Set_Scope_PDM_Accel)
++			.def("Set_Launcher_PDM_Accel", &CWeapon::Set_Launcher_PDM_Accel)
++			.def("Set_PDM_Crouch", &CWeapon::Set_PDM_Crouch)
++			.def("Set_PDM_Crouch_NA", &CWeapon::Set_PDM_Crouch_NA)
++			.def("SetCrosshairInertion", &CWeapon::SetCrosshairInertion)
++			.def("Set_Silencer_CrosshairInertion", &CWeapon::Set_Silencer_CrosshairInertion)
++			.def("Set_Scope_CrosshairInertion", &CWeapon::Set_Scope_CrosshairInertion)
++			.def("Set_Launcher_CrosshairInertion", &CWeapon::Set_Launcher_CrosshairInertion)
++			.def("SetFirstBulletDisp", &CWeapon::SetFirstBulletDisp)
++			.def("SetHitPower", &CWeapon::SetHitPower)
++			.def("SetHitPowerCritical", &CWeapon::SetHitPowerCritical)
++			.def("SetHitImpulse", &CWeapon::SetHitImpulse)
++			.def("SetFireDistance", &CWeapon::SetFireDistance)
++
++			// Cam Recoil
++			// Getters
++			.def("GetCamRelaxSpeed", &CWeapon::GetCamRelaxSpeed)
++			.def("GetCamRelaxSpeed_AI", &CWeapon::GetCamRelaxSpeed_AI)
++			.def("GetCamDispersion", &CWeapon::GetCamDispersion)
++			.def("GetCamDispersionInc", &CWeapon::GetCamDispersionInc)
++			.def("GetCamDispersionFrac", &CWeapon::GetCamDispersionFrac)
++			.def("GetCamMaxAngleVert", &CWeapon::GetCamMaxAngleVert)
++			.def("GetCamMaxAngleHorz", &CWeapon::GetCamMaxAngleHorz)
++			.def("GetCamStepAngleHorz", &CWeapon::GetCamStepAngleHorz)
++			.def("GetZoomCamRelaxSpeed", &CWeapon::GetZoomCamRelaxSpeed)
++			.def("GetZoomCamRelaxSpeed_AI", &CWeapon::GetZoomCamRelaxSpeed_AI)
++			.def("GetZoomCamDispersion", &CWeapon::GetZoomCamDispersion)
++			.def("GetZoomCamDispersionInc", &CWeapon::GetZoomCamDispersionInc)
++			.def("GetZoomCamDispersionFrac", &CWeapon::GetZoomCamDispersionFrac)
++			.def("GetZoomCamMaxAngleVert", &CWeapon::GetZoomCamMaxAngleVert)
++			.def("GetZoomCamMaxAngleHorz", &CWeapon::GetZoomCamMaxAngleHorz)
++			.def("GetZoomCamStepAngleHorz", &CWeapon::GetZoomCamStepAngleHorz)
++
++			// Setters
++			.def("SetCamRelaxSpeed", &CWeapon::SetCamRelaxSpeed)
++			.def("SetCamRelaxSpeed_AI", &CWeapon::SetCamRelaxSpeed_AI)
++			.def("SetCamDispersion", &CWeapon::SetCamDispersion)
++			.def("SetCamDispersionInc", &CWeapon::SetCamDispersionInc)
++			.def("SetCamDispersionFrac", &CWeapon::SetCamDispersionFrac)
++			.def("SetCamMaxAngleVert", &CWeapon::SetCamMaxAngleVert)
++			.def("SetCamMaxAngleHorz", &CWeapon::SetCamMaxAngleHorz)
++			.def("SetCamStepAngleHorz", &CWeapon::SetCamStepAngleHorz)
++			.def("SetZoomCamRelaxSpeed", &CWeapon::SetZoomCamRelaxSpeed)
++			.def("SetZoomCamRelaxSpeed_AI", &CWeapon::SetZoomCamRelaxSpeed_AI)
++			.def("SetZoomCamDispersion", &CWeapon::SetZoomCamDispersion)
++			.def("SetZoomCamDispersionInc", &CWeapon::SetZoomCamDispersionInc)
++			.def("SetZoomCamDispersionFrac", &CWeapon::SetZoomCamDispersionFrac)
++			.def("SetZoomCamMaxAngleVert", &CWeapon::SetZoomCamMaxAngleVert)
++			.def("SetZoomCamMaxAngleHorz", &CWeapon::SetZoomCamMaxAngleHorz)
++			.def("SetZoomCamStepAngleHorz", &CWeapon::SetZoomCamStepAngleHorz)
+ 			
+ 			.def("Cost", &CWeapon::Cost)
+ 			.def("Weight", &CWeapon::Weight)
+diff --git a/src/xrGame/first_bullet_controller.h b/src/xrGame/first_bullet_controller.h
+index 0d3548b..e55621e 100644
+--- a/src/xrGame/first_bullet_controller.h
++++ b/src/xrGame/first_bullet_controller.h
+@@ -14,6 +14,7 @@ public:
+ 	void load(shared_str const& section);
+ 	bool is_bullet_first(float actor_linear_velocity) const;
+ 	inline float get_fire_dispertion() const { return m_fire_dispertion; };
++	inline void set_fire_dispertion(float val) { m_fire_dispertion = val; };
+ 	void make_shot();
+ }; //class first_bullet_controller
+ 
 diff --git a/src/xrGame/level_script.cpp b/src/xrGame/level_script.cpp
 index c16d21c..ae3827f 100644
 --- a/src/xrGame/level_script.cpp
@@ -1237,6 +1708,98 @@ index 81e990e..ff36f04 100644
  	script_rq_result()
  	{
  		O = 0;
+diff --git a/src/xrGame/script_game_object.h b/src/xrGame/script_game_object.h
+index 640dcab..08ae946 100644
+--- a/src/xrGame/script_game_object.h
++++ b/src/xrGame/script_game_object.h
+@@ -1027,6 +1027,10 @@ public:
+ 	void SetActorRunCoef(float run_coef);
+ 	float GetActorRunBackCoef() const;
+ 	void SetActorRunBackCoef(float run_back_coef);
++	float GetActorWalkAccel() const;
++	void SetActorWalkAccel(float val);
++	float GetActorWalkBackCoef() const;
++	void SetActorWalkBackCoef(float val);
+ 
+ 	void SetCharacterIcon(LPCSTR iconName);
+ #endif
+diff --git a/src/xrGame/script_game_object_inventory_owner.cpp b/src/xrGame/script_game_object_inventory_owner.cpp
+index 3ad0a2f..d7697f7 100644
+--- a/src/xrGame/script_game_object_inventory_owner.cpp
++++ b/src/xrGame/script_game_object_inventory_owner.cpp
+@@ -2491,6 +2491,55 @@ void CScriptGameObject::SetActorRunBackCoef(float run_back_coef)
+ 	pActor->m_fRunBackFactor = run_back_coef;
+ }
+ 
++
++float CScriptGameObject::GetActorWalkAccel() const
++{
++	CActor* pActor = smart_cast<CActor*>(&object());
++	if (!pActor)
++	{
++		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
++			"CActor : cannot access class member GetActorWalkAccel!");
++		return (false);
++	}
++	return (pActor->m_fWalkAccel);
++}
++void CScriptGameObject::SetActorWalkAccel(float val)
++{
++	CActor* pActor = smart_cast<CActor*>(&object());
++	if (!pActor)
++	{
++		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
++			"CActor : cannot access class member SetActorWalkAccel!");
++		return;
++	}
++	pActor->m_fWalkAccel = val;
++}
++
++
++float CScriptGameObject::GetActorWalkBackCoef() const
++{
++	CActor* pActor = smart_cast<CActor*>(&object());
++	if (!pActor)
++	{
++		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
++			"CActor : cannot access class member GetActorWalkBackCoef!");
++		return (false);
++	}
++	return (pActor->m_fWalkBackFactor);
++}
++void CScriptGameObject::SetActorWalkBackCoef(float val)
++{
++	CActor* pActor = smart_cast<CActor*>(&object());
++	if (!pActor)
++	{
++		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
++			"CActor : cannot access class member SetActorWalkBackCoef!");
++		return;
++	}
++	pActor->m_fWalkBackFactor = val;
++}
++
++
+ void CScriptGameObject::SetCharacterIcon(LPCSTR iconName)
+ {
+ 	CInventoryOwner* pInventoryOwner = smart_cast<CInventoryOwner*>(&object());
+diff --git a/src/xrGame/script_game_object_script3.cpp b/src/xrGame/script_game_object_script3.cpp
+index aeeaf8f..44157ab 100644
+--- a/src/xrGame/script_game_object_script3.cpp
++++ b/src/xrGame/script_game_object_script3.cpp
+@@ -536,6 +536,12 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
+ 		.def("get_actor_runback_coef", &CScriptGameObject::GetActorRunBackCoef)
+ 		.def("set_actor_runback_coef", &CScriptGameObject::SetActorRunBackCoef)
+ 		//end AVO
++
++		// Additional exports
++		.def("get_actor_walk_accel", &CScriptGameObject::GetActorWalkAccel)
++		.def("set_actor_walk_accel", &CScriptGameObject::SetActorWalkAccel)
++		.def("get_actor_walk_back_coef", &CScriptGameObject::GetActorWalkBackCoef)
++		.def("set_actor_walk_back_coef", &CScriptGameObject::SetActorWalkBackCoef)
+ #endif
+ 
+ 		.def("set_can_be_harmed", &CScriptGameObject::SetCanBeHarmed)
 diff --git a/src/xrGame/ui/UILogsWnd.cpp b/src/xrGame/ui/UILogsWnd.cpp
 index cda3adc..6d1fad1 100644
 --- a/src/xrGame/ui/UILogsWnd.cpp
@@ -1308,6 +1871,18 @@ index 464c410..e7f0642 100644
  public:
  	CUINewsItemWnd();
  	virtual ~CUINewsItemWnd();
+diff --git a/src/xrServerEntities/script_fvector_script.cpp b/src/xrServerEntities/script_fvector_script.cpp
+index 06020de..a1a7aa6 100644
+--- a/src/xrServerEntities/script_fvector_script.cpp
++++ b/src/xrServerEntities/script_fvector_script.cpp
+@@ -79,6 +79,7 @@ void CScriptFvector::script_register(lua_State* L)
+ 		.def("dotproduct", &Fvector::dotproduct)
+ 		.def("crossproduct", &Fvector::crossproduct, return_reference_to(_1))
+ 		.def("distance_to_xz", &Fvector::distance_to_xz)
++		.def("distance_to_xz_sqr", &Fvector::distance_to_xz_sqr)
+ 		.def("distance_to_sqr", &Fvector::distance_to_sqr)
+ 		.def("distance_to", &Fvector::distance_to)
+ 		//			.def("from_bary",					(Fvector & (Fvector::*)(const Fvector &, const Fvector &, const Fvector &, float, float, float))(&Fvector::from_bary),	return_reference_to(_1))
 diff --git a/src/xrServerEntities/script_storage.cpp b/src/xrServerEntities/script_storage.cpp
 index 450b304..6a932db 100644
 --- a/src/xrServerEntities/script_storage.cpp
