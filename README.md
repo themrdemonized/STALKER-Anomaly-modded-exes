@@ -72,6 +72,17 @@ How to compile exes:
   * DLTX received possibility to add items to parameter's list if the parameter has structure like ```name = item1, item2, item3```.
     * `>name = item4, item5` will add item4 and item5 to list, the result would be `name = item1, item2, item3, item4, item5`
     * `<name = item3` will remove item3 from the list, the result would be `name = item1, item2`
+    * example for mod_system_...ltx: ```
+      ![info_portions]
+      >files                                    = ah_info, info_hidden_threat
+
+      ![dialogs]
+      >files                                    = AH_dialogs, dialogs_hidden_threat
+      
+      ![profiles]
+      >files                                    = npc_profile_ah, npc_profile_hidden_threat
+      >specific_characters_files                = character_desc_ah, character_desc_hidden_threat
+    ```
   * DXML will no longer process translation strings of non eng/rus languages, they aren't supported yet
   * New lua_help_ex.script file where new engine exports will be described
   * Exported additional CWeapon functions considering weapon's RPM, handling and recoil
