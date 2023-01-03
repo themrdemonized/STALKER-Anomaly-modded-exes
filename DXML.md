@@ -34,7 +34,7 @@ What this does is creating a function on_xml_read that will be auto-called from 
 * xml_file_name - current XML filename that engine is processing (for example: text\eng\_game_version.xml)
 * xml_obj - the object described above
 
-** WARNING: ** DXML won't process translation strings other than from eng/rus folders and `gameplay\character_desc_general.xml` file. For how to manipulate that file check "Additional functions" paragraph below.
+**WARNING:** DXML won't process translation strings other than from eng/rus folders and `gameplay\character_desc_general.xml` file. For how to manipulate that file check "Additional functions" paragraph below.
 
 To understand, what can be done with xml_obj and what functions it provides, let's take a look at typical usecases:
 
@@ -256,6 +256,7 @@ end
 ```
 
 Full list of fields available in "data" table:
+
 * name
 * bio
 * community
@@ -302,6 +303,7 @@ end
 ```
 
 Full list of methods in dialog_list
+
 * find(regex) - find existing dialog by regex, returns last found dialog matching regex and its position in the list
 * has(string) - check if dialog by string exists, returns the position of found dialog in the list
 * add(string, pos) - adds new dialog in specified position (by default adds before break dialog string if it exists)
