@@ -1,5 +1,5 @@
 diff --git a/src/Layers/xrRender/SkeletonAnimated.cpp b/src/Layers/xrRender/SkeletonAnimated.cpp
-index a2b6c3f..af7cff9 100644
+index a2b6c3f..d5ac60e 100644
 --- a/src/Layers/xrRender/SkeletonAnimated.cpp
 +++ b/src/Layers/xrRender/SkeletonAnimated.cpp
 @@ -11,6 +11,7 @@
@@ -28,8 +28,26 @@ index a2b6c3f..af7cff9 100644
  		}
  	};
  
+@@ -808,7 +809,7 @@ void CKinematicsAnimated::Load(const char* N, IReader* data, u32 dwFlags)
+ 		string_path items_nm;
+ 		data->r_stringZ(items_nm, sizeof(items_nm));
+ 		u32 set_cnt = _GetItemCount(items_nm);
+-		R_ASSERT(set_cnt<MAX_ANIM_SLOT);
++		R_ASSERT2(set_cnt<MAX_ANIM_SLOT, make_string("section '%s'\nmodel '%s'", current_player_hud_sect.c_str(), N).c_str());
+ 		m_Motions.reserve(set_cnt);
+ 		string_path nm;
+ 		for (u32 k = 0; k < set_cnt; ++k)
+@@ -853,7 +854,7 @@ void CKinematicsAnimated::Load(const char* N, IReader* data, u32 dwFlags)
+ 		m_Motions.back().motions.create(nm, data, bones);
+ 	}
+ 
+-	R_ASSERT(m_Motions.size());
++	R_ASSERT2(m_Motions.size(), make_string("section '%s'\nmodel '%s'", current_player_hud_sect.c_str(), N).c_str());
+ 
+ 	m_Partition = m_Motions[0].motions.partition();
+ 	m_Partition->load(this, N);
 diff --git a/src/xrCore/Xr_ini.cpp b/src/xrCore/Xr_ini.cpp
-index 3f5ac84..d269bb5 100644
+index 3f5ac84..35c1207 100644
 --- a/src/xrCore/Xr_ini.cpp
 +++ b/src/xrCore/Xr_ini.cpp
 @@ -3,6 +3,14 @@
@@ -255,7 +273,7 @@ index 3f5ac84..d269bb5 100644
 -				{
 -					FS_FileSet fset;
 -					FS.file_list(fset, inc_path, FS_ListFiles, inc_name);
-+						Debug.fatal(DEBUG_INFO, "Duplicate section '%s' wasn't marked as an override.\n\nOverride section by prefixing it with '!' (![%s]) or give it a unique name.\n\nCheck this file and its DLTX mods:\n\"%s\",\nfile with section \"%s\",\nfile with duplicate \"%s\"", *Current->Name, *Current->Name, m_file_name, SectionToFilename[std::string(Current->Name.c_str())], currentFileName);
++						Debug.fatal(DEBUG_INFO, "Duplicate section '%s' wasn't marked as an override.\n\nOverride section by prefixing it with '!' (![%s]) or give it a unique name.\n\nCheck this file and its DLTX mods:\n\"%s\",\nfile with section \"%s\",\nfile with duplicate \"%s\"", *Current->Name, *Current->Name, m_file_name, SectionToFilename[std::string(Current->Name.c_str())].c_str(), currentFileName);
 +					}
  
 -					for (FS_FileSet::iterator it = fset.begin(); it != fset.end(); it++)

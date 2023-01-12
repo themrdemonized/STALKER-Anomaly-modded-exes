@@ -98,6 +98,10 @@ How to compile exes:
 
 ## Changelog
 
+**2023.01.13**:
+
+* Fix corrupted print of duplicate section
+
 **2023.01.06**:
 
 * In case of typical first person model/animation errors, the game will print the section that has defined model
