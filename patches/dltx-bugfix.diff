@@ -46,6 +46,19 @@ index a2b6c3f..d5ac60e 100644
  
  	m_Partition = m_Motions[0].motions.partition();
  	m_Partition->load(this, N);
+diff --git a/src/Layers/xrRender/WallmarksEngine.cpp b/src/Layers/xrRender/WallmarksEngine.cpp
+index d0592f8..141f50c 100644
+--- a/src/Layers/xrRender/WallmarksEngine.cpp
++++ b/src/Layers/xrRender/WallmarksEngine.cpp
+@@ -34,7 +34,7 @@ namespace WallmarksEngine
+ const float W_DIST_FADE = 15.f;
+ const float W_DIST_FADE_SQR = W_DIST_FADE * W_DIST_FADE;
+ const float I_DIST_FADE_SQR = 1.f / W_DIST_FADE_SQR;
+-const int MAX_TRIS = 1024;
++const int MAX_TRIS = 1024 * 16;
+ 
+ IC bool operator ==(const CWallmarksEngine::wm_slot* slot, const ref_shader& shader) { return slot->shader == shader; }
+ 
 diff --git a/src/xrCore/Xr_ini.cpp b/src/xrCore/Xr_ini.cpp
 index 3f5ac84..35c1207 100644
 --- a/src/xrCore/Xr_ini.cpp

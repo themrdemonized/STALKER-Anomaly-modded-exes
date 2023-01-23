@@ -51,6 +51,7 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Additional callbacks and exports described in lua_help_ex.script
   * Restored "Fatal Error" MessageBox popup in case of encountering fatal engine errors like it was on Windows 7 or lower
   * In case of typical first person model/animation errors, the game will print the section that has defined model
+  * MAX_TRIS const increased from 1024 to 16384
   * Fixed sorting news in News Tab in PDA
   * Added getting material of ray_pick() result with all of its properties
   * Added `on_loading_screen_key_prompt` callback for when loading screen happens and "Press Any Key to Continue" prompt appears
@@ -97,6 +98,10 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+
+**2023.01.23**:
+
+* MAX_TRIS const increased from 1024 to 16384
 
 **2023.01.13**:
 
