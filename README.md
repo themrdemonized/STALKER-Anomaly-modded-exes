@@ -15,6 +15,18 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Attempting to override sections no longer crash the game, but prints the message into the log. All sections that triggers that error will be printed
   * Duplicate section errors now prints the root file where the error happened for easier checking mod_... ltxes
   * Print of class and script errors in console
+  * DLTX received possibility to create section if it doesn't exists and override section if it does with the same symbol `@`.
+  Below is the example for `newsection` that wasn't defined. Firstly its created with one param `override = false`, then its overriden with `override = true`
+
+  ```
+  @[newsection]
+  override = false
+
+  @[newsection]
+  override = true
+  
+  ```
+
   * DLTX received possibility to add items to parameter's list if the parameter has structure like 
   
   ```name = item1, item2, item3```
@@ -54,6 +66,7 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * MAX_TRIS const increased from 1024 to 16384
   * Fixed sorting news in News Tab in PDA
   * Added getting material of ray_pick() result with all of its properties
+  * Added `bone_direction()` function for game objects
   * Added `on_loading_screen_key_prompt` callback for when loading screen happens and "Press Any Key to Continue" prompt appears
   * Added `on_loading_screen_dismissed` callback for when player dismisses loading screen after "Press Any Key to Continue" pressed
   * Added `on_specific_character_dialog_list` callback that allows to manipulate available actor dialog list defined in characted_desc...xml files in `<actor_dialog>` tags
@@ -98,6 +111,22 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+
+**2023.01.28**:
+
+* DLTX received possibility to create section if it doesn't exists and override section if it does with the same symbol `@`.
+Below is the example for `newsection` that wasn't defined. Firstly its created with one param `override = false`, then its overriden with `override = true`
+
+```
+@[newsection]
+override = false
+
+@[newsection]
+override = true
+
+```
+* Added `bone_direction()` function for game objects
+* Updated `lua_help_ex.script` with new functions available
 
 **2023.01.23**:
 

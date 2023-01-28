@@ -60,7 +60,7 @@ index d0592f8..141f50c 100644
  IC bool operator ==(const CWallmarksEngine::wm_slot* slot, const ref_shader& shader) { return slot->shader == shader; }
  
 diff --git a/src/xrCore/Xr_ini.cpp b/src/xrCore/Xr_ini.cpp
-index 3f5ac84..35c1207 100644
+index 3f5ac84..cce213c 100644
 --- a/src/xrCore/Xr_ini.cpp
 +++ b/src/xrCore/Xr_ini.cpp
 @@ -3,6 +3,14 @@
@@ -98,7 +98,7 @@ index 3f5ac84..35c1207 100644
  	CInifile::SectIt_ sect_it = std::lower_bound(tgt->Data.begin(), tgt->Data.end(), *I.first, item_pred);
  	if (sect_it != tgt->Data.end() && sect_it->first.equal(I.first))
  	{
-@@ -210,212 +229,703 @@ void CInifile::Load(IReader* F, LPCSTR path
+@@ -210,212 +229,750 @@ void CInifile::Load(IReader* F, LPCSTR path
  )
  {
  	R_ASSERT(F);
@@ -254,10 +254,10 @@ index 3f5ac84..35c1207 100644
 -				xr_strcat(inc_path, sizeof(inc_path), folder);
 +				IReader* I = FS.r_open(_fn);
 +				R_ASSERT3(I, "Can't find include file:", name);
++
++				strcpy(currentFileName, name);
  
 -				const auto loadFile = [&](const string_path _fn, const string_path name)
-+				strcpy(currentFileName, name);
-+
 +				LTXLoad(I, inc_path, OutputData, ParentDataMap, bOverridesOnly, false);
 +
 +				FS.r_close(I);
@@ -316,6 +316,8 @@ index 3f5ac84..35c1207 100644
 +			Current = NULL;
 +		};
 +
++		std::unordered_set<std::string> sectionsMarkedForCreate;
++
 +		while (!F->eof() || (bIsRootFile && !bHasLoadedModFiles))
  		{
 -			// insert previous filled section
@@ -329,21 +331,9 @@ index 3f5ac84..35c1207 100644
 -				DATA.insert(I, Current);
 +				F->r_string(str, str.GetSize());
 +				_Trim(str);
- 			}
--			Current = xr_new<Sect>();
--			Current->Name = 0;
--			// start new section
--			R_ASSERT3(strchr(str, ']'), "Bad ini section found: ", str);
--			LPCSTR inherited_names = strstr(str, "]:");
--			if (0 != inherited_names)
++			}
 +			else if (!bHasLoadedModFiles && bIsRootFile)
- 			{
--				VERIFY2(m_flags.test(eReadOnly), "Allow for readonly mode only.");
--				inherited_names += 2;
--				u32 cnt = _GetItemCount(inherited_names);
--				u32 total_count = 0;
--				u32 k = 0;
--				for (k = 0; k < cnt; ++k)
++			{
 +				StashCurrentSection();
 +				bHasLoadedModFiles = TRUE;
 +
@@ -371,11 +361,7 @@ index 3f5ac84..35c1207 100644
 +				FS.file_list(ModFiles, FilePath.c_str(), FS_ListFiles, ("mod_" + FileName + "_*.ltx").c_str());
 +
 +				for (auto It = ModFiles.begin(); It != ModFiles.end(); ++It)
- 				{
--					string512 tmp;
--					_GetItem(inherited_names, k, tmp);
--					Sect& inherited_section = r_section(tmp);
--					total_count += inherited_section.Data.size();
++				{
 +					std::string ModFileName = It->name.c_str();
 +
 +					//Determine if we should load this mod file, or if it's meant for a different root file
@@ -401,9 +387,8 @@ index 3f5ac84..35c1207 100644
 +					}
 +
 +					loadFile((FilePath + ModFileName).c_str(), FilePath.c_str(), ModFileName.c_str());
- 				}
- 
--				Current->Data.reserve(Current->Data.size() + total_count);
++				}
++
 +				continue;
 +			}
 +
@@ -414,8 +399,7 @@ index 3f5ac84..35c1207 100644
 +			{
 +				comm = comm_1;
 +			}
- 
--				for (k = 0; k < cnt; ++k)
++
 +#ifdef DEBUG
 +			LPSTR comment = 0;
 +#endif
@@ -427,12 +411,7 @@ index 3f5ac84..35c1207 100644
 +
 +				LPCSTR q1 = strchr(str, quot);
 +				if (q1 && q1 < comm)
- 				{
--					string512 tmp;
--					_GetItem(inherited_names, k, tmp);
--					Sect& inherited_section = r_section(tmp);
--					for (SectIt_ it = inherited_section.Data.begin(); it != inherited_section.Data.end(); it++)
--						insert_item(Current, *it);
++				{
 +					LPCSTR q2 = strchr(++q1, quot);
 +					if (q2 && q2 > comm)
 +						in_quot = true;
@@ -444,33 +423,45 @@ index 3f5ac84..35c1207 100644
 +#ifdef DEBUG
 +					comment = comm + 1;
 +#endif
- 				}
++				}
  			}
--			*strchr(str, ']') = 0;
--			Current->Name = strlwr(str + 1);
--		}
--		else // name = value
--		{
--			if (Current)
+-			Current = xr_new<Sect>();
+-			Current->Name = 0;
+-			// start new section
+-			R_ASSERT3(strchr(str, ']'), "Bad ini section found: ", str);
+-			LPCSTR inherited_names = strstr(str, "]:");
+-			if (0 != inherited_names)
 +
 +			_Trim(str);
 +
++			auto isOverrideSection = [](char* str) {
++				return strstr(str, "![") == &str[0];
++			};
++
++			auto isSafeOverrideSection = [](char* str) {
++				return strstr(str, "@[") == &str[0];
++			};
++
++			auto isModSection = [isOverrideSection, isSafeOverrideSection](char* str) {
++				return isOverrideSection(str) || isSafeOverrideSection(str);
++			};
++
 +			if (str[0] && (str[0] == '#') && strstr(str, "#include")) //handle includes
  			{
--				string4096 value_raw;
--				char* name = str;
--				char* t = strchr(name, '=');
--				if (t)
+-				VERIFY2(m_flags.test(eReadOnly), "Allow for readonly mode only.");
+-				inherited_names += 2;
+-				u32 cnt = _GetItemCount(inherited_names);
+-				u32 total_count = 0;
+-				u32 k = 0;
+-				for (k = 0; k < cnt; ++k)
 +				string_path inc_name;
 +				R_ASSERT(path && path[0]);
 +				if (_GetItem(str, 1, inc_name, '"'))
  				{
--					*t = 0;
--					_Trim(name);
--					++t;
--					xr_strcpy(value_raw, sizeof(value_raw), t);
--					bInsideSTR = _parse(str2, value_raw);
--					if (bInsideSTR) //multiline str value
+-					string512 tmp;
+-					_GetItem(inherited_names, k, tmp);
+-					Sect& inherited_section = r_section(tmp);
+-					total_count += inherited_section.Data.size();
 +					string_path fn, inc_path, folder;
 +					strconcat(sizeof(fn), fn, path, inc_name);
 +					_splitpath(fn, inc_path, folder, 0, 0);
@@ -478,28 +469,12 @@ index 3f5ac84..35c1207 100644
 +
 +
 +					if (strstr(inc_name, "*.ltx"))
- 					{
--						while (bInsideSTR)
++					{
 +						FS_FileSet fset;
 +						FS.file_list(fset, inc_path, FS_ListFiles, inc_name);
 +
 +						for (FS_FileSet::iterator it = fset.begin(); it != fset.end(); it++)
- 						{
--							xr_strcat(value_raw, sizeof(value_raw), "\r\n");
--							string4096 str_add_raw;
--							F->r_string(str_add_raw, sizeof(str_add_raw));
--							R_ASSERT2(
--								xr_strlen(value_raw) + xr_strlen(str_add_raw) < sizeof(value_raw),
--								make_string(
--									"Incorrect inifile format: section[%s], variable[%s]. Odd number of quotes (\") found, but should be even."
--									,
--									Current->Name.c_str(),
--									name
--								)
--							);
--							xr_strcat(value_raw, sizeof(value_raw), str_add_raw);
--							bInsideSTR = _parse(str2, value_raw);
--							if (bInsideSTR)
++						{
 +							LPCSTR _name = it->name.c_str();
 +							string_path _fn;
 +							strconcat(sizeof(_fn), _fn, inc_path, _name);
@@ -508,18 +483,25 @@ index 3f5ac84..35c1207 100644
 +					}
 +					else
 +						loadFile(fn, inc_path, inc_name);
-+				}
-+
+ 				}
+ 
+-				Current->Data.reserve(Current->Data.size() + total_count);
 +				continue;
 +			}
 +			else if (str[0] && strstr(str, "!![") == &str[0])	//Section delete
 +			{
 +				StashCurrentSection();
-+
+ 
+-				for (k = 0; k < cnt; ++k)
 +				if (!bOverridesOnly)
-+				{
+ 				{
+-					string512 tmp;
+-					_GetItem(inherited_names, k, tmp);
+-					Sect& inherited_section = r_section(tmp);
+-					for (SectIt_ it = inherited_section.Data.begin(); it != inherited_section.Data.end(); it++)
+-						insert_item(Current, *it);
 +					continue;
-+				}
+ 				}
 +
 +				Current = xr_new<Sect>();
 +				*strchr(str, ']') = 0;
@@ -534,22 +516,45 @@ index 3f5ac84..35c1207 100644
 +				insert_item(Current, DeleteItem);
 +
 +				continue;
-+			}
-+			else if ((str[0] && (str[0] == '[')) || strstr(str, "![") == &str[0]) //new section ?
+ 			}
+-			*strchr(str, ']') = 0;
+-			Current->Name = strlwr(str + 1);
+-		}
+-		else // name = value
+-		{
+-			if (Current)
++			else if ((str[0] && (str[0] == '[')) || isModSection(str)) //new section ?
 +			{
 +				// insert previous filled section
 +				StashCurrentSection();
 +
-+				bIsCurrentSectionOverride = strstr(str, "![") == &str[0];	//Used to detect bad or unintended overrides
-+
-+				Current = xr_new<Sect>();
-+				u32 SectionNameStartPos = (bIsCurrentSectionOverride ? 2 : 1);
++				u32 SectionNameStartPos = (isModSection(str) ? 2 : 1);
 +				std::string SecName = std::string(str).substr(SectionNameStartPos, strchr(str, ']') - str - SectionNameStartPos).c_str();
 +				for (auto i = SecName.begin(); i != SecName.end(); ++i)
 +				{
 +					*i = tolower(*i);
 +				}
++				
++				if (isOverrideSection(str)) { //Used to detect bad or unintended overrides
++					bIsCurrentSectionOverride = true;
++				} else if (isSafeOverrideSection(str)) { // Create section if it doesnt exist, override if it does
++					bIsCurrentSectionOverride = true;
++					if (bOverridesOnly) {
++						// Msg("using @[, override existing section %s", SecName.c_str());
++					} else {
++						auto SectIt = OutputData->find(SecName);
++						if (SectIt != OutputData->end()) {
++							// Msg("using @[, override existing section %s", SecName.c_str());
++						} else {
++							// Msg("using @[, create new section %s", SecName.c_str());
++							sectionsMarkedForCreate.insert(SecName);
++						}
++					}
++				} else {
++					bIsCurrentSectionOverride = false;
++				}
 +
++				Current = xr_new<Sect>();
 +				Current->Name = SecName.c_str();
 +
 +				// start new section
@@ -573,23 +578,49 @@ index 3f5ac84..35c1207 100644
 +				continue;
 +			}
 +			else // name = value
-+			{
+ 			{
+-				string4096 value_raw;
+-				char* name = str;
+-				char* t = strchr(name, '=');
+-				if (t)
 +				if (Current && bIsCurrentSectionOverride == bOverridesOnly)
-+				{
+ 				{
+-					*t = 0;
+-					_Trim(name);
+-					++t;
+-					xr_strcpy(value_raw, sizeof(value_raw), t);
+-					bInsideSTR = _parse(str2, value_raw);
+-					if (bInsideSTR) //multiline str value
 +					bool bIsDelete = str[0] == '!';
 +
 +					MezzStringBuffer value_raw;
 +					char* name = (char*) (str + (bIsDelete ? 1 : 0));
 +					char* t = strchr(name, '=');
 +					if (t)
-+					{
+ 					{
+-						while (bInsideSTR)
 +						*t = 0;
 +						_Trim(name);
 +						++t;
 +						xr_strcpy(value_raw, value_raw.GetSize(), t);
 +						bInsideSTR = _parse(str2, value_raw);
 +						if (bInsideSTR) //multiline str value
-+						{
+ 						{
+-							xr_strcat(value_raw, sizeof(value_raw), "\r\n");
+-							string4096 str_add_raw;
+-							F->r_string(str_add_raw, sizeof(str_add_raw));
+-							R_ASSERT2(
+-								xr_strlen(value_raw) + xr_strlen(str_add_raw) < sizeof(value_raw),
+-								make_string(
+-									"Incorrect inifile format: section[%s], variable[%s]. Odd number of quotes (\") found, but should be even."
+-									,
+-									Current->Name.c_str(),
+-									name
+-								)
+-							);
+-							xr_strcat(value_raw, sizeof(value_raw), str_add_raw);
+-							bInsideSTR = _parse(str2, value_raw);
+-							if (bInsideSTR)
 +							while (bInsideSTR)
  							{
 -								if (is_empty_line_now(F))
@@ -637,6 +668,22 @@ index 3f5ac84..35c1207 100644
 +		}
 +
 +		StashCurrentSection();
++
++		// Create empty sections that were marked with @[ and weren't defined normally
++		if (!bOverridesOnly) {
++			for (auto& SecName : sectionsMarkedForCreate) {
++				auto SectIt = OutputData->find(SecName);
++				if (SectIt == OutputData->end()) {
++					// Msg("section %s does not exist but was marked as @[, creating", SecName.c_str());
++					Current = xr_new<Sect>();
++					Current->Name = SecName.c_str();
++					OutputData->emplace(std::pair<std::string, Sect>(std::string(Current->Name.c_str()), *Current));
++					OverrideToFilename[std::string(Current->Name.c_str())][currentFileName] = true;
++					SectionToFilename[std::string(Current->Name.c_str())] = currentFileName;
++					Current = NULL;
++				}
++			}
++		}
 +	};
 +
 +	std::unordered_map<std::string, std::vector<std::string>> BaseParentDataMap;
@@ -770,8 +817,8 @@ index 3f5ac84..35c1207 100644
 +				if (ParentSectionName == *It)
 +				{
 +					Debug.fatal(DEBUG_INFO, "Section '%s' has cyclical dependencies. Ensure that sections with parents don't inherit in a loop. Check this file and its DLTX mods: %s, mod file %s", ParentSectionName.c_str(), m_file_name, currentFileName);
- 				}
- 			}
++				}
++			}
 +
 +			EvaluateSection(ParentSectionName, PreviousEvaluations);
 +
@@ -788,7 +835,7 @@ index 3f5ac84..35c1207 100644
 +			{
 +				InsertItemWithDelete(CurrentItem, Parent);
 +			}
- 		}
++		}
 +
 +		//Delete entries that are still marked DLTX_DELETE
 +		for (auto It = CurrentSect->Data.rbegin(); It != CurrentSect->Data.rend(); ++It)
@@ -882,9 +929,9 @@ index 3f5ac84..35c1207 100644
 +
 +						sect_it->second = join_list(sect_it_items_vec, ",").c_str();
 +					}
-+				}
-+			}
-+		}
+ 				}
+ 			}
+ 		}
 +		
 +
 +		//Pop from stack
@@ -913,29 +960,29 @@ index 3f5ac84..35c1207 100644
 +	for (std::pair<std::string, Sect> SectPair : BaseData)
 +	{
 +		EvaluateSection(SectPair.first, &PreviousEvaluations);
- 	}
--	if (Current)
++	}
 +
 +	//Insert all finalized sections into final container
 +	for (std::pair<std::string, Sect> SectPair : FinalData)
- 	{
--		RootIt I = std::lower_bound(DATA.begin(), DATA.end(), *Current->Name, sect_pred);
--		if ((I != DATA.end()) && ((*I)->Name == Current->Name))
--			Debug.fatal(DEBUG_INFO, "Duplicate section '%s' found.", *Current->Name);
--		DATA.insert(I, Current);
++	{
 +		Sect* NewSect = xr_new<Sect>();
 +		*NewSect = SectPair.second;
 +
 +		RootIt I = std::lower_bound(DATA.begin(), DATA.end(), SectPair.first.c_str(), sect_pred);
 +		DATA.insert(I, NewSect);
-+	}
+ 	}
+-	if (Current)
 +
 +	// Clean modifiers of parameters' lists
 +	OverrideModifyListData.clear();
 +
 +	//throw errors if there are overrides that never got used
 +	if (OverrideData.size())
-+	{
+ 	{
+-		RootIt I = std::lower_bound(DATA.begin(), DATA.end(), *Current->Name, sect_pred);
+-		if ((I != DATA.end()) && ((*I)->Name == Current->Name))
+-			Debug.fatal(DEBUG_INFO, "Duplicate section '%s' found.", *Current->Name);
+-		DATA.insert(I, Current);
 +		//Debug.fatal(DEBUG_INFO, "Attemped to override section '%s', which doesn't exist. Ensure that a base section with the same name is loaded first. Check this file and its DLTX mods: %s", OverrideData.begin()->first.c_str(), m_file_name);
 +		for (auto i = OverrideData.begin(); i != OverrideData.end(); i++) {
 +			auto override_filenames = OverrideToFilename.find(i->first);
@@ -1537,6 +1584,32 @@ index 6f55903..5e8a276 100644
  			
  			.def("Cost", &CWeapon::Cost)
  			.def("Weight", &CWeapon::Weight)
+diff --git a/src/xrGame/death_anims_predicates.cpp b/src/xrGame/death_anims_predicates.cpp
+index 05efd48..c9d6437 100644
+--- a/src/xrGame/death_anims_predicates.cpp
++++ b/src/xrGame/death_anims_predicates.cpp
+@@ -6,6 +6,7 @@
+ #include	"ai/stalker/ai_stalker.h"
+ #include	"stalker_movement_manager_smart_cover.h"
+ #include	"weaponshotgun.h"
++#include	"WeaponAutomaticShotgun.h"
+ #include	"explosive.h"
+ #include	"weaponmagazined.h"
+ #include	"CharacterPhysicsSupport.h"
+@@ -177,8 +178,11 @@ class type_motion2 : public type_motion
+ 			return false;
+ 		//static_cast<CGameObject*>(O)->cast_weapon()
+ 		CWeaponShotgun* s = smart_cast<CWeaponShotgun*>(static_cast<CGameObject*>(O));
+-		if (!s)
+-			return false;
++		if (!s) {
++			CWeaponAutomaticShotgun* s = smart_cast<CWeaponAutomaticShotgun*>(static_cast<CGameObject*>(O));
++			if (!s)
++				return false;
++		}		
+ 		Fvector p;
+ 		const float max_distance = 20.f;
+ 		if (Fvector().sub(H.initiator()->Position(), global_hit_position(p, ea, H)).magnitude() > max_distance)
 diff --git a/src/xrGame/first_bullet_controller.h b/src/xrGame/first_bullet_controller.h
 index 0d3548b..e55621e 100644
 --- a/src/xrGame/first_bullet_controller.h
@@ -1798,11 +1871,56 @@ index 81e990e..ff36f04 100644
  	script_rq_result()
  	{
  		O = 0;
+diff --git a/src/xrGame/script_game_object.cpp b/src/xrGame/script_game_object.cpp
+index 5489997..9a1a917 100644
+--- a/src/xrGame/script_game_object.cpp
++++ b/src/xrGame/script_game_object.cpp
+@@ -369,6 +369,32 @@ Fvector CScriptGameObject::bone_position(LPCSTR bone_name, bool bHud) const
+ 	return (matrix.c);
+ }
+ 
++Fvector CScriptGameObject::bone_direction(LPCSTR bone_name, bool bHud) const
++{
++	IKinematics* k = nullptr;
++
++	CHudItem* itm = smart_cast<CHudItem*>(&object());
++	if (bHud && itm)
++		k = itm->HudItemData()->m_model;
++	else
++		k = object().Visual()->dcast_PKinematics();
++
++	u16 bone_id;
++	if (xr_strlen(bone_name))
++	{
++		bone_id = k->LL_BoneID(bone_name);
++		if (bone_id == BI_NONE)
++			bone_id = k->LL_GetBoneRoot();
++	} else
++		bone_id = k->LL_GetBoneRoot();
++
++	Fmatrix matrix;
++	Fvector res;
++	matrix.mul_43((bHud && itm) ? itm->HudItemData()->m_item_transform : object().XFORM(),
++		k->LL_GetTransform(bone_id));
++	matrix.getHPB(res);
++	return (res);
++}
+ 
+ LPCSTR CScriptGameObject::bone_name(u16 id, bool bHud)
+ {
 diff --git a/src/xrGame/script_game_object.h b/src/xrGame/script_game_object.h
-index 640dcab..08ae946 100644
+index 640dcab..08f6153 100644
 --- a/src/xrGame/script_game_object.h
 +++ b/src/xrGame/script_game_object.h
-@@ -1027,6 +1027,10 @@ public:
+@@ -683,6 +683,7 @@ public:
+ 	void stop_particles(LPCSTR pname, LPCSTR bone);
+ 
+ 	Fvector bone_position(LPCSTR bone_name, bool bHud = false) const;
++	Fvector bone_direction(LPCSTR bone_name, bool bHud = false) const;
+ 	LPCSTR bone_name(u16 id, bool bHud);
+ 	bool is_body_turning() const;
+ 	cphysics_shell_scripted* get_physics_shell() const;
+@@ -1027,6 +1028,10 @@ public:
  	void SetActorRunCoef(float run_coef);
  	float GetActorRunBackCoef() const;
  	void SetActorRunBackCoef(float run_back_coef);
@@ -1874,10 +1992,18 @@ index 3ad0a2f..d7697f7 100644
  {
  	CInventoryOwner* pInventoryOwner = smart_cast<CInventoryOwner*>(&object());
 diff --git a/src/xrGame/script_game_object_script3.cpp b/src/xrGame/script_game_object_script3.cpp
-index aeeaf8f..44157ab 100644
+index aeeaf8f..1b4f437 100644
 --- a/src/xrGame/script_game_object_script3.cpp
 +++ b/src/xrGame/script_game_object_script3.cpp
-@@ -536,6 +536,12 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
+@@ -115,6 +115,7 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
+ 			     ::set_item))
+ 
+ 		.def("bone_position", &CScriptGameObject::bone_position)
++		.def("bone_direction", &CScriptGameObject::bone_direction)
+ 
+ 		.def("bone_name", &CScriptGameObject::bone_name)
+ 		.def("is_body_turning", &CScriptGameObject::is_body_turning)
+@@ -536,6 +537,12 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
  		.def("get_actor_runback_coef", &CScriptGameObject::GetActorRunBackCoef)
  		.def("set_actor_runback_coef", &CScriptGameObject::SetActorRunBackCoef)
  		//end AVO
