@@ -64,6 +64,7 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Restored "Fatal Error" MessageBox popup in case of encountering fatal engine errors like it was on Windows 7 or lower
   * In case of typical first person model/animation errors, the game will print the section that has defined model
   * MAX_TRIS const increased from 1024 to 16384
+  * Enabled death animations for CWeaponAutomaticShotgun class
   * Fixed sorting news in News Tab in PDA
   * Added getting material of ray_pick() result with all of its properties
   * Added `bone_direction()` function for game objects
