@@ -58,9 +58,28 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
 
   * To edit effect strength, type in console `snd_doppler_power [0, 5]`. Choosing power 0 will disable the feature
 
+* Added CGameObject::NetSpawn and NetDestroy callbacks to Lua (file callbacks_gameobject.script), to register callback use
+
+  ```lua
+  RegisterScriptCallback("game_object_on_net_spawn", function(obj))
+  RegisterScriptCallback("game_object_on_net_destroy", function(obj))
+  ```
+
+* Added `gameobjects_registry` table in `callbacks_gameobject.script` that contains all online game objects and updates accordingly. Additionally, a global iterator `game_objects_iter` added that will go through all online game objects
+
+  ```lua
+  for obj in game_objects_iter() do
+    printf(obj:section())
+  end
+  ```
+
+* Pseudogiant stomps now can kill and damage any object, stalker or mutant, instead of only actor. New callbacks provided for pseudogiants attacks in callbacks_gameobject.script
+
+  * To disable new functionality, type in console `pseudogiant_can_damage_objects_on_stomp 0`
+
 * Additional edits and bugfixes by demonized
   
-  * Additional callbacks and exports described in lua_help_ex.script
+  * Additional callbacks and exports described in `lua_help_ex.script`
   * Restored "Fatal Error" MessageBox popup in case of encountering fatal engine errors like it was on Windows 7 or lower
   * In case of typical first person model/animation errors, the game will print the section that has defined model
   * MAX_TRIS const increased from 1024 to 16384
@@ -112,6 +131,20 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+
+**2023.02.16**:
+
+* Added `gameobjects_registry` table in `callbacks_gameobject.script` that contains all online game objects and updates accordingly. Additionally, a global iterator `game_objects_iter` added that will go through all online game objects
+
+  ```lua
+  for obj in game_objects_iter() do
+    printf(obj:section())
+  end
+  ```
+
+* Pseudogiant stomps now can kill and damage any object, stalker or mutant, instead of only actor. New callbacks provided for pseudogiants attacks in callbacks_gameobject.script
+
+  * To disable new functionality, type in console `pseudogiant_can_damage_objects_on_stomp 0`
 
 **2023.01.28**:
 
