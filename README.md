@@ -131,6 +131,9 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.02.18**:
+
+* New SSS update
 
 **2023.02.16**:
 

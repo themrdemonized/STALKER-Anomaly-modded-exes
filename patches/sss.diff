@@ -151,6 +151,34 @@ index 70d8640..e748ddf 100644
  		.def("dx10atoc", &adopt_compiler::_dx10ATOC, return_reference_to(_1))
  		.def("dx10zfunc", &adopt_compiler::_dx10ZFunc, return_reference_to(_1))
  
+ src/Layers/xrRenderPC_R4/r2_R_sun.cpp | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/Layers/xrRenderPC_R4/r2_R_sun.cpp b/src/Layers/xrRenderPC_R4/r2_R_sun.cpp
+index 7d6c6e9..e289f42 100644
+--- a/src/Layers/xrRenderPC_R4/r2_R_sun.cpp
++++ b/src/Layers/xrRenderPC_R4/r2_R_sun.cpp
+@@ -1090,16 +1090,16 @@ void CRender::init_cacades()
+ 	u32 cascade_count = 3;
+ 	m_sun_cascades.resize(cascade_count);
+ 
+-	float fBias = -0.0000025f;
++	float fBias = -0.0000010f;
+ 	//	float size = MAP_SIZE_START;
+ 	m_sun_cascades[0].reset_chain = true;
+-	m_sun_cascades[0].size = 20; 
++	m_sun_cascades[0].size = 40; 
+ 	m_sun_cascades[0].bias = m_sun_cascades[0].size * fBias;
+ 
+-	m_sun_cascades[1].size = 40;
++	m_sun_cascades[1].size = 80;
+ 	m_sun_cascades[1].bias = m_sun_cascades[1].size * fBias;
+ 
+-	m_sun_cascades[2].size = 160;
++	m_sun_cascades[2].size = 320;
+ 	m_sun_cascades[2].bias = m_sun_cascades[2].size * fBias;
+ 
+ 	// 	for( u32 i = 0; i < cascade_count; ++i )
  src/Layers/xrRenderPC_R4/r4.cpp | 6 ++++++
  1 file changed, 6 insertions(+)
 
