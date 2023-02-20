@@ -116,6 +116,10 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
 
 * Screen Space Shaders by Ascii1457 (https://www.moddb.com/mods/stalker-anomaly/addons/screen-space-shaders)
 
+## Optional patches (not used in exes)
+
+* vs2022.diff: Visual Studio 2022 solution and repo edits for building with VS2022 by mrnuku/xray-monolith and edited by demonized (the exes are still build with VS2015)
+
 ## How to make my own modded exe?
 
 Patches folder contains diffs used to create new exes, they are used to compile your own exes if you need that
