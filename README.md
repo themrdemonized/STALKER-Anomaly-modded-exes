@@ -118,7 +118,7 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
 
 ## Optional patches (not used in exes)
 
-* vs2022.diff: Visual Studio 2022 solution and repo edits for building with VS2022 by mrnuku/xray-monolith and edited by demonized (the exes are still build with VS2015)
+* vs2022.diff: Visual Studio 2022 solution and repo edits for building with VS2022 by mrnuku/xray-monolith and edited by demonized (the exes in this repo's archive are still build with VS2015)
 
 ## How to make my own modded exe?
 
