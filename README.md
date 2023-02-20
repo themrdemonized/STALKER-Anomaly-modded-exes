@@ -58,6 +58,13 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
 
   * To edit effect strength, type in console `snd_doppler_power [0, 5]`. Choosing power 0 will disable the feature
 
+* Additions to demo_record commands by demonized
+
+  * New console commands:
+    * `demo_record_blocked_input 1` will start demo_record but you won't be available to move it or stop it, its intended for manipulation via scripts executing console commands below. The console and Esc key are available
+    * `demo_record_stop` will stop all launched `demo_record` commands, including with blocked input ones 
+    * `demo_set_cam_direction <head, pitch, roll>` will set the direction the camera is facing and its roll. The parameters are in RADIANS, beware. Use this with `demo_set_cam_position <x, y, z>` to manipulate camera via scripts
+
 * Added CGameObject::NetSpawn and NetDestroy callbacks to Lua (file callbacks_gameobject.script), to register callback use
 
   ```lua
@@ -135,6 +142,16 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.02.20**:
+
+* New SSS update
+* New demo-record.diff that contains these changes
+
+  * New console commands:
+    * `demo_record_blocked_input 1` will start demo_record but you won't be available to move it or stop it, its intended for manipulation via scripts executing console commands below. The console and Esc key are available
+    * `demo_record_stop` will stop all launched `demo_record` commands, including with blocked input ones 
+    * `demo_set_cam_direction <head, pitch, roll>` will set the direction the camera is facing and its roll. The parameters are in RADIANS, beware. Use this with `demo_set_cam_position <x, y, z>` to manipulate camera via scripts
+
 **2023.02.18**:
 
 * New SSS update
