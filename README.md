@@ -143,6 +143,15 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.03.05**:
+* Fixed the bug where the weapon with attached adjustable scope and grenade launcher will allow to zoom in with GL. To explicitly enable zooming with active grenade launcher, for whatever reason, add `scope_dynamic_zoom_gl = true` in weapon section in its .ltx file
+* Possibility to add shader scopes to alternative sights
+  * `scope_dynamic_zoom_alt = true` will enable adjustable scope for alt. sight
+  * `scope_texture_alt = <path to texture>` will allow to specify what crosshair to use for alt. sight
+* Correct zoom_factor calculation for adjustable scopes with shader scopes enabled, you wont get any extra zoom from shader on top of engine FOV
+* `scope_factor` console command that changes zoom by shader scopes now works in real time
+* Lowered chromatic abberation and scope blur effect, increasing the quality of image  
+
 **2023.02.20**:
 
 * New SSS update
