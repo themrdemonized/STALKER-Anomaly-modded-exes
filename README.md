@@ -114,6 +114,7 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
 * Shader Scopes by CrookR and enhanced by Edzan, comes ready to use in the archive, delete old version first
 
   * Dynamic zoom is disabled by default for alternative sights (can be enabled by adding scope_dynamic_zoom_alt = true to the weapon section). For example, if you take SVD Lynx or SVD PMC with March Tactical (or other sights with adjustable zoom) and switch to alternate sight, they wont have dynamic zoom anymore
+  * Possibility to set alternative sight crosshair and zoom_factor with `scope_texture_alt = <path to texture>` and `scope_zoom_factor_alt = <number>` parameters in weapon ltx
   * The main sights with dynamic zoom and binoculars now normally remember their state.
   * Added console command sds_enable [on (default)/off] to enable/disable Shader Based 2D Scopes.
   * Added sds_speed_enable [on (default)/off] console command to disable/enable mouse speed (sensitivity) effect of scope_factor when aiming.
@@ -152,6 +153,7 @@ How to compile exes:
 * Added possibility to unlocalize Lua variables in scripts before loading, making them global to the script namespace
   * For unlocalizing a variable in the script, please refer to documentation in test file in `gamedata/configs/unlocalizers` folder
 * Fixed the bug where `scope_factor` settings were applied to disabled shader scopes or scopes without defined radius for shader effect
+* Fixed non-working adjustable scopes upgrade for weapons
 
 **2023.03.05**:
 
