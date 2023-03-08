@@ -55,6 +55,10 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Allows to modify contents of loaded xml files before processing by engine by utilizing Lua scripts
   * For more information see DXML.md guide.
 
+* Possiblity to unlocalize Lua variables in scripts before loading, making them global to the script namespace by demonized
+
+  * For unlocalizing a variable in the script, please refer to documentation in test file in `gamedata/configs/unlocalizers` folder
+
 * Doppler effect of sounds based on code by Cribbledirge and edited by demonized.
 
   * To edit effect strength, type in console `snd_doppler_power [0, 5]`. Choosing power 0 will disable the feature
@@ -143,7 +147,14 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.03.09**:
+
+* Added possibility to unlocalize Lua variables in scripts before loading, making them global to the script namespace
+  * For unlocalizing a variable in the script, please refer to documentation in test file in `gamedata/configs/unlocalizers` folder
+* Fixed the bug where `scope_factor` settings were applied to disabled shader scopes or scopes without defined radius for shader effect
+
 **2023.03.05**:
+
 * Fixed the bug where the weapon with attached adjustable scope and grenade launcher will allow to zoom in with GL. To explicitly enable zooming with active grenade launcher, for whatever reason, add `scope_dynamic_zoom_gl = true` in weapon section in its .ltx file
 * Possibility to add shader scopes to alternative sights
   * `scope_dynamic_zoom_alt = true` will enable adjustable scope for alt. sight
