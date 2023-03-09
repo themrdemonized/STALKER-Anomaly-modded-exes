@@ -176,7 +176,7 @@ function on_xml_read()
 			-- Find string element with "id=ui_st_game_version" text inside it
 			local res = xml_obj:query("string[id=ui_st_game_version] > text")
 			if res[1] then
-				el = res[1]
+				local el = res[1]
 				local el_text = xml_obj:getText(el)
 				if el_text then
 					-- Set new text
@@ -221,7 +221,7 @@ function on_xml_read()
 		then
 			local res = xml_obj:query("player > money")
 			if res[1] then
-				el = res[1]
+				local el = res[1]
 				xml_obj:setElementAttr(el, {x=20, y=60})
 			end
 		end
