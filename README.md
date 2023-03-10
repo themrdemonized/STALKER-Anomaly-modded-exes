@@ -103,8 +103,6 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Added `on_loading_screen_dismissed` callback for when player dismisses loading screen after "Press Any Key to Continue" pressed
   * Added `on_specific_character_dialog_list` callback that allows to manipulate available actor dialog list defined in characted_desc...xml files in `<actor_dialog>` tags
   * Added `on_specific_character_init` callback that allows to manipulate information about specific character such as rank, money, faction, etc.
-  
-* BaS engine edits by Mortan
 
 * Fixes and features by DPurple
 
@@ -127,7 +125,13 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
     * The step of zoom adjustment is more precise. Also, it's possible to adjust the step of zoom with the console command zoom_step_count [1.0, 10.0], this option is also applicable to the binoculars.
   * In the new version all implementations from fakelens.script have moved directly to the engine. fakelens.script remained as a layer between the engine and scopeRadii.script
 
+## Below are the edits that are supplemental to the mods, the mods themselves **are not included**, download the mods by the links. If mods in the links provide their own exes, you can ignore them, all necessary edits are already included on this page. 
+
+* BaS engine edits by Mortan (https://www.moddb.com/mods/stalker-anomaly/addons/boomsticks-and-sharpsticks)
+
 * Screen Space Shaders by Ascii1457 (https://www.moddb.com/mods/stalker-anomaly/addons/screen-space-shaders)
+
+* Heatvision by vegeta1k95 (https://www.moddb.com/mods/stalker-anomaly/addons/heatvision-v02-extension-for-beefs-nvg-dx11engine-mod/)
 
 ## Optional patches (not used in exes)
 
@@ -148,6 +152,11 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.03.11**:
+
+* Added heatvision support by vegeta1k95 (https://www.moddb.com/mods/stalker-anomaly/addons/heatvision-v02-extension-for-beefs-nvg-dx11engine-mod/)
+* Fixed too big FOV when using shader scopes with `new_zoom_enable` command enabled
+
 **2023.03.09**:
 
 * Added possibility to unlocalize Lua variables in scripts before loading, making them global to the script namespace

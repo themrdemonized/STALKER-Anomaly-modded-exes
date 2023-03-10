@@ -1,5 +1,20 @@
+diff --git a/src/Include/xrRender/RenderVisual.h b/src/Include/xrRender/RenderVisual.h
+index 94bc87e..a31273a 100644
+--- a/src/Include/xrRender/RenderVisual.h
++++ b/src/Include/xrRender/RenderVisual.h
+@@ -25,6 +25,10 @@ public:
+ 	virtual shared_str	_BCL	getDebugName() = 0;
+ #endif
+ 
++	//--DSR-- HeatVision_start
++	virtual void MarkAsHot(bool is_hot) {};
++	//--DSR-- HeatVision_end
++
+ 	virtual IKinematics* _BCL dcast_PKinematics() { return 0; }
+ 	virtual IKinematicsAnimated* dcast_PKinematicsAnimated() { return 0; }
+ 	virtual IParticleCustom* dcast_ParticleCustom() { return 0; }
 diff --git a/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp b/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
-index 5035624..e45a27e 100644
+index 5035624..a45d2cd 100644
 --- a/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
 +++ b/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
 @@ -258,9 +258,26 @@ class cl_eye_P : public R_constant_setup
@@ -54,7 +69,7 @@ index 5035624..e45a27e 100644
  // eye-params
  class cl_eye_N : public R_constant_setup
  {
-@@ -285,6 +315,47 @@ class cl_eye_N : public R_constant_setup
+@@ -285,6 +315,97 @@ class cl_eye_N : public R_constant_setup
  
  static cl_eye_N binder_eye_N;
  
@@ -99,10 +114,60 @@ index 5035624..e45a27e 100644
 +};
 +static cl_fakescope_params3 binder_fakescope_params3;
 +
++//--DSR-- HeatVision_start
++extern float heat_vision_mode;
++extern Fvector4 heat_vision_steps;
++extern Fvector4 heat_vision_blurring;
++extern Fvector4 heat_vision_args_1;
++extern Fvector4 heat_vision_args_2;
++
++static class cl_heatvision_hotness : public R_constant_setup
++{
++	virtual void setup(R_constant* C)
++	{
++		RCache.hemi.set_c_hotness(C);
++	}
++} binder_heatvision_hotness;
++
++static class cl_heatvision_steps : public R_constant_setup
++{
++	virtual void setup(R_constant* C)
++	{
++		RCache.set_c(C, ps_r2_heatvision, heat_vision_steps.x, heat_vision_steps.y, heat_vision_steps.z);
++	}
++} binder_heatvision_params1;
++
++static class cl_heatvision_blurring : public R_constant_setup
++{
++	virtual void setup(R_constant* C)
++	{
++		RCache.set_c(C, heat_vision_blurring.x, heat_vision_blurring.y, heat_vision_blurring.z, heat_vision_mode);
++	}
++} binder_heatvision_params2;
++
++static class cl_heatvision_args1 : public R_constant_setup
++{
++	virtual void setup(R_constant* C)
++	{
++		RCache.set_c(C, heat_vision_args_1.x, heat_vision_args_1.y, heat_vision_args_1.z, heat_vision_args_1.w);
++	}
++} binder_heatvision_args1;
++
++static class cl_heatvision_args2 : public R_constant_setup
++{
++	virtual void setup(R_constant* C)
++	{
++		RCache.set_c(C, heat_vision_args_2.x, heat_vision_args_2.y, heat_vision_args_2.z, heat_vision_args_2.w);
++	}
++} binder_heatvision_args2;
++
++//--DSR-- HeatVision_end
++
++
  #ifndef _EDITOR
  // D-Light0
  class cl_sun0_color : public R_constant_setup
-@@ -639,7 +710,9 @@ void CBlender_Compile::SetMapping()
+@@ -639,7 +760,9 @@ void CBlender_Compile::SetMapping()
  
  	// eye-params
  	r_Constant("eye_position", &binder_eye_P);
@@ -112,7 +177,7 @@ index 5035624..e45a27e 100644
  	r_Constant("eye_normal", &binder_eye_N);
  
  #ifndef _EDITOR
-@@ -690,6 +763,11 @@ void CBlender_Compile::SetMapping()
+@@ -690,10 +813,23 @@ void CBlender_Compile::SetMapping()
  	r_Constant("shader_param_7", &dev_param_7);
  	r_Constant("shader_param_8", &dev_param_8);
  
@@ -124,11 +189,179 @@ index 5035624..e45a27e 100644
  	// other common
  	for (u32 it = 0; it < DEV->v_constant_setup.size(); it++)
  	{
+ 		std::pair<shared_str, R_constant_setup*> cs = DEV->v_constant_setup[it];
+ 		r_Constant(*cs.first, cs.second);
+ 	}
++
++	//--DSR-- HeatVision_start
++	r_Constant("L_hotness", &binder_heatvision_hotness);
++	r_Constant("heatvision_params1", &binder_heatvision_params1);
++	r_Constant("heatvision_params2", &binder_heatvision_params2);
++	r_Constant("heatvision_params3", &binder_heatvision_args1);
++	r_Constant("heatvision_params4", &binder_heatvision_args2);
++	//--DSR-- HeatVision_end
+ }
+diff --git a/src/Layers/xrRender/FBasicVisual.cpp b/src/Layers/xrRender/FBasicVisual.cpp
+index f8e4651..c51735e 100644
+--- a/src/Layers/xrRender/FBasicVisual.cpp
++++ b/src/Layers/xrRender/FBasicVisual.cpp
+@@ -11,6 +11,7 @@
+ 
+ #include "fbasicvisual.h"
+ #include "../../xrEngine/fmesh.h"
++#include "dxRenderDeviceRender.h"
+ 
+ //////////////////////////////////////////////////////////////////////
+ // Construction/Destruction
+@@ -76,6 +77,20 @@ void dxRender_Visual::Load(const char* N, IReader* data, u32)
+ #endif
+ }
+ 
++//--DSR-- HeatVision_start
++void dxRender_Visual::MarkAsHot(bool is_hot) {
++	Shader* s = shader._get();
++	if (0 == s) return;
++	ShaderElement* e = s->E[0]._get();
++	if (0 == e || e->passes.empty()) return;
++	SPass* p = e->passes[0]._get();
++	STextureList* l = p->T._get();
++	if (0 == l || l->empty()) return;
++	CTexture* t = l->at(0).second._get();
++	t->m_is_hot = is_hot;
++}
++//--DSR-- HeatVision_end
++
+ #define PCOPY(a)	a = pFrom->a
+ 
+ void dxRender_Visual::Copy(dxRender_Visual* pFrom)
+diff --git a/src/Layers/xrRender/FBasicVisual.h b/src/Layers/xrRender/FBasicVisual.h
+index 666dccc..aad4252 100644
+--- a/src/Layers/xrRender/FBasicVisual.h
++++ b/src/Layers/xrRender/FBasicVisual.h
+@@ -77,6 +77,10 @@ public:
+ 
+ 	virtual vis_data& _BCL getVisData() { return vis; }
+ 	virtual u32 getType() { return Type; }
++	
++	//--DSR-- HeatVision_start
++	virtual void MarkAsHot(bool is_hot);
++	//--DSR-- HeatVision_end
+ 
+ 	dxRender_Visual();
+ 	virtual ~dxRender_Visual();
+diff --git a/src/Layers/xrRender/FHierrarhyVisual.cpp b/src/Layers/xrRender/FHierrarhyVisual.cpp
+index c5b821a..68dacdc 100644
+--- a/src/Layers/xrRender/FHierrarhyVisual.cpp
++++ b/src/Layers/xrRender/FHierrarhyVisual.cpp
+@@ -90,6 +90,15 @@ void FHierrarhyVisual::Load(const char* N, IReader* data, u32 dwFlags)
+ 	}
+ }
+ 
++//--DSR-- HeatVision_start
++void FHierrarhyVisual::MarkAsHot(bool is_hot) 
++{
++	dxRender_Visual::MarkAsHot(is_hot);
++	for (u32 i = 0; i < children.size(); i++)
++		children[i]->MarkAsHot(is_hot);
++}
++//--DSR-- HeatVision_end
++
+ void FHierrarhyVisual::Copy(dxRender_Visual* pSrc)
+ {
+ 	dxRender_Visual::Copy(pSrc);
+diff --git a/src/Layers/xrRender/FHierrarhyVisual.h b/src/Layers/xrRender/FHierrarhyVisual.h
+index 5f20c61..960ffe0 100644
+--- a/src/Layers/xrRender/FHierrarhyVisual.h
++++ b/src/Layers/xrRender/FHierrarhyVisual.h
+@@ -21,6 +21,10 @@ public:
+ 	virtual void Load(const char* N, IReader* data, u32 dwFlags);
+ 	virtual void Copy(dxRender_Visual* pFrom);
+ 	virtual void Release();
++
++	//--DSR-- HeatVision_start
++	virtual void MarkAsHot(bool is_hot);
++	//--DSR-- HeatVision_end
+ };
+ 
+ #endif //FHierrarhyVisualH
+diff --git a/src/Layers/xrRender/R_Backend_hemi.cpp b/src/Layers/xrRender/R_Backend_hemi.cpp
+index 15ccb1f..795f2f9 100644
+--- a/src/Layers/xrRender/R_Backend_hemi.cpp
++++ b/src/Layers/xrRender/R_Backend_hemi.cpp
+@@ -13,6 +13,9 @@ void R_hemi::unmap()
+ 	c_pos_faces = 0;
+ 	c_neg_faces = 0;
+ 	c_material = 0;
++	//--DSR-- HeatVision_start
++	c_hotness = 0;
++	//--DSR-- HeatVision_end
+ }
+ 
+ void R_hemi::set_pos_faces(float posx, float posy, float posz)
+@@ -29,3 +32,10 @@ void R_hemi::set_material(float x, float y, float z, float w)
+ {
+ 	if (c_material) RCache.set_c(c_material, x, y, z, w);
+ }
++
++//--DSR-- HeatVision_start
++void R_hemi::set_hotness(float x, float y, float z, float w)
++{
++	if (c_hotness) RCache.set_c(c_hotness, x, y, z, w);
++}
++//--DSR-- HeatVision_end
+diff --git a/src/Layers/xrRender/R_Backend_hemi.h b/src/Layers/xrRender/R_Backend_hemi.h
+index eaff851..911a71d 100644
+--- a/src/Layers/xrRender/R_Backend_hemi.h
++++ b/src/Layers/xrRender/R_Backend_hemi.h
+@@ -9,6 +9,10 @@ public:
+ 	R_constant* c_neg_faces;
+ 	R_constant* c_material;
+ 
++	//--DSR-- HeatVision_start
++	R_constant* c_hotness;
++	//--DSR-- HeatVision_end
++
+ public:
+ 	R_hemi();
+ 	void unmap();
+@@ -17,8 +21,17 @@ public:
+ 	void set_c_neg_faces(R_constant* C) { c_neg_faces = C; }
+ 	void set_c_material(R_constant* C) { c_material = C; }
+ 
++	//--DSR-- HeatVision_start
++	void set_c_hotness(R_constant* C) { c_hotness = C; }
++	//--DSR-- HeatVision_end
++
++
+ 	void set_pos_faces(float posx, float posy, float posz);
+ 	void set_neg_faces(float negx, float negy, float negz);
+ 	void set_material(float x, float y, float z, float w);
++
++	//--DSR-- HeatVision_start
++	void set_hotness(float x, float y, float z, float w);
++	//--DSR-- HeatVision_end
+ };
+ #endif
+diff --git a/src/Layers/xrRender/SH_Texture.h b/src/Layers/xrRender/SH_Texture.h
+index 62f91a6..cde2b8a 100644
+--- a/src/Layers/xrRender/SH_Texture.h
++++ b/src/Layers/xrRender/SH_Texture.h
+@@ -97,6 +97,10 @@ public: //	Public class members (must be encapsulated furthur)
+ 	float m_material;
+ 	shared_str m_bumpmap;
+ 
++	//--DSR-- HeatVision_start
++	bool m_is_hot = false;
++	//--DSR-- HeatVision_end
++
+ 	union
+ 	{
+ 		u32 m_play_time; // sync theora time
 diff --git a/src/Layers/xrRender/rendertarget_phase_nightvision.cpp b/src/Layers/xrRender/rendertarget_phase_nightvision.cpp
-index 248d1c4..2935515 100644
+index 248d1c4..64da747 100644
 --- a/src/Layers/xrRender/rendertarget_phase_nightvision.cpp
 +++ b/src/Layers/xrRender/rendertarget_phase_nightvision.cpp
-@@ -51,3 +51,57 @@ void CRenderTarget::phase_nightvision()
+@@ -51,3 +51,111 @@ void CRenderTarget::phase_nightvision()
  	HW.pContext->CopyResource(rt_Generic_0->pTexture->surface_get(), dest_rt->pTexture->surface_get());
  #endif
  };
@@ -186,15 +419,77 @@ index 248d1c4..2935515 100644
 +	HW.pContext->CopyResource(rt_Generic_0->pTexture->surface_get(), dest_rt->pTexture->surface_get());
 +#endif
 +};
-\ No newline at end of file
++
++//--DSR-- HeatVision_start
++void CRenderTarget::phase_heatvision()
++{
++	//Constants
++	u32 Offset = 0;
++	u32 C = color_rgba(0, 0, 0, 255);
++
++	float d_Z = EPS_S;
++	float d_W = 1.0f;
++	float w = float(Device.dwWidth);
++	float h = float(Device.dwHeight);
++
++	Fvector2 p0, p1;
++#if defined(USE_DX10) || defined(USE_DX11)	
++	p0.set(0.0f, 0.0f);
++	p1.set(1.0f, 1.0f);
++#else
++	p0.set(0.5f / w, 0.5f / h);
++	p1.set((w + 0.5f) / w, (h + 0.5f) / h);
++#endif
++
++	//////////////////////////////////////////////////////////////////////////
++	//Set MSAA/NonMSAA rendertarget
++#if defined(USE_DX10) || defined(USE_DX11)
++	ref_rt& dest_rt = RImplementation.o.dx10_msaa ? rt_Generic : rt_Color;
++	u_setrt(dest_rt, nullptr, nullptr, nullptr);
++#else
++	u_setrt(rt_Generic_0, nullptr, nullptr, nullptr);
++#endif		
++
++	RCache.set_CullMode(CULL_NONE);
++	RCache.set_Stencil(FALSE);
++
++	//Fill vertex buffer
++	FVF::TL* pv = (FVF::TL*)RCache.Vertex.Lock(4, g_combine->vb_stride, Offset);
++	pv->set(0, float(h), d_Z, d_W, C, p0.x, p1.y); pv++;
++	pv->set(0, 0, d_Z, d_W, C, p0.x, p0.y); pv++;
++	pv->set(float(w), float(h), d_Z, d_W, C, p1.x, p1.y); pv++;
++	pv->set(float(w), 0, d_Z, d_W, C, p1.x, p0.y); pv++;
++	RCache.Vertex.Unlock(4, g_combine->vb_stride);
++
++	//Set pass
++	RCache.set_Element(s_heatvision->E[ps_r2_heatvision]);
++
++	//Set geometry
++	RCache.set_Geometry(g_combine);
++	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
++
++#if defined(USE_DX10) || defined(USE_DX11)
++	HW.pContext->CopyResource(rt_Generic_0->pTexture->surface_get(), dest_rt->pTexture->surface_get());
++#endif
++};
++//--DSR-- HeatVision_start
 diff --git a/src/Layers/xrRender/xrRender_console.cpp b/src/Layers/xrRender/xrRender_console.cpp
-index 19cf561..9653bb5 100644
+index 19cf561..b533250 100644
 --- a/src/Layers/xrRender/xrRender_console.cpp
 +++ b/src/Layers/xrRender/xrRender_console.cpp
-@@ -258,6 +258,10 @@ Fvector ps_r2_drops_control = {.0f, 1.15f, .0f}; // r2-only
+@@ -258,6 +258,19 @@ Fvector ps_r2_drops_control = {.0f, 1.15f, .0f}; // r2-only
  
  int ps_r2_nightvision = 0;
  
++//--DSR-- HeatVision_start
++int ps_r2_heatvision = 0;
++float heat_vision_mode = 0.0f;
++Fvector4 heat_vision_steps = { 0.45f, 0.65f, 0.76f, .0f };
++Fvector4 heat_vision_blurring = { 15.f, 4.f, 60.f, .0f };
++Fvector4 heat_vision_args_1 = { .0f, .0f, .0f, .0f };
++Fvector4 heat_vision_args_2 = { .0f, .0f, .0f, .0f };
++//--DSR-- HeatVision_end
++
 +//crookr
 +int scope_fake_enabled = 1;
 +//string32 scope_fake_texture = "wpn\\wpn_crosshair_pso1";
@@ -202,48 +497,72 @@ index 19cf561..9653bb5 100644
  float ps_r2_ss_sunshafts_length = 1.f;
  float ps_r2_ss_sunshafts_radius = 1.f;
  
-@@ -1046,6 +1050,9 @@ void xrRender_initconsole()
+@@ -1046,6 +1059,10 @@ void xrRender_initconsole()
  	CMD4(CCC_Vector4, "r__bloom_weight", &ps_pp_bloom_weight, twb_min, twb_max);
  	CMD4(CCC_Vector4, "r__bloom_thresh", &ps_pp_bloom_thresh, twb_min, twb_max);
  	CMD4(CCC_Integer, "r__nightvision", &ps_r2_nightvision, 0, 3); //For beef's nightvision shader or other stuff
 +
 +	CMD4(CCC_Integer, "r__fakescope", &scope_fake_enabled, 0, 1); //crookr for fake scope
 +
++	CMD4(CCC_Integer, "r__heatvision", &ps_r2_heatvision, 0, 1); //--DSR-- HeatVision
  	CMD3(CCC_Mask, "r2_terrain_z_prepass", &ps_r2_ls_flags, R2FLAG_TERRAIN_PREPASS); //Terrain Z Prepass @Zagolski
  	
  	//////////other
+@@ -1071,6 +1088,14 @@ void xrRender_initconsole()
+ 	CMD4(CCC_Vector4, "shader_param_7", &ps_dev_param_7, tw2_min, tw2_max);
+ 	CMD4(CCC_Vector4, "shader_param_8", &ps_dev_param_8, tw2_min, tw2_max);
+ 
++	//--DSR-- HeatVision_start
++	CMD2(CCC_Float,   "heat_vision_mode",		&heat_vision_mode);
++	CMD4(CCC_Vector4, "heat_vision_steps",		&heat_vision_steps, tw2_min, tw2_max);
++	CMD4(CCC_Vector4, "heat_vision_blurring",	&heat_vision_blurring, tw2_min, tw2_max);
++	CMD4(CCC_Vector4, "heat_vision_args_1",		&heat_vision_args_1, tw2_min, tw2_max);
++	CMD4(CCC_Vector4, "heat_vision_args_2",		&heat_vision_args_2, tw2_min, tw2_max);
++	//--DSR-- HeatVision_end
++
+ 	// Geometry optimization
+ 	CMD4(CCC_Integer, "r__optimize_static_geom", &opt_static, 0, 4);
+ 	CMD4(CCC_Integer, "r__optimize_dynamic_geom", &opt_dynamic, 0, 4);
 diff --git a/src/Layers/xrRender/xrRender_console.h b/src/Layers/xrRender/xrRender_console.h
-index 7ee8c11..84a2c7f 100644
+index 7ee8c11..80124c5 100644
 --- a/src/Layers/xrRender/xrRender_console.h
 +++ b/src/Layers/xrRender/xrRender_console.h
-@@ -140,6 +140,7 @@ extern ECORE_API int ps_r2_qsync;
+@@ -140,6 +140,8 @@ extern ECORE_API int ps_r2_qsync;
  extern ECORE_API Fvector4 ps_r2_mask_control; // r2-only
  extern ECORE_API Fvector ps_r2_drops_control; // r2-only
  extern ECORE_API int ps_r2_nightvision;
 +extern ECORE_API int scope_fake_enabled; //crookr
++extern ECORE_API int ps_r2_heatvision; //--DSR-- HeatVision
  extern ECORE_API float ps_r2_ss_sunshafts_length;
  extern ECORE_API float ps_r2_ss_sunshafts_radius;
  extern u32 ps_sunshafts_mode;
 diff --git a/src/Layers/xrRenderPC_R2/blender_nightvision.cpp b/src/Layers/xrRenderPC_R2/blender_nightvision.cpp
-index b44403b..baff94d 100644
+index b44403b..042b2c4 100644
 --- a/src/Layers/xrRenderPC_R2/blender_nightvision.cpp
 +++ b/src/Layers/xrRenderPC_R2/blender_nightvision.cpp
-@@ -3,10 +3,14 @@
+@@ -3,11 +3,21 @@
  #include "blender_nightvision.h"
  
  CBlender_nightvision::CBlender_nightvision() { description.CLS = 0; }
 +CBlender_fakescope::CBlender_fakescope() { description.CLS = 0; } //crookr
++CBlender_heatvision::CBlender_heatvision() { description.CLS = 0;  } //--DSR-- HeatVision
  
  CBlender_nightvision::~CBlender_nightvision()
  {
  }
+ 
 +CBlender_fakescope::~CBlender_fakescope() //crookr
 +{
 +}
- 
++
++CBlender_heatvision::~CBlender_heatvision() //--DSR-- HeatVision_start
++{
++}
++
  void CBlender_nightvision::Compile(CBlender_Compile& C)
  {
-@@ -38,3 +42,12 @@ void CBlender_nightvision::Compile(CBlender_Compile& C)
+ 	IBlender::Compile(C);
+@@ -38,3 +48,23 @@ void CBlender_nightvision::Compile(CBlender_Compile& C)
  		break;	
  	}
  }
@@ -256,12 +575,22 @@ index b44403b..baff94d 100644
 +	C.r_Sampler_clf("s_image", r2_RT_generic0);
 +	C.r_End();
 +}
-\ No newline at end of file
++
++//--DSR-- HeatVision_start
++void CBlender_heatvision::Compile(CBlender_Compile& C)
++{
++	IBlender::Compile(C);
++	C.r_Pass("null", "heatvision", FALSE, FALSE, FALSE);
++	C.r_Sampler_rtf("s_position", r2_RT_P);
++	C.r_Sampler_clf("s_image", r2_RT_generic0);
++	C.r_End();	
++}
++//--DSR-- HeatVision_end
 diff --git a/src/Layers/xrRenderPC_R2/blender_nightvision.h b/src/Layers/xrRenderPC_R2/blender_nightvision.h
-index 0801e41..05189e8 100644
+index 0801e41..8efe46d 100644
 --- a/src/Layers/xrRenderPC_R2/blender_nightvision.h
 +++ b/src/Layers/xrRenderPC_R2/blender_nightvision.h
-@@ -13,3 +13,17 @@ public:
+@@ -13,3 +13,32 @@ public:
  	CBlender_nightvision();
  	virtual ~CBlender_nightvision();
  };
@@ -279,77 +608,103 @@ index 0801e41..05189e8 100644
 +	CBlender_fakescope();
 +	virtual ~CBlender_fakescope();
 +};
-\ No newline at end of file
++
++//--DSR-- HeatVision_start
++class CBlender_heatvision : public IBlender
++{
++public:
++	virtual LPCSTR getComment() { return "heatvision"; }
++	virtual BOOL canBeDetailed() { return FALSE; }
++	virtual BOOL canBeLMAPped() { return FALSE; }
++
++	virtual void Compile(CBlender_Compile& C);
++
++	CBlender_heatvision();
++	virtual ~CBlender_heatvision();
++};
++//--DSR-- HeatVision_end
 diff --git a/src/Layers/xrRenderPC_R2/r2_rendertarget.cpp b/src/Layers/xrRenderPC_R2/r2_rendertarget.cpp
-index f55c506..5ec5666 100644
+index f55c506..7f17163 100644
 --- a/src/Layers/xrRenderPC_R2/r2_rendertarget.cpp
 +++ b/src/Layers/xrRenderPC_R2/r2_rendertarget.cpp
-@@ -247,6 +247,7 @@ CRenderTarget::CRenderTarget()
+@@ -247,6 +247,8 @@ CRenderTarget::CRenderTarget()
  	b_gasmask_drops = xr_new<CBlender_gasmask_drops>();
  	b_gasmask_dudv = xr_new<CBlender_gasmask_dudv>();
  	b_nightvision = xr_new<CBlender_nightvision>();
 +	b_fakescope = xr_new<CBlender_fakescope>(); //crookr
++	b_heatvision = xr_new<CBlender_heatvision>(); //--DSR-- HeatVision
  	b_lut = xr_new<CBlender_lut>();
  	b_smaa = xr_new<CBlender_smaa>();
  
-@@ -288,6 +289,7 @@ CRenderTarget::CRenderTarget()
+@@ -288,6 +290,11 @@ CRenderTarget::CRenderTarget()
  		rt_secondVP.create(r2_RT_secondVP, w, h, D3DFMT_A8R8G8B8); //--#SM+#-- +SecondVP+
  		rt_ui_pda.create(r2_RT_ui, w, h, D3DFMT_A8R8G8B8);
  
 +		rt_fakescope.create(r2_RT_scopert, w, h, D3DFMT_A8R8G8B8, 1); //crookr fakescope
++		
++		//--DSR-- HeatVision_start
++		rt_Heat.create(r2_RT_heat, w, h, D3DFMT_A8R8G8B8, 1);
++		//--DSR-- HeatVision_end
  
  		// RT Blur
  		rt_blur_h_2.create(r2_RT_blur_h_2, u32(w/2), u32(h/2), D3DFMT_A8R8G8B8);
-@@ -323,6 +325,7 @@ CRenderTarget::CRenderTarget()
+@@ -323,6 +330,8 @@ CRenderTarget::CRenderTarget()
  	s_gasmask_drops.create(b_gasmask_drops, "r2\\gasmask_drops");
  	s_gasmask_dudv.create(b_gasmask_dudv, "r2\\gasmask_dudv");
  	s_nightvision.create(b_nightvision, "r2\\nightvision");
 +	s_fakescope.create(b_fakescope, "r2\\fakescope"); //crookr
++	s_heatvision.create(b_heatvision, "r2\\heatvision"); //--DSR-- HeatVision
  	s_lut.create(b_lut, "r2\\lut");	
  	// OCCLUSION
  	s_occq.create(b_occq, "r2\\occq");
-@@ -758,6 +761,7 @@ CRenderTarget::~CRenderTarget()
+@@ -758,6 +767,8 @@ CRenderTarget::~CRenderTarget()
  	xr_delete(b_gasmask_drops);
  	xr_delete(b_gasmask_dudv);
  	xr_delete(b_nightvision);
 +	xr_delete(b_fakescope); //crookr
++	xr_delete(b_heatvision); //--DSR-- HeatVision
  	xr_delete(b_lut);	
  	xr_delete(b_smaa);
  
 diff --git a/src/Layers/xrRenderPC_R2/r2_rendertarget.h b/src/Layers/xrRenderPC_R2/r2_rendertarget.h
-index 727029d..f75ff50 100644
+index 727029d..3b9e2be 100644
 --- a/src/Layers/xrRenderPC_R2/r2_rendertarget.h
 +++ b/src/Layers/xrRenderPC_R2/r2_rendertarget.h
-@@ -39,6 +39,7 @@ public:
+@@ -39,6 +39,8 @@ public:
  	IBlender* b_gasmask_drops;
  	IBlender* b_gasmask_dudv;
  	IBlender* b_nightvision;
 +	IBlender* b_fakescope; //crookr
++	IBlender* b_heatvision; //--DSR-- HeatVision
  	IBlender* b_lut;
  	
  	IBlender* b_smaa;	
-@@ -68,6 +69,8 @@ public:
+@@ -68,7 +70,10 @@ public:
  	ref_rt rt_secondVP;		// 32bit		(r,g,b,a) --//#SM+#-- +SecondVP+
  	ref_rt rt_ui_pda;
  
 +	ref_rt rt_fakescope; //crookr
 +
  	ref_rt rt_dof;
++	ref_rt rt_Heat; //--DSR-- HeatVision
  	
  	ref_rt rt_blur_h_2;
-@@ -122,6 +125,7 @@ private:
+ 	ref_rt rt_blur_2;
+@@ -122,6 +127,8 @@ private:
  	ref_shader s_gasmask_drops;
  	ref_shader s_gasmask_dudv;
  	ref_shader s_nightvision;
 +	ref_shader s_fakescope; //crookr
++	ref_shader s_heatvision; //--DSR-- HeatVision
  
  	ref_shader s_blur;	
  	ref_shader s_dof;
-@@ -260,6 +264,7 @@ public:
+@@ -260,6 +267,8 @@ public:
  	void phase_gasmask_drops();
  	void phase_gasmask_dudv();
  	void phase_nightvision();
 +	void phase_fakescope(); //crookr
++	void phase_heatvision(); //--DSR-- HeatVision
  	void phase_lut();	
  	void phase_smaa();
  		
@@ -370,27 +725,30 @@ index bbec49c..443c2c0 100644
  	if (ps_smaa_quality)
  	{
 diff --git a/src/Layers/xrRenderPC_R2/r2_types.h b/src/Layers/xrRenderPC_R2/r2_types.h
-index 7033e17..345b8a0 100644
+index 7033e17..3d3c50d 100644
 --- a/src/Layers/xrRenderPC_R2/r2_types.h
 +++ b/src/Layers/xrRenderPC_R2/r2_types.h
-@@ -62,6 +62,8 @@
+@@ -62,6 +62,9 @@
  #define		r2_RT_dof			"$user$dof"
  #define		r2_RT_ui			"$user$ui"
  
 +#define		r2_RT_scopert		"$user$scopeRT" //crookr
++#define		r2_RT_heat			"$user$heat" //--DSR-- HeatVision
 +
  #define		r2_RT_smaa_edgetex "$user$smaa_edgetex"
  #define		r2_RT_smaa_blendtex "$user$smaa_blendtex"
  
 diff --git a/src/Layers/xrRenderPC_R3/blender_nightvision.cpp b/src/Layers/xrRenderPC_R3/blender_nightvision.cpp
-index 1a5d5c6..8ffed7b 100644
+index 1a5d5c6..6cecd9f 100644
 --- a/src/Layers/xrRenderPC_R3/blender_nightvision.cpp
 +++ b/src/Layers/xrRenderPC_R3/blender_nightvision.cpp
-@@ -3,11 +3,16 @@
+@@ -3,11 +3,22 @@
  #include "blender_nightvision.h"
  
  CBlender_nightvision::CBlender_nightvision() { description.CLS = 0; }
 +CBlender_fakescope::CBlender_fakescope() { description.CLS = 0; } //crookr
++CBlender_heatvision::CBlender_heatvision() { description.CLS = 0; } //--DSR-- HeatVision
++
  
  CBlender_nightvision::~CBlender_nightvision()
  {
@@ -400,10 +758,14 @@ index 1a5d5c6..8ffed7b 100644
 +{
 +}
 +
++CBlender_heatvision::~CBlender_heatvision() //--DSR-- HeatVision
++{
++}
++
  void CBlender_nightvision::Compile(CBlender_Compile& C)
  {
  	IBlender::Compile(C);
-@@ -66,3 +71,22 @@ void CBlender_nightvision::Compile(CBlender_Compile& C)
+@@ -66,3 +77,44 @@ void CBlender_nightvision::Compile(CBlender_Compile& C)
  		break;		
  	}
  }
@@ -426,12 +788,33 @@ index 1a5d5c6..8ffed7b 100644
 +	C.r_End();
 +
 +}
-\ No newline at end of file
++
++//--DSR-- HeatVision_start
++void CBlender_heatvision::Compile(CBlender_Compile& C)
++{
++	IBlender::Compile(C);
++	
++	C.r_Pass("stub_screen_space", "heatvision", FALSE, FALSE, FALSE);
++	C.r_dx10Texture("s_position", r2_RT_P);
++	C.r_dx10Texture("s_image", r2_RT_generic0);
++	C.r_dx10Texture("s_bloom_new", r2_RT_pp_bloom);
++	C.r_dx10Texture("s_blur_2", r2_RT_blur_2);
++	C.r_dx10Texture("s_blur_4", r2_RT_blur_4);
++	C.r_dx10Texture("s_blur_8", r2_RT_blur_8);
++
++	C.r_dx10Texture("s_heat", r2_RT_heat);
++
++	C.r_dx10Sampler("smp_base");
++	C.r_dx10Sampler("smp_nofilter");
++	C.r_dx10Sampler("smp_rtlinear");
++	C.r_End();
++}
++//--DSR-- HeatVision_end
 diff --git a/src/Layers/xrRenderPC_R3/blender_nightvision.h b/src/Layers/xrRenderPC_R3/blender_nightvision.h
-index 0801e41..05189e8 100644
+index 0801e41..8efe46d 100644
 --- a/src/Layers/xrRenderPC_R3/blender_nightvision.h
 +++ b/src/Layers/xrRenderPC_R3/blender_nightvision.h
-@@ -13,3 +13,17 @@ public:
+@@ -13,3 +13,32 @@ public:
  	CBlender_nightvision();
  	virtual ~CBlender_nightvision();
  };
@@ -449,92 +832,119 @@ index 0801e41..05189e8 100644
 +	CBlender_fakescope();
 +	virtual ~CBlender_fakescope();
 +};
-\ No newline at end of file
++
++//--DSR-- HeatVision_start
++class CBlender_heatvision : public IBlender
++{
++public:
++	virtual LPCSTR getComment() { return "heatvision"; }
++	virtual BOOL canBeDetailed() { return FALSE; }
++	virtual BOOL canBeLMAPped() { return FALSE; }
++
++	virtual void Compile(CBlender_Compile& C);
++
++	CBlender_heatvision();
++	virtual ~CBlender_heatvision();
++};
++//--DSR-- HeatVision_end
 diff --git a/src/Layers/xrRenderPC_R3/r2_types.h b/src/Layers/xrRenderPC_R3/r2_types.h
-index 6597231..2e7dd84 100644
+index 6597231..0414f9c 100644
 --- a/src/Layers/xrRenderPC_R3/r2_types.h
 +++ b/src/Layers/xrRenderPC_R3/r2_types.h
-@@ -70,6 +70,8 @@
+@@ -70,6 +70,9 @@
  #define		r2_RT_dof			"$user$dof"
  #define		r2_RT_ui			"$user$ui"
  
 +#define		r2_RT_scopert		"$user$scopeRT" //crookr
++#define		r2_RT_heat			"$user$heat" //--DSR-- HeatVision
 +
  #define		r2_RT_smaa_edgetex "$user$smaa_edgetex"
  #define		r2_RT_smaa_blendtex "$user$smaa_blendtex"
  
 diff --git a/src/Layers/xrRenderPC_R3/r3_rendertarget.cpp b/src/Layers/xrRenderPC_R3/r3_rendertarget.cpp
-index 9c5ecf2..0ff83e9 100644
+index 9c5ecf2..229f82d 100644
 --- a/src/Layers/xrRenderPC_R3/r3_rendertarget.cpp
 +++ b/src/Layers/xrRenderPC_R3/r3_rendertarget.cpp
-@@ -351,6 +351,7 @@ CRenderTarget::CRenderTarget()
+@@ -351,6 +351,8 @@ CRenderTarget::CRenderTarget()
  	b_gasmask_drops = xr_new<CBlender_gasmask_drops>();
  	b_gasmask_dudv = xr_new<CBlender_gasmask_dudv>();
  	b_nightvision = xr_new<CBlender_nightvision>();
 +	b_fakescope = xr_new<CBlender_fakescope>(); //crookr
++	b_heatvision = xr_new<CBlender_heatvision>(); //--DSR-- HeatVision
  	b_lut = xr_new<CBlender_lut>();
  	b_smaa = xr_new<CBlender_smaa>();
  
-@@ -430,6 +431,8 @@ CRenderTarget::CRenderTarget()
+@@ -430,6 +432,12 @@ CRenderTarget::CRenderTarget()
  		rt_Generic_1.create(r2_RT_generic1, w, h, D3DFMT_A8R8G8B8, 1);
  		rt_Generic.create(r2_RT_generic, w, h, D3DFMT_A8R8G8B8, 1);
  
 +		rt_fakescope.create(r2_RT_scopert, w, h, D3DFMT_A8R8G8B8, 1); //crookr fakescope
 +
++		//--DSR-- HeatVision_start
++		rt_Heat.create(r2_RT_heat, w, h, D3DFMT_A8R8G8B8, SampleCount);
++		//--DSR-- HeatVision_end
++
          if (RImplementation.o.dx10_msaa)
              rt_Generic_temp.create("$user$generic_temp", w, h, D3DFMT_A8R8G8B8, SampleCount);
          else
-@@ -477,6 +480,7 @@ CRenderTarget::CRenderTarget()
+@@ -477,6 +485,8 @@ CRenderTarget::CRenderTarget()
  	s_gasmask_drops.create(b_gasmask_drops, "r2\\gasmask_drops");
  	s_gasmask_dudv.create(b_gasmask_dudv, "r2\\gasmask_dudv");
  	s_nightvision.create(b_nightvision, "r2\\nightvision");
 +	s_fakescope.create(b_fakescope, "r2\\fakescope"); //crookr
++	s_heatvision.create(b_heatvision, "r2\\heatvision"); //--DSR-- HeatVision
  	s_lut.create(b_lut, "r2\\lut");	
  	// OCCLUSION
  	s_occq.create(b_occq, "r2\\occq");
-@@ -1143,6 +1147,7 @@ CRenderTarget::~CRenderTarget()
+@@ -1143,6 +1153,8 @@ CRenderTarget::~CRenderTarget()
  	xr_delete(b_gasmask_drops);
  	xr_delete(b_gasmask_dudv);
  	xr_delete(b_nightvision);
 +	xr_delete(b_fakescope); //crookr
++	xr_delete(b_heatvision); //--DSR-- HeatVision
  	xr_delete(b_lut);	
  	xr_delete(b_smaa);
  
 diff --git a/src/Layers/xrRenderPC_R3/r3_rendertarget.h b/src/Layers/xrRenderPC_R3/r3_rendertarget.h
-index 6d332ba..f097ef4 100644
+index 6d332ba..b3cbb66 100644
 --- a/src/Layers/xrRenderPC_R3/r3_rendertarget.h
 +++ b/src/Layers/xrRenderPC_R3/r3_rendertarget.h
-@@ -58,6 +58,7 @@ public:
+@@ -58,6 +58,8 @@ public:
  	IBlender* b_gasmask_drops;
  	IBlender* b_gasmask_dudv;
  	IBlender* b_nightvision;
 +	IBlender* b_fakescope; //crookr
++	IBlender* b_heatvision; //--DSR-- HeatVision
  	IBlender* b_lut;
  	
  	IBlender* b_smaa;	
-@@ -93,6 +94,9 @@ public:
+@@ -93,6 +95,11 @@ public:
  	ref_rt rt_secondVP;		// 32bit		(r,g,b,a) --//#SM+#-- +SecondVP+
  	ref_rt rt_ui_pda;
  
 +
 +	ref_rt rt_fakescope; //crookr
 +	
++	ref_rt rt_Heat; //--DSR-- HeatVision
++
  	ref_rt rt_dof;
  
  	ref_rt rt_blur_h_2;
-@@ -171,6 +175,7 @@ private:
+@@ -171,6 +178,8 @@ private:
  	ref_shader s_gasmask_drops;
  	ref_shader s_gasmask_dudv;
  	ref_shader s_nightvision;
 +	ref_shader s_fakescope; //crookr
++	ref_shader s_heatvision; //--DSR-- HeatVision
  	ref_shader s_lut;	
  
      ref_shader s_smaa;
-@@ -298,6 +303,7 @@ public:
+@@ -298,6 +307,8 @@ public:
  	void phase_gasmask_drops();
  	void phase_gasmask_dudv();
  	void phase_nightvision();
 +	void phase_fakescope(); //crookr
++	void phase_heatvision(); //--DSR-- HeatVision
  	void phase_lut();	
  	void phase_smaa();	
  
@@ -555,14 +965,15 @@ index fe27772..f7576be 100644
      //SMAA
  	if (ps_smaa_quality)
 diff --git a/src/Layers/xrRenderPC_R4/blender_nightvision.cpp b/src/Layers/xrRenderPC_R4/blender_nightvision.cpp
-index 1a5d5c6..a13b7fa 100644
+index 1a5d5c6..a88a9a5 100644
 --- a/src/Layers/xrRenderPC_R4/blender_nightvision.cpp
 +++ b/src/Layers/xrRenderPC_R4/blender_nightvision.cpp
-@@ -3,11 +3,17 @@
+@@ -3,11 +3,23 @@
  #include "blender_nightvision.h"
  
  CBlender_nightvision::CBlender_nightvision() { description.CLS = 0; }
 +CBlender_fakescope::CBlender_fakescope() { description.CLS = 0; } //crookr
++CBlender_heatvision::CBlender_heatvision() { description.CLS = 0;  } //--DSR-- Heatvision
  
  CBlender_nightvision::~CBlender_nightvision()
  {
@@ -572,11 +983,44 @@ index 1a5d5c6..a13b7fa 100644
 +{
 +}
 +
++//--DSR-- HeatVision_start
++CBlender_heatvision::~CBlender_heatvision()
++{
++}
++//--DSR-- HeatVision_end
 +
  void CBlender_nightvision::Compile(CBlender_Compile& C)
  {
  	IBlender::Compile(C);
-@@ -66,3 +72,26 @@ void CBlender_nightvision::Compile(CBlender_Compile& C)
+@@ -30,6 +42,9 @@ void CBlender_nightvision::Compile(CBlender_Compile& C)
+ 		C.r_dx10Texture("s_blur_2", r2_RT_blur_2);
+ 		C.r_dx10Texture("s_blur_4", r2_RT_blur_4);
+ 		C.r_dx10Texture("s_blur_8", r2_RT_blur_8);		
++
++		C.r_dx10Texture("s_heat", r2_RT_heat); //--DSR-- HeatVision
++
+ 			
+ 		C.r_dx10Sampler("smp_base");
+ 		C.r_dx10Sampler("smp_nofilter");
+@@ -45,6 +60,8 @@ void CBlender_nightvision::Compile(CBlender_Compile& C)
+ 		C.r_dx10Texture("s_blur_4", r2_RT_blur_4);
+ 		C.r_dx10Texture("s_blur_8", r2_RT_blur_8);		
+ 		
++		C.r_dx10Texture("s_heat", r2_RT_heat); //--DSR-- HeatVision
++
+ 		C.r_dx10Sampler("smp_base");
+ 		C.r_dx10Sampler("smp_nofilter");
+ 		C.r_dx10Sampler("smp_rtlinear");
+@@ -59,6 +76,8 @@ void CBlender_nightvision::Compile(CBlender_Compile& C)
+ 		C.r_dx10Texture("s_blur_4", r2_RT_blur_4);
+ 		C.r_dx10Texture("s_blur_8", r2_RT_blur_8);		
+ 		
++		C.r_dx10Texture("s_heat", r2_RT_heat); //--DSR-- HeatVision
++
+ 		C.r_dx10Sampler("smp_base");
+ 		C.r_dx10Sampler("smp_nofilter");
+ 		C.r_dx10Sampler("smp_rtlinear");
+@@ -66,3 +85,63 @@ void CBlender_nightvision::Compile(CBlender_Compile& C)
  		break;		
  	}
  }
@@ -603,12 +1047,48 @@ index 1a5d5c6..a13b7fa 100644
 +	C.r_End();
 +
 +}
-\ No newline at end of file
++
++//--DSR-- HeatVision_start
++void CBlender_heatvision::Compile(CBlender_Compile& C) 
++{
++	IBlender::Compile(C);
++
++	switch (C.iElement)
++	{
++	case 0: //Dummy shader - because IDK what gonna happen when r2_nightvision will be 0
++		C.r_Pass("stub_screen_space", "copy_nomsaa", FALSE, FALSE, FALSE);
++		C.r_dx10Texture("s_generic", r2_RT_generic0);
++
++		C.r_dx10Sampler("smp_base");
++		C.r_dx10Sampler("smp_nofilter");
++		C.r_dx10Sampler("smp_rtlinear");
++		C.r_End();
++		break;
++	case 1:
++		C.r_Pass("stub_screen_space", "heatvision", FALSE, FALSE, FALSE);
++		C.r_dx10Texture("s_position", r2_RT_P);
++		C.r_dx10Texture("s_image", r2_RT_generic0);
++		C.r_dx10Texture("s_bloom_new", r2_RT_pp_bloom);
++		C.r_dx10Texture("s_blur_2", r2_RT_blur_2);
++		C.r_dx10Texture("s_blur_4", r2_RT_blur_4);
++		C.r_dx10Texture("s_blur_8", r2_RT_blur_8);
++
++		C.r_dx10Texture("s_heat", r2_RT_heat); //--DSR-- HeatVision
++
++
++		C.r_dx10Sampler("smp_base");
++		C.r_dx10Sampler("smp_nofilter");
++		C.r_dx10Sampler("smp_rtlinear");
++		C.r_End();
++		break;
++	}
++}
++//--DSR-- HeatVision_end
 diff --git a/src/Layers/xrRenderPC_R4/blender_nightvision.h b/src/Layers/xrRenderPC_R4/blender_nightvision.h
-index 0801e41..e65607f 100644
+index 0801e41..8efe46d 100644
 --- a/src/Layers/xrRenderPC_R4/blender_nightvision.h
 +++ b/src/Layers/xrRenderPC_R4/blender_nightvision.h
-@@ -13,3 +13,17 @@ public:
+@@ -13,3 +13,32 @@ public:
  	CBlender_nightvision();
  	virtual ~CBlender_nightvision();
  };
@@ -626,72 +1106,129 @@ index 0801e41..e65607f 100644
 +	CBlender_fakescope();
 +	virtual ~CBlender_fakescope();
 +};
++
++//--DSR-- HeatVision_start
++class CBlender_heatvision : public IBlender
++{
++public:
++	virtual LPCSTR getComment() { return "heatvision"; }
++	virtual BOOL canBeDetailed() { return FALSE; }
++	virtual BOOL canBeLMAPped() { return FALSE; }
++
++	virtual void Compile(CBlender_Compile& C);
++
++	CBlender_heatvision();
++	virtual ~CBlender_heatvision();
++};
++//--DSR-- HeatVision_end
 diff --git a/src/Layers/xrRenderPC_R4/r2_types.h b/src/Layers/xrRenderPC_R4/r2_types.h
-index 18a11d4..54866bd 100644
+index 18a11d4..723d606 100644
 --- a/src/Layers/xrRenderPC_R4/r2_types.h
 +++ b/src/Layers/xrRenderPC_R4/r2_types.h
-@@ -69,6 +69,8 @@
+@@ -69,6 +69,9 @@
  #define		r2_RT_dof			"$user$dof"
  #define		r2_RT_ui			"$user$ui"
  
 +#define		r2_RT_scopert		"$user$scopeRT" //crookr
++#define		r2_RT_heat			"$user$heat" //--DSR-- HeatVision
 +
  #define		r2_RT_smaa_edgetex "$user$smaa_edgetex"
  #define		r2_RT_smaa_blendtex "$user$smaa_blendtex"
  
+diff --git a/src/Layers/xrRenderPC_R4/r4.h b/src/Layers/xrRenderPC_R4/r4.h
+index 9ae8b61..4288bef 100644
+--- a/src/Layers/xrRenderPC_R4/r4.h
++++ b/src/Layers/xrRenderPC_R4/r4.h
+@@ -233,6 +233,9 @@ public:
+ 		o_hemi = 0.75f * LT.get_hemi();
+ 		//o_hemi						= 0.5f*LT.get_hemi			()	;
+ 		o_sun = 0.75f * LT.get_sun();
++		//--DSR-- HeatVision_start
++		RCache.hemi.set_hotness(O->GetHotness(), O->GetTransparency(), 0.f, 0.f);
++		//--DSR-- HeatVision_end
+ 		CopyMemory(o_hemi_cube, LT.get_hemi_cube(), CROS_impl::NUM_FACES*sizeof(float));
+ 	}
+ 
+@@ -248,6 +251,8 @@ public:
+ #ifdef	DEBUG
+         if (ps_r2_ls_flags.test(R2FLAG_GLOBALMATERIAL))	mtl=ps_r2_gmaterial;
+ #endif
++		if (!T->m_is_hot)
++			RCache.hemi.set_hotness(0.f, 0.f, 0.f, 0.f);
+ 		RCache.hemi.set_material(o_hemi, o_sun, 0, (mtl < 5 ? (mtl + .5f) / 4.f : mtl));
+ 		RCache.hemi.set_pos_faces(o_hemi_cube[CROS_impl::CUBE_FACE_POS_X],
+ 		                          o_hemi_cube[CROS_impl::CUBE_FACE_POS_Y],
 diff --git a/src/Layers/xrRenderPC_R4/r4_rendertarget.cpp b/src/Layers/xrRenderPC_R4/r4_rendertarget.cpp
-index 4280e5f..a0d7fbb 100644
+index 4280e5f..442d4ad 100644
 --- a/src/Layers/xrRenderPC_R4/r4_rendertarget.cpp
 +++ b/src/Layers/xrRenderPC_R4/r4_rendertarget.cpp
-@@ -350,6 +350,7 @@ CRenderTarget::CRenderTarget()
+@@ -350,6 +350,8 @@ CRenderTarget::CRenderTarget()
  	b_gasmask_drops = xr_new<CBlender_gasmask_drops>();
  	b_gasmask_dudv = xr_new<CBlender_gasmask_dudv>();
  	b_nightvision = xr_new<CBlender_nightvision>();
 +	b_fakescope = xr_new<CBlender_fakescope>(); //crookr
++	b_heatvision = xr_new<CBlender_heatvision>(); //--DSR-- HeatVision
  	b_lut = xr_new<CBlender_lut>();
  	b_smaa = xr_new<CBlender_smaa>();
  
-@@ -434,6 +435,9 @@ CRenderTarget::CRenderTarget()
+@@ -434,6 +436,13 @@ CRenderTarget::CRenderTarget()
  		rt_Generic_1.create(r2_RT_generic1, w, h, D3DFMT_A8R8G8B8, 1);
  		rt_Generic.create(r2_RT_generic, w, h, D3DFMT_A8R8G8B8, 1);
  
 +
 +		rt_fakescope.create(r2_RT_scopert, w, h, D3DFMT_A8R8G8B8, 1); //crookr fakescope
 +
++		//--DSR-- HeatVision_start
++		rt_Heat.create(r2_RT_heat, w, h, D3DFMT_A8R8G8B8, SampleCount);
++		//--DSR-- HeatVision_end
++
          if (RImplementation.o.dx10_msaa)
              rt_Generic_temp.create("$user$generic_temp", w, h, D3DFMT_A8R8G8B8, SampleCount);
          else
-@@ -479,6 +483,9 @@ CRenderTarget::CRenderTarget()
+@@ -479,6 +488,9 @@ CRenderTarget::CRenderTarget()
  	s_gasmask_drops.create(b_gasmask_drops, "r2\\gasmask_drops");
  	s_gasmask_dudv.create(b_gasmask_dudv, "r2\\gasmask_dudv");
  	s_nightvision.create(b_nightvision, "r2\\nightvision");
 +
 +	s_fakescope.create(b_fakescope, "r2\\fakescope"); //crookr
-+
++	s_heatvision.create(b_heatvision, "r2\\heatvision"); //--DSR-- HeatVision
  	s_lut.create(b_lut, "r2\\lut");	
  	// OCCLUSION
  	s_occq.create(b_occq, "r2\\occq");
-@@ -1156,6 +1163,7 @@ CRenderTarget::~CRenderTarget()
+@@ -1156,6 +1168,8 @@ CRenderTarget::~CRenderTarget()
  	xr_delete(b_gasmask_drops);
  	xr_delete(b_gasmask_dudv);
  	xr_delete(b_nightvision);
 +	xr_delete(b_fakescope); //crookr
++	xr_delete(b_heatvision); //--DSR-- HeatVision
  	xr_delete(b_lut);	
  	xr_delete(b_smaa);
  
 diff --git a/src/Layers/xrRenderPC_R4/r4_rendertarget.h b/src/Layers/xrRenderPC_R4/r4_rendertarget.h
-index 37da92e..05dc919 100644
+index 37da92e..846ab97 100644
 --- a/src/Layers/xrRenderPC_R4/r4_rendertarget.h
 +++ b/src/Layers/xrRenderPC_R4/r4_rendertarget.h
-@@ -58,6 +58,7 @@ public:
+@@ -58,6 +58,8 @@ public:
  	IBlender* b_gasmask_drops;
  	IBlender* b_gasmask_dudv;
  	IBlender* b_nightvision;
 +	IBlender* b_fakescope; //crookr
++	IBlender* b_heatvision; //--DSR-- HeatVision
  	IBlender* b_lut;
  	IBlender* b_smaa;
  	// compute shader for hdao
-@@ -95,6 +96,9 @@ public:
+@@ -83,6 +85,10 @@ public:
+ 	ref_rt rt_Position; // 64bit,	fat	(x,y,z,?)				(eye-space)
+ 	ref_rt rt_Color; // 64/32bit,fat	(r,g,b,specular-gloss)	(or decompressed MET-8-8-8-8)
+ 
++	//--DSR-- HeatVision_start
++	ref_rt rt_Heat;
++	//--DSR-- HeatVision_end
++
+ 	// 
+ 	ref_rt rt_Accumulator; // 64bit		(r,g,b,specular)
+ 	ref_rt rt_Accumulator_temp; // only for HW which doesn't feature fp16 blend
+@@ -95,6 +101,9 @@ public:
  	
  	ref_rt rt_secondVP;	// 32bit		(r,g,b,a) --//#SM+#-- +SecondVP+
  
@@ -701,32 +1238,54 @@ index 37da92e..05dc919 100644
  	ref_rt rt_dof;
  	ref_rt rt_ui_pda;
  	
-@@ -174,7 +178,8 @@ private:
+@@ -174,7 +183,9 @@ private:
  	ref_shader s_pp_bloom;	
  	ref_shader s_gasmask_drops;
  	ref_shader s_gasmask_dudv;
 -	ref_shader s_nightvision;	
 +	ref_shader s_nightvision;
 +	ref_shader s_fakescope; //crookr
++	ref_shader s_heatvision; //--DSR-- HeatVision
  	ref_shader s_smaa;
  
  	ref_shader s_lut;
-@@ -300,6 +305,7 @@ public:
+@@ -300,6 +311,8 @@ public:
  	void phase_gasmask_drops();
  	void phase_gasmask_dudv();
  	void phase_nightvision();
 +	void phase_fakescope(); //crookr
++	void phase_heatvision(); //--DSR-- HeatVision
  	void phase_lut();		
  	void phase_smaa();
  	void phase_scene_prepare();
 diff --git a/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_combine.cpp b/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_combine.cpp
-index 875ae48..a5e8ac1 100644
+index 875ae48..3124093 100644
 --- a/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_combine.cpp
 +++ b/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_combine.cpp
-@@ -396,6 +396,11 @@ void CRenderTarget::phase_combine()
+@@ -290,10 +290,12 @@ void CRenderTarget::phase_combine()
+ 	// Forward rendering
+ 	{
+ 		PIX_EVENT(Forward_rendering);
++		//--DSR-- HeatVision_start
+ 		if (!RImplementation.o.dx10_msaa)
+-			u_setrt(rt_Generic_0, 0, 0, HW.pBaseZB); // LDR RT
++			u_setrt(rt_Generic_0, rt_Heat, 0, HW.pBaseZB); // LDR RT
+ 		else
+-			u_setrt(rt_Generic_0_r, 0, 0, RImplementation.Target->rt_MSAADepth->pZRT); // LDR RT
++			u_setrt(rt_Generic_0_r, rt_Heat, 0, RImplementation.Target->rt_MSAADepth->pZRT); // LDR RT
++		//--DSR-- HeatVision_end
+ 		RCache.set_CullMode(CULL_CCW);
+ 		RCache.set_Stencil(FALSE);
+ 		RCache.set_ColorWriteEnable();
+@@ -396,6 +398,16 @@ void CRenderTarget::phase_combine()
  	if(ps_r2_nightvision > 0)
  		phase_nightvision();
  	
++	//--DSR-- HeatVision_start
++	if (ps_r2_heatvision > 0)
++		phase_heatvision();
++	//--DSR-- HeatVision_end
++
 +	if (scope_fake_enabled)
 +	{
 +		phase_fakescope(); //crookr
@@ -735,6 +1294,49 @@ index 875ae48..a5e8ac1 100644
      //SMAA
  	if (ps_smaa_quality)
  	{
+diff --git a/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_scene.cpp b/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_scene.cpp
+index 0b59b29..2d6adab 100644
+--- a/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_scene.cpp
++++ b/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_scene.cpp
+@@ -13,6 +13,9 @@ void CRenderTarget::phase_scene_prepare()
+ 
+ 		FLOAT ColorRGBA[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+ 		HW.pContext->ClearRenderTargetView(rt_Position->pRT, ColorRGBA);
++		//--DSR-- HeatVision_start
++		HW.pContext->ClearRenderTargetView(rt_Heat->pRT, ColorRGBA);
++		//--DSR-- HeatVision_end
+ 
+ 		if (!RImplementation.o.dx10_msaa)
+ 			HW.pContext->ClearDepthStencilView(HW.pBaseZB, D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0);
+@@ -39,8 +42,10 @@ void CRenderTarget::phase_scene_begin()
+ 
+ 	// Targets, use accumulator for temporary storage
+ 	{
+-		if (RImplementation.o.albedo_wo) u_setrt(rt_Position, rt_Accumulator, pZB);
+-		else u_setrt(rt_Position, rt_Color, pZB);
++		//--DSR-- HeatVision_start
++		if (RImplementation.o.albedo_wo) u_setrt(rt_Position, rt_Accumulator, rt_Heat, pZB);
++		else u_setrt(rt_Position, rt_Color, rt_Heat, pZB);
++		//--DSR-- HeatVision_end
+ 	}
+ 
+ 
+diff --git a/src/xrEngine/IRenderable.h b/src/xrEngine/IRenderable.h
+index 040868a..b7c60d3 100644
+--- a/src/xrEngine/IRenderable.h
++++ b/src/xrEngine/IRenderable.h
+@@ -24,6 +24,11 @@ public:
+ 	virtual void renderable_Render() = 0;
+ 	virtual BOOL renderable_ShadowGenerate() { return FALSE; };
+ 	virtual BOOL renderable_ShadowReceive() { return FALSE; };
++
++	//--DSR-- HeatVision_start
++	virtual float GetHotness() { return 0.0; }
++	virtual float GetTransparency() { return 0.0; }
++	//--DSR-- HeatVision_end
+ };
+ 
+ #endif // IRENDERABLE_H_INCLUDED
 diff --git a/src/xrEngine/xr_ioc_cmd.cpp b/src/xrEngine/xr_ioc_cmd.cpp
 index a1ec515..4aa560a 100644
 --- a/src/xrEngine/xr_ioc_cmd.cpp
@@ -822,6 +1424,51 @@ index 8499334..48becf2 100644
  	if (dx)
  	{
  		float d = float(dx) * scale;
+diff --git a/src/xrGame/Entity.cpp b/src/xrGame/Entity.cpp
+index 70a5767..11b4e80 100644
+--- a/src/xrGame/Entity.cpp
++++ b/src/xrGame/Entity.cpp
+@@ -401,3 +401,24 @@ void CEntity::ChangeTeam(int team, int squad, int group)
+ 	Level().seniority_holder().team(g_Team()).squad(g_Squad()).group(g_Group()).register_member(this);
+ 	on_after_change_team();
+ }
++
++//--DSR-- HeatVision_start
++u32 clampU(u32 x, u32 a, u32 b) {
++	if (x < a) return a;
++	else if (x > b) return b;
++	return x;
++}
++
++float CEntity::GetHotness() {
++	if (AlreadyDie() || !g_Alive())
++		return 1.0f - (float)clampU(Device.dwTimeGlobal - m_level_death_time, 0, 20000) / 20000.0f;
++	return 1.0f;
++}
++
++void CEntity::OnChangeVisual()
++{
++	inherited::OnChangeVisual();
++	if (renderable.visual != 0)
++		renderable.visual->MarkAsHot(true);
++}
++//--DSR-- HeatVision_end
+diff --git a/src/xrGame/Entity.h b/src/xrGame/Entity.h
+index c5697ab..b21f2ec 100644
+--- a/src/xrGame/Entity.h
++++ b/src/xrGame/Entity.h
+@@ -82,6 +82,11 @@ public:
+ 	/*	virtual*/
+ 	IC void SetMaxHealth(float v) { m_entity_condition->max_health() = v; }
+ 
++	//--DSR-- HeatVision_start
++	virtual float GetHotness();
++	virtual void  OnChangeVisual();
++	//--DSR-- HeatVision_end
++
+ 	/*virtual*/
+ 	IC BOOL g_Alive() const { return GetfHealth() > 0; }
+ 	virtual BOOL g_State(SEntityState&) const { return FALSE; }
 diff --git a/src/xrGame/NewZoomFlag.h b/src/xrGame/NewZoomFlag.h
 new file mode 100644
 index 0000000..ec29839
@@ -843,7 +1490,7 @@ index 0000000..ec29839
 +//
 \ No newline at end of file
 diff --git a/src/xrGame/Weapon.cpp b/src/xrGame/Weapon.cpp
-index 080f84d..e55870c 100644
+index 080f84d..d8665de 100644
 --- a/src/xrGame/Weapon.cpp
 +++ b/src/xrGame/Weapon.cpp
 @@ -42,6 +42,47 @@
@@ -1094,7 +1741,7 @@ index 080f84d..e55870c 100644
  }
  
  bool CWeapon::unlimited_ammo()
-@@ -2697,16 +2809,44 @@ bool CWeapon::IsHudModeNow()
+@@ -2697,16 +2809,46 @@ bool CWeapon::IsHudModeNow()
  	return (HudItemData() != NULL);
  }
  
@@ -1105,7 +1752,9 @@ index 080f84d..e55870c 100644
 +	float min_zoom_k = 0.3f;
 +	float delta_factor_total = def_fov - scope_factor;
 +	VERIFY(delta_factor_total > 0);
-+	float loc_min_zoom_factor = (atan(tan(def_fov * (0.5 * PI / 180)) / g_ironsights_factor) / (0.5 * PI / 180)) / 0.75f;
++	float loc_min_zoom_factor = ((atan(tan(def_fov * (0.5 * PI / 180)) / g_ironsights_factor) / (0.5 * PI / 180)) / 0.75f) * (scope_radius > 0.0 ? scope_scrollpower : 1);
++
++	//Msg("min zoom factor %f, min zoom %f, loc min zoom factor %f", min_zoom_factor, min_zoom, loc_min_zoom_factor);
 +
 +	if (min_zoom < loc_min_zoom_factor) {
 +		min_zoom_factor = min_zoom;
@@ -1144,7 +1793,7 @@ index 080f84d..e55870c 100644
  }
  
  void CWeapon::ZoomDec()
-@@ -2714,11 +2854,20 @@ void CWeapon::ZoomDec()
+@@ -2714,11 +2856,20 @@ void CWeapon::ZoomDec()
  	if (!IsScopeAttached()) return;
  	if (!m_zoom_params.m_bUseDynamicZoom) return;
  	float delta, min_zoom_factor;
@@ -1340,6 +1989,83 @@ index 4b266c9..27af437 100644
  	result |= result2;
  
  	temp_int = (int)m_eSilencerStatus;
+diff --git a/src/xrGame/ai/monsters/bloodsucker/bloodsucker.cpp b/src/xrGame/ai/monsters/bloodsucker/bloodsucker.cpp
+index 2379645..dcb0f6e 100644
+--- a/src/xrGame/ai/monsters/bloodsucker/bloodsucker.cpp
++++ b/src/xrGame/ai/monsters/bloodsucker/bloodsucker.cpp
+@@ -505,6 +505,21 @@ CAI_Bloodsucker::visibility_t CAI_Bloodsucker::get_visibility_state() const
+ 	return m_force_visibility_state != unset ? m_force_visibility_state : m_visibility_state;
+ }
+ 
++//--DSR-- HeatVision_start
++float CAI_Bloodsucker::GetTransparency() 
++{
++	if (m_visibility_state == no_visibility) 
++	{
++		return 1.0f;
++	}
++	else
++	{
++		return 0.0f;
++	}
++
++}
++//--DSR-- HeatVision_end
++
+ void CAI_Bloodsucker::set_visibility_state(visibility_t new_state)
+ {
+ 	if (m_force_visibility_state != unset)
+@@ -540,6 +555,12 @@ void CAI_Bloodsucker::set_visibility_state(visibility_t new_state)
+ 	{
+ 		start_invisible_predator();
+ 	}
++	//--DSR-- HeatVision_start
++	/*else if (m_visibility_state == no_visibility)
++	{
++		start_invisible_predator();
++	}*/
++	//--DSR-- HeatVision_end
+ 	else
+ 	{
+ 		sound().play(CAI_Bloodsucker::eChangeVisibility);
+@@ -856,12 +877,20 @@ void CAI_Bloodsucker::manual_deactivate()
+ 	setVisible(TRUE);
+ }
+ 
++
++extern int ps_r2_heatvision;
+ void CAI_Bloodsucker::renderable_Render()
+ {
+-	if (m_visibility_state != no_visibility)
+-	{
++	//--DSR-- HeatVision_start
++	
++	//if (m_visibility_state != no_visibility)
++	//{
++	//	inherited::renderable_Render();  
++	//}
++
++	if (m_visibility_state != no_visibility || ps_r2_heatvision > 0)
+ 		inherited::renderable_Render();
+-	}
++	//--DSR-- HeatVision_end
+ }
+ 
+ bool CAI_Bloodsucker::done_enough_hits_before_vampire()
+diff --git a/src/xrGame/ai/monsters/bloodsucker/bloodsucker.h b/src/xrGame/ai/monsters/bloodsucker/bloodsucker.h
+index 7fa710b..cffb4ae 100644
+--- a/src/xrGame/ai/monsters/bloodsucker/bloodsucker.h
++++ b/src/xrGame/ai/monsters/bloodsucker/bloodsucker.h
+@@ -215,6 +215,9 @@ private:
+ 	TTime m_runaway_invisible_time;
+ 
+ public:
++
++	virtual float GetTransparency(); //--DSR-- HeatVision
++
+ 	float get_full_visibility_radius();
+ 	float get_partial_visibility_radius();
+ 	float get_no_visibility_radius();
 diff --git a/src/xrGame/console_commands.cpp b/src/xrGame/console_commands.cpp
 index 2841970..ff9c11a 100644
 --- a/src/xrGame/console_commands.cpp
@@ -1384,6 +2110,22 @@ index 0000000..229a8a3
 +
 +std::map<shared_str, float> listScopeRadii;
 \ No newline at end of file
+diff --git a/src/xrGame/player_hud.cpp b/src/xrGame/player_hud.cpp
+index 96fae36..5d63ca2 100644
+--- a/src/xrGame/player_hud.cpp
++++ b/src/xrGame/player_hud.cpp
+@@ -689,6 +689,11 @@ void player_hud::load_script(LPCSTR section)
+ 	script_override_arms = false;
+ 	load(section, true);
+ 	script_override_arms = true;
++	
++	//--DSR-- HeatVision_start
++	m_model->dcast_RenderVisual()->MarkAsHot(true);
++	m_model_2->dcast_RenderVisual()->MarkAsHot(true);
++	//--DSR-- HeatVision_end
+ }
+ 
+ bool player_hud::render_item_ui_query()
 diff --git a/src/xrGame/xrGame.vcxproj b/src/xrGame/xrGame.vcxproj
 index c8e93f0..728e067 100644
 --- a/src/xrGame/xrGame.vcxproj
