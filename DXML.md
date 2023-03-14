@@ -34,6 +34,8 @@ What this does is creating a function on_xml_read that will be auto-called from 
 * xml_file_name - current XML filename that engine is processing (for example: text\eng\_game_version.xml)
 * xml_obj - the object described above
 
+**WARNING:** DXML won't process translation strings other than from eng/rus folders and `gameplay\character_desc_general.xml` file. For how to manipulate that file check "Additional functions" paragraph below.
+
 To understand, what can be done with xml_obj and what functions it provides, let's take a look at typical usecases:
 
 ---
