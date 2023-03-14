@@ -202,7 +202,7 @@ index 5035624..a45d2cd 100644
 +	//--DSR-- HeatVision_end
  }
 diff --git a/src/Layers/xrRender/FBasicVisual.cpp b/src/Layers/xrRender/FBasicVisual.cpp
-index f8e4651..c51735e 100644
+index f8e4651..ba1455a 100644
 --- a/src/Layers/xrRender/FBasicVisual.cpp
 +++ b/src/Layers/xrRender/FBasicVisual.cpp
 @@ -11,6 +11,7 @@
@@ -213,7 +213,7 @@ index f8e4651..c51735e 100644
  
  //////////////////////////////////////////////////////////////////////
  // Construction/Destruction
-@@ -76,6 +77,20 @@ void dxRender_Visual::Load(const char* N, IReader* data, u32)
+@@ -76,6 +77,21 @@ void dxRender_Visual::Load(const char* N, IReader* data, u32)
  #endif
  }
  
@@ -227,7 +227,8 @@ index f8e4651..c51735e 100644
 +	STextureList* l = p->T._get();
 +	if (0 == l || l->empty()) return;
 +	CTexture* t = l->at(0).second._get();
-+	t->m_is_hot = is_hot;
++	if (t)
++		t->m_is_hot = is_hot;
 +}
 +//--DSR-- HeatVision_end
 +
@@ -1136,7 +1137,7 @@ index 18a11d4..723d606 100644
  #define		r2_RT_smaa_blendtex "$user$smaa_blendtex"
  
 diff --git a/src/Layers/xrRenderPC_R4/r4.h b/src/Layers/xrRenderPC_R4/r4.h
-index 9ae8b61..4288bef 100644
+index 9ae8b61..95e2cb6 100644
 --- a/src/Layers/xrRenderPC_R4/r4.h
 +++ b/src/Layers/xrRenderPC_R4/r4.h
 @@ -233,6 +233,9 @@ public:
@@ -1153,7 +1154,7 @@ index 9ae8b61..4288bef 100644
  #ifdef	DEBUG
          if (ps_r2_ls_flags.test(R2FLAG_GLOBALMATERIAL))	mtl=ps_r2_gmaterial;
  #endif
-+		if (!T->m_is_hot)
++		if (!T || T && !T->m_is_hot)
 +			RCache.hemi.set_hotness(0.f, 0.f, 0.f, 0.f);
  		RCache.hemi.set_material(o_hemi, o_sun, 0, (mtl < 5 ? (mtl + .5f) / 4.f : mtl));
  		RCache.hemi.set_pos_faces(o_hemi_cube[CROS_impl::CUBE_FACE_POS_X],

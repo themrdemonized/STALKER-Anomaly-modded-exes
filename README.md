@@ -152,6 +152,14 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.03.15**:
+
+* Stability updates to heatvision sources
+* DXML 3.0 update:
+  * DXML now uses own storage for callbacks to ensure they are fired accordingly to registering order
+  * Added `insertFromXMLFile` function to read contents of xml file to insert into xml_obj
+  * Added optional parameter useRootNode to `insertFromXMLString` and `insertFromXMLFile` functions that will hint DXML to insert contents from a root node of parsed XML instead of the whole file (default: false) 
+
 **2023.03.11**:
 
 * Added heatvision support by vegeta1k95 (https://www.moddb.com/mods/stalker-anomaly/addons/heatvision-v02-extension-for-beefs-nvg-dx11engine-mod/)

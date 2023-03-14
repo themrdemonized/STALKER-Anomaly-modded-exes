@@ -34,8 +34,6 @@ What this does is creating a function on_xml_read that will be auto-called from 
 * xml_file_name - current XML filename that engine is processing (for example: text\eng\_game_version.xml)
 * xml_obj - the object described above
 
-**WARNING:** DXML won't process translation strings other than from eng/rus folders and `gameplay\character_desc_general.xml` file. For how to manipulate that file check "Additional functions" paragraph below.
-
 To understand, what can be done with xml_obj and what functions it provides, let's take a look at typical usecases:
 
 ---
@@ -81,8 +79,40 @@ insertFromXMLString method has these arguments:
 * "xml_string" - XML string to process
 * "where" - the element in xml_obj in which new data will be inserted argument is optional and specifies an element subtable of self.xml_table to insert (default - root element)
 * "pos" argument is optional and specifies position to insert (default - to the end)
+* "useRootNode" argument is optional and will hint DXML to insert contents inside the root node if it has one instead of whole string
 
 The function returns the position of first inserted element in "where"
+
+---
+
+### Case 1.1: inserting new XML data from file
+
+**Examples: insert new dialog into gameplay\dialogs.xml from file plugins\new_dialog.xml**
+
+This case will insert new data from a xml file `plugins\new_dialog.xml` into `gameplay\dialogs.xml`.
+
+To do this, you can use `xml_obj:insertFromXMLFile` function, where you specify the path to the file and the arguments, which are exactly the same as in `xml_obj:insertFromXMLString` function.
+
+The path argument should be a path to the file WITH EXTENSION (example: `[[plugins\new_dialog.xml]]`).
+
+The base folder for xml files to read is gamedata/configs, for example if the path provided is `plugins\new_dialog.xml`, then the file should exist in `gamedata/configs/plugins/new_dialog.xml`.
+
+If the file has failed to read, the game will crash with the error message displaying what happened. 
+
+```lua
+function on_xml_read()
+    RegisterScriptCallback("on_xml_read", function(xml_file_name, xml_obj)
+        -- XML file i want to change
+        local xml_to_change = [[gameplay\dialogs.xml]]
+
+        -- Check if its the file i want to change
+        if xml_file_name == xml_to_change then
+            -- Here is my code to change XML
+            xml_obj:insertFromXMLFile([[plugins\new_dialog.xml]])
+        end
+    end)
+end
+```
 
 ---
 
@@ -256,7 +286,6 @@ end
 ```
 
 Full list of fields available in "data" table:
-
 * name
 * bio
 * community
@@ -303,7 +332,6 @@ end
 ```
 
 Full list of methods in dialog_list
-
 * find(regex) - find existing dialog by regex, returns last found dialog matching regex and its position in the list
 * has(string) - check if dialog by string exists, returns the position of found dialog in the list
 * add(string, pos) - adds new dialog in specified position (by default adds before break dialog string if it exists)
