@@ -63,6 +63,19 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
 
   * To edit effect strength, type in console `snd_doppler_power [0, 5]`. Choosing power 0 will disable the feature
 
+* True First Person Death Camera, that will stay with player when he dies and will react accordingly to player's head transforms, by demonized, with possibility to adjust its settings.
+  * Known bugs:
+    * If the player falls with face straight into the ground, the camera will clip underground due to model being clipped as well with
+    
+  * Additional console commands
+    * `first_person_death` // Enable First Person Death Camera
+    * `first_person_death_direction_offset` // FPD Camera Direction Offset (in DEGREES)
+    * `first_person_death_position_offset` // FPD Camera Position Offset (x, y, z)
+    * `first_person_death_position_smoothing` // FPD Camera Position Change Smoothing
+    * `first_person_death_direction_smoothing` // FPD Camera Direction Change Smoothing
+    * `first_person_death_near_plane_offset` // FPD Camera Near Plane Offset
+
+
 * Additions to demo_record commands by demonized
 
   * New console commands:
@@ -99,6 +112,7 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Fixed sorting news in News Tab in PDA
   * Added getting material of ray_pick() result with all of its properties
   * Added `bone_direction()` function for game objects
+  * Added `level.get_music_volume()` and `level.set_music_volume()` functions to adjust music volume in runtime without messing with console commands
   * Added `on_loading_screen_key_prompt` callback for when loading screen happens and "Press Any Key to Continue" prompt appears
   * Added `on_loading_screen_dismissed` callback for when player dismisses loading screen after "Press Any Key to Continue" pressed
   * Added `on_specific_character_dialog_list` callback that allows to manipulate available actor dialog list defined in characted_desc...xml files in `<actor_dialog>` tags
@@ -124,6 +138,9 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
     * Minimal zoom is equal to either mechanical zoom or the one prescribed in section min_scope_zoom_factor.
     * The step of zoom adjustment is more precise. Also, it's possible to adjust the step of zoom with the console command zoom_step_count [1.0, 10.0], this option is also applicable to the binoculars.
   * In the new version all implementations from fakelens.script have moved directly to the engine. fakelens.script remained as a layer between the engine and scopeRadii.script
+
+* All settings can be edited from the game options in "Modded Exes" tab
+![image](http://puu.sh/JC40Y/9315119150.jpg)
 
 ## Below are the edits that are supplemental to the mods, the mods themselves **are not included**, download the mods by the links. If mods in the links provide their own exes, you can ignore them, all necessary edits are already included on this page. 
 
@@ -152,6 +169,26 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.03.19**:
+
+* Added true first person death camera (enabled by default), that will stay with player when he dies and will react accordingly to player's head transforms. Additional console commands
+  * `first_person_death` // Enable First Person Death Camera
+  * `first_person_death_direction_offset` // FPD Camera Direction Offset (in DEGREES)
+  * `first_person_death_position_offset` // FPD Camera Position Offset (x, y, z)
+  * `first_person_death_position_smoothing` // FPD Camera Position Change Smoothing
+  * `first_person_death_direction_smoothing` // FPD Camera Direction Change Smoothing
+  * `first_person_death_near_plane_offset` // FPD Camera Near Plane Offset
+
+[![Watch the video](https://img.youtube.com/vi/Jm-DRNqnak0/default.jpg)](https://youtu.be/Jm-DRNqnak0)
+
+* Fixed heatvision effects not applied to the player hands
+* Added options menu for modded exes settings
+  * From options menu you can adjust all added modded exes parameters, such as for Shader Scopes, Sound Doppler, FPD Camera and so on
+
+![image](http://puu.sh/JC40Y/9315119150.jpg)
+
+* Added `level.get_music_volume()` and `level.set_music_volume()` Lua functions to adjust music volume in runtime without messing with console commands
+
 **2023.03.15**:
 
 * Stability updates to heatvision sources

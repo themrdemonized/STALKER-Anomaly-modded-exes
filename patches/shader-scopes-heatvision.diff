@@ -2112,21 +2112,20 @@ index 0000000..229a8a3
 +std::map<shared_str, float> listScopeRadii;
 \ No newline at end of file
 diff --git a/src/xrGame/player_hud.cpp b/src/xrGame/player_hud.cpp
-index 96fae36..5d63ca2 100644
+index 96fae36..fcf4941 100644
 --- a/src/xrGame/player_hud.cpp
 +++ b/src/xrGame/player_hud.cpp
-@@ -689,6 +689,11 @@ void player_hud::load_script(LPCSTR section)
- 	script_override_arms = false;
- 	load(section, true);
- 	script_override_arms = true;
-+	
+@@ -682,6 +682,10 @@ void player_hud::load(const shared_str& player_hud_sect, bool force)
+ 	m_model_2->dcast_PKinematics()->CalculateBones_Invalidate();
+ 	m_model_2->dcast_PKinematics()->CalculateBones(TRUE);
+ 
 +	//--DSR-- HeatVision_start
 +	m_model->dcast_RenderVisual()->MarkAsHot(true);
 +	m_model_2->dcast_RenderVisual()->MarkAsHot(true);
 +	//--DSR-- HeatVision_end
  }
  
- bool player_hud::render_item_ui_query()
+ void player_hud::load_script(LPCSTR section)
 diff --git a/src/xrGame/xrGame.vcxproj b/src/xrGame/xrGame.vcxproj
 index c8e93f0..728e067 100644
 --- a/src/xrGame/xrGame.vcxproj

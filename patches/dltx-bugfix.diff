@@ -1142,6 +1142,180 @@ index a1ec515..b206c4e 100644
  
  #ifdef DEBUG
      CMD3(CCC_Mask, "snd_stats", &g_stats_flags, st_sound);
+diff --git a/src/xrGame/Actor.cpp b/src/xrGame/Actor.cpp
+index 899a940..8064673 100644
+--- a/src/xrGame/Actor.cpp
++++ b/src/xrGame/Actor.cpp
+@@ -246,6 +246,8 @@ CActor::CActor() : CEntityAlive(), current_ik_cam_shift(0)
+ 	m_bSafemode = false;
+ 
+ 	m_bDelayDrawPickupItems = false;
++
++	m_FPCam = NULL;
+ }
+ 
+ 
+@@ -829,6 +831,7 @@ void CActor::HitSignal(float perc, Fvector& vLocalDir, CObject* who, s16 element
+ }
+ 
+ void start_tutorial(LPCSTR name);
++extern BOOL firstPersonDeath;
+ 
+ void CActor::Die(CObject* who)
+ {
+@@ -920,11 +923,24 @@ void CActor::Die(CObject* who)
+ 
+ 	if (IsGameTypeSingle())
+ 	{
+-#ifdef FP_DEATH
+-        cam_Set(eacFirstEye);
+-#else
+-		cam_Set(eacFreeLook);
+-#endif // FP_DEATH
++		if (firstPersonDeath) {
++			cam_Set(eacFirstEye);
++			m_FPCam = xr_new<CFPCamEffector>();
++			Fvector pos = Device.vCameraPosition;
++			Fvector hpb;
++			hpb.set(
++				Device.vCameraDirection.getH(),
++				Device.vCameraDirection.getP(),
++				0
++			);
++			m_FPCam->m_Position.set(pos);
++			m_FPCam->m_HPB.set(hpb);
++			m_FPCam->m_Camera.setHPB(hpb.x, hpb.y, hpb.z).translate_over(pos);
++			Cameras().AddCamEffector(m_FPCam);
++		}
++		else
++			cam_Set(eacFreeLook);
++
+ 		CurrentGameUI()->HideShownDialogs();
+ 
+ 		/* avo: attempt to set camera on timer */
+diff --git a/src/xrGame/Actor.h b/src/xrGame/Actor.h
+index 1440969..78de06a 100644
+--- a/src/xrGame/Actor.h
++++ b/src/xrGame/Actor.h
+@@ -61,6 +61,7 @@ class CActorStatisticMgr;
+ class CLocationManager;
+ 
+ class CNightVisionEffector;
++class CFPCamEffector;
+ 
+ class CActor :
+ 	public CEntityAlive,
+@@ -81,6 +82,9 @@ public:
+ 	CActor();
+ 	virtual ~CActor();
+ 
++protected:
++	CFPCamEffector* m_FPCam;
++
+ public:
+ 	virtual BOOL AlwaysTheCrow() { return TRUE; }
+ 
+diff --git a/src/xrGame/ActorCameras.cpp b/src/xrGame/ActorCameras.cpp
+index 19a5c6c..0b324e9 100644
+--- a/src/xrGame/ActorCameras.cpp
++++ b/src/xrGame/ActorCameras.cpp
+@@ -28,6 +28,9 @@
+ #include "player_hud.h"
+ #include "Missile.h"
+ 
++#include "EffectorBobbing.h"
++class CFPCamEffector;
++
+ ENGINE_API extern float psHUD_FOV;
+ ENGINE_API extern float psHUD_FOV_def;
+ 
+@@ -453,6 +456,14 @@ static const float ik_cam_shift_tolerance = 0.2f;
+ static const float ik_cam_shift_speed = 0.01f;
+ #endif
+ 
++BOOL firstPersonDeath = TRUE;
++float offsetH = 0;
++float offsetP = 0;
++float offsetB = 0;
++float offsetX = 0;
++float offsetY = 0;
++float offsetZ = 0;
++float viewportNearOffset = 0;
+ void CActor::cam_Update(float dt, float fFOV)
+ {
+ 	if (m_holder) return;
+@@ -576,6 +587,53 @@ void CActor::cam_Update(float dt, float fFOV)
+ 	{
+ 		collide_camera(*cameras[eacFirstEye], _viewport_near, this);
+ 	}
++	
++	if (cam_active == eacFirstEye) {
++		if (firstPersonDeath && !g_Alive() && m_FPCam) {
++			IKinematics* k = Visual()->dcast_PKinematics();
++
++			// Get eye bone position
++			CBoneInstance& eyeBone = k->LL_GetBoneInstance(m_eye_right);
++			Fmatrix matrix = Fidentity;
++			matrix.mul_43(XFORM(), eyeBone.mTransform);
++			Fvector camPos = (matrix.c);
++
++			// Get head bone direction, works better for first person death
++			CBoneInstance& headBone = k->LL_GetBoneInstance(m_head);
++			Fmatrix matrixDir = Fidentity;
++			Fvector camDir;
++			matrixDir.mul_43(XFORM(), headBone.mTransform);
++			matrixDir.getHPB(camDir);
++
++			// Adjust camera direction
++			Fvector adjustedCamDir;
++			adjustedCamDir.set(camDir).setHP(
++				camDir.x + deg2rad(8.f) + deg2rad(offsetH),
++				camDir.y - deg2rad(20.f) + deg2rad(offsetP)
++			);
++			camDir.set(
++				adjustedCamDir.getH(),
++				adjustedCamDir.getP(),
++				camDir.z + deg2rad(90.f) + deg2rad(offsetB)
++			);
++			if (camDir.x < 0) {
++				camDir.x = PI_MUL_2 + camDir.x;
++			}
++
++			Fvector dir, dirUp, dirRight;
++			dir.setHP(camDir.x, camDir.y);
++			Fvector::generate_orthonormal_basis_normalized(dir, dirUp, dirRight);
++
++			camPos.mad(dir, -0.04 + offsetZ);
++			camPos.mad(dirUp, offsetY);
++			camPos.mad(dirRight, -0.01 + offsetX);
++
++			m_FPCam->m_HPB.set(camDir);
++			m_FPCam->m_Position.set(camPos);
++			_viewport_near = VIEWPORT_NEAR - 0.08 + viewportNearOffset;
++			//Cameras().ApplyDevice(_viewport_near);
++		}
++	}
+ 
+ 	//Alundaio -psp always
+ 	//if( psActorFlags.test(AF_PSP) )
+diff --git a/src/xrGame/ActorInput.cpp b/src/xrGame/ActorInput.cpp
+index 8499334..2e2983b 100644
+--- a/src/xrGame/ActorInput.cpp
++++ b/src/xrGame/ActorInput.cpp
+@@ -592,11 +592,11 @@ void CActor::ActorUse()
+ 		}
+ 	}
+ }
+-
++extern BOOL firstPersonDeath;
+ BOOL CActor::HUDview() const
+ {
+ 	return IsFocused() && (cam_active == eacFirstEye) &&
+-		((!m_holder) || (m_holder && m_holder->allowWeapon() && m_holder->HUDView()));
++		((!m_holder) || (m_holder && m_holder->allowWeapon() && m_holder->HUDView())) && (firstPersonDeath ? g_Alive() : true);
+ }
+ 
+ static u16 SlotsToCheck [] = {
 diff --git a/src/xrGame/Actor_Weapon.cpp b/src/xrGame/Actor_Weapon.cpp
 index 14eefbd..931a042 100644
 --- a/src/xrGame/Actor_Weapon.cpp
@@ -1156,6 +1330,82 @@ index 14eefbd..931a042 100644
  	}
  
  	effector->m_WeaponID = weapon->ID();
+diff --git a/src/xrGame/EffectorBobbing.cpp b/src/xrGame/EffectorBobbing.cpp
+index ffd7c19..f728fb7 100644
+--- a/src/xrGame/EffectorBobbing.cpp
++++ b/src/xrGame/EffectorBobbing.cpp
+@@ -113,3 +113,48 @@ BOOL CEffectorBobbing::ProcessCam(SCamEffectorInfo& info)
+ 	//	}
+ 	return TRUE;
+ }
++
++CFPCamEffector::CFPCamEffector() : CEffectorCam(eCEUser, INT_MAX) {
++	m_Camera.identity();
++	m_Camera.setHPB(0, 0, 0);
++	m_HPB.set(0, 0, 0);
++	m_Position.set(0, 0, 0);
++}
++
++// EMA smoothing for changing values, frame independent
++int firstPersonDeathPositionSmoothing = 6;
++int firstPersonDeathDirectionSmoothing = 12;
++
++void CFPCamEffector::ema(Fvector &current, Fvector &target, int steps) {
++	float smoothing_alpha = 2.0 / (steps + 1);
++	float delta = Device.dwTimeDelta;
++
++	if (fis_zero(current.x) && fis_zero(current.y) && fis_zero(current.z)) {
++		current.x = target.x;
++		current.y = target.y;
++		current.z = target.z;
++		return;
++	}
++
++	current.x = current.x + min(1.f, smoothing_alpha * (delta / steps)) * (target.x - current.x);
++	current.y = current.y + min(1.f, smoothing_alpha * (delta / steps)) * (target.y - current.y);
++	current.z = current.z + min(1.f, smoothing_alpha * (delta / steps)) * (target.z - current.z);
++}
++
++BOOL CFPCamEffector::ProcessCam(SCamEffectorInfo& info)
++{
++	// Set target camera
++	Fmatrix temp;
++	temp.identity().setHPB(m_HPB.x, m_HPB.y, m_HPB.z).translate_over(m_Position);
++
++	// Smooth out transition between current camera and target
++	ema(m_Camera.j, temp.j, firstPersonDeathDirectionSmoothing);
++	ema(m_Camera.k, temp.k, firstPersonDeathDirectionSmoothing);
++	ema(m_Camera.c, temp.c, firstPersonDeathPositionSmoothing);
++
++	// update camera
++	info.n.set(m_Camera.j);
++	info.d.set(m_Camera.k);
++	info.p.set(m_Camera.c);
++	return TRUE;
++}
+\ No newline at end of file
+diff --git a/src/xrGame/EffectorBobbing.h b/src/xrGame/EffectorBobbing.h
+index 854b7a7..1a216d2 100644
+--- a/src/xrGame/EffectorBobbing.h
++++ b/src/xrGame/EffectorBobbing.h
+@@ -33,3 +33,17 @@ public:
+ };
+ 
+ #endif //_EFFECTOR_BOBBING_H
++
++class CFPCamEffector : public CEffectorCam
++{
++public:
++	Fvector m_Position;
++	Fvector m_HPB;
++	Fmatrix m_Camera;
++	virtual void ema(Fvector& current, Fvector& target, int steps);
++	
++public:
++	CFPCamEffector();
++	virtual BOOL ProcessCam(SCamEffectorInfo& info);
++
++};
 diff --git a/src/xrGame/EffectorShot.cpp b/src/xrGame/EffectorShot.cpp
 index 8ac8fa4..a7ae406 100644
 --- a/src/xrGame/EffectorShot.cpp
@@ -1682,19 +1932,78 @@ index 908d83f..696ee7c 100644
  
  		Fvector dir;
 diff --git a/src/xrGame/console_commands.cpp b/src/xrGame/console_commands.cpp
-index 2841970..b7f58f4 100644
+index 2841970..db51ea9 100644
 --- a/src/xrGame/console_commands.cpp
 +++ b/src/xrGame/console_commands.cpp
-@@ -110,6 +110,8 @@ float streff;
+@@ -110,6 +110,10 @@ float streff;
  
  extern BOOL g_ai_die_in_anomaly; //Alundaio
  
++extern BOOL firstPersonDeath;
++
 +extern BOOL pseudogiantCanDamageObjects;
 +
  ENGINE_API extern float g_console_sensitive;
  
  u32 g_dead_body_collision = 1;
-@@ -2448,6 +2450,8 @@ void CCC_RegisterCommands()
+@@ -515,6 +519,56 @@ public:
+ 
+ Fvector CCC_DemoRecordSetPos::p = {0, 0, 0};
+ 
++extern float offsetH;
++extern float offsetP;
++extern float offsetB;
++extern float offsetX;
++extern float offsetY;
++extern float offsetZ;
++extern float viewportNearOffset;
++extern int firstPersonDeathPositionSmoothing;
++extern int firstPersonDeathDirectionSmoothing;
++
++class CCC_FPDDirectionOffset : public CCC_Vector3
++{
++	static Fvector d;
++public:
++
++	CCC_FPDDirectionOffset(LPCSTR N) : CCC_Vector3(N, &d, Fvector().set(-FLT_MAX, -FLT_MAX, -FLT_MAX),
++		Fvector().set(FLT_MAX, FLT_MAX, FLT_MAX))
++	{
++	};
++
++	virtual void Execute(LPCSTR args)
++	{
++		CCC_Vector3::Execute(args);
++		offsetH = d.x;
++		offsetP = d.y;
++		offsetB = d.z;
++	}
++};
++Fvector CCC_FPDDirectionOffset::d = { 0, 0, 0 };
++
++class CCC_FPDPositionOffset : public CCC_Vector3
++{
++	static Fvector d;
++public:
++
++	CCC_FPDPositionOffset(LPCSTR N) : CCC_Vector3(N, &d, Fvector().set(-FLT_MAX, -FLT_MAX, -FLT_MAX),
++		Fvector().set(FLT_MAX, FLT_MAX, FLT_MAX))
++	{
++	};
++
++	virtual void Execute(LPCSTR args)
++	{
++		CCC_Vector3::Execute(args);
++		offsetX = d.x;
++		offsetY = d.y;
++		offsetZ = d.z;
++	}
++};
++Fvector CCC_FPDPositionOffset::d = { 0, 0, 0 };
++
+ class CCC_DemoPlay : public IConsole_Command
+ {
+ public:
+@@ -2448,6 +2502,8 @@ void CCC_RegisterCommands()
  
  	CMD4(CCC_Integer, "ai_die_in_anomaly", &g_ai_die_in_anomaly, 0, 1); //Alundaio
  
@@ -1703,6 +2012,21 @@ index 2841970..b7f58f4 100644
  	CMD4(CCC_Float, "ai_aim_predict_time", &g_aim_predict_time, 0.f, 10.f);
  
  	CMD4(CCC_Float, "head_bob_factor", &g_head_bob_factor, 0.f, 2.f);
+@@ -2508,6 +2564,14 @@ void CCC_RegisterCommands()
+ 	CMD3(CCC_Mask, "g_feel_grenade", &psDeviceFlags2, rsFeelGrenade);
+ 	CMD3(CCC_Mask, "g_always_active", &psDeviceFlags2, rsAlwaysActive);
+ 
++	//First Person Death
++	CMD4(CCC_Integer, "first_person_death", &firstPersonDeath, 0, 1);
++	CMD1(CCC_FPDDirectionOffset, "first_person_death_direction_offset");
++	CMD1(CCC_FPDPositionOffset, "first_person_death_position_offset");
++	CMD4(CCC_Integer, "first_person_death_position_smoothing", &firstPersonDeathPositionSmoothing, 1, 30);
++	CMD4(CCC_Integer, "first_person_death_direction_smoothing", &firstPersonDeathDirectionSmoothing, 1, 60);
++	CMD4(CCC_Float, "first_person_death_near_plane_offset", &viewportNearOffset, -0.1, 0.5);
++
+ 	if (strstr(Core.Params, "-dbgdev"))
+ 		CMD4(CCC_Float, "g_streff", &streff, -10.f, 10.f);
+ 	//No need for server commands in a singleplayer-only mod
 diff --git a/src/xrGame/death_anims_predicates.cpp b/src/xrGame/death_anims_predicates.cpp
 index 05efd48..c9d6437 100644
 --- a/src/xrGame/death_anims_predicates.cpp
@@ -1742,10 +2066,35 @@ index 0d3548b..e55621e 100644
  }; //class first_bullet_controller
  
 diff --git a/src/xrGame/level_script.cpp b/src/xrGame/level_script.cpp
-index c16d21c..ae3827f 100644
+index c16d21c..b38133f 100644
 --- a/src/xrGame/level_script.cpp
 +++ b/src/xrGame/level_script.cpp
-@@ -1762,6 +1762,21 @@ void CLevel::script_register(lua_State* L)
+@@ -679,6 +679,15 @@ void set_snd_volume(float v)
+ 	clamp(psSoundVFactor, 0.0f, 1.0f);
+ }
+ 
++float get_music_volume() {
++	return psSoundVMusicFactor;
++}
++
++void set_music_volume(float v) {
++	psSoundVMusicFactor = v;
++	clamp(psSoundVMusicFactor, 0.0f, 1.0f);
++}
++
+ #include "actor_statistic_mgr.h"
+ 
+ void add_actor_points(LPCSTR sect, LPCSTR detail_key, int cnt, int pts)
+@@ -1705,6 +1714,8 @@ void CLevel::script_register(lua_State* L)
+ 			def("get_snd_volume", &get_snd_volume),
+ 			def("get_rain_volume", &get_rain_volume),
+ 			def("set_snd_volume", &set_snd_volume),
++			def("get_music_volume", &get_music_volume),
++			def("set_music_volume", &set_music_volume),
+ 			def("add_cam_effector", ((float (*)(LPCSTR, int, bool, LPCSTR))&add_cam_effector)),
+ 			def("add_cam_effector", ((float (*)(LPCSTR, int, bool, LPCSTR, float))&add_cam_effector)),
+ 			def("add_cam_effector", ((float (*)(LPCSTR, int, bool, LPCSTR, float, bool))&add_cam_effector)),
+@@ -1762,6 +1773,21 @@ void CLevel::script_register(lua_State* L)
  		.def_readonly("object", &script_rq_result::O)
  		.def_readonly("range", &script_rq_result::range)
  		.def_readonly("element", &script_rq_result::element)
@@ -2698,10 +3047,18 @@ index 9029b27..02517bc 100644
  
  #if 0
 diff --git a/src/xrSound/Sound.h b/src/xrSound/Sound.h
-index eeb6d58..9e1ed78 100644
+index eeb6d58..07237c7 100644
 --- a/src/xrSound/Sound.h
 +++ b/src/xrSound/Sound.h
-@@ -212,17 +212,72 @@ class XRSOUND_API CSound_environment
+@@ -36,6 +36,7 @@ XRSOUND_API extern u32 psSoundModel;
+ XRSOUND_API extern float psSoundVEffects;
+ XRSOUND_API extern float psSoundVFactor;
+ XRSOUND_API extern float psSoundVMusic;
++XRSOUND_API extern float psSoundVMusicFactor;
+ XRSOUND_API extern float psSoundRolloff;
+ XRSOUND_API extern float psSoundOcclusionScale;
+ XRSOUND_API extern Flags32 psSoundFlags;
+@@ -212,17 +213,72 @@ class XRSOUND_API CSound_environment
  public:
  };
  
@@ -2774,6 +3131,18 @@ index eeb6d58..9e1ed78 100644
  };
  
  /// definition (Sound Interface)
+diff --git a/src/xrSound/SoundRender_Core.cpp b/src/xrSound/SoundRender_Core.cpp
+index 203aeb3..3caa495 100644
+--- a/src/xrSound/SoundRender_Core.cpp
++++ b/src/xrSound/SoundRender_Core.cpp
+@@ -17,6 +17,7 @@ float psSoundVEffects = 1.0f;
+ float psSoundVFactor = 1.0f;
+ 
+ float psSoundVMusic = 1.f;
++float psSoundVMusicFactor = 1.f;
+ int psSoundCacheSizeMB = 32;
+ 
+ CSoundRender_Core* SoundRender = 0;
 diff --git a/src/xrSound/SoundRender_CoreA.cpp b/src/xrSound/SoundRender_CoreA.cpp
 index 4301be7..a90e63c 100644
 --- a/src/xrSound/SoundRender_CoreA.cpp
@@ -2871,9 +3240,45 @@ index fa6be85..425130f 100644
  		p_source.position.set(0, 0, 0);
  
 diff --git a/src/xrSound/SoundRender_Emitter_FSM.cpp b/src/xrSound/SoundRender_Emitter_FSM.cpp
-index 87a6824..7313308 100644
+index 87a6824..23141fe 100644
 --- a/src/xrSound/SoundRender_Emitter_FSM.cpp
 +++ b/src/xrSound/SoundRender_Emitter_FSM.cpp
+@@ -68,7 +68,7 @@ void CSoundRender_Emitter::update(float dt)
+ 		occluder_volume = SoundRender->get_occlusion(p_source.position, .2f, occluder);
+ 		smooth_volume = p_source.base_volume * p_source.volume * (owner_data->s_type == st_Effect
+ 			                                                          ? psSoundVEffects * psSoundVFactor
+-			                                                          : psSoundVMusic) * (b2D ? 1.f : occluder_volume);
++			                                                          : psSoundVMusic * psSoundVMusicFactor) * (b2D ? 1.f : occluder_volume);
+ 		e_current = e_target = *SoundRender->get_environment(p_source.position);
+ 		if (update_culling(dt))
+ 		{
+@@ -94,7 +94,7 @@ void CSoundRender_Emitter::update(float dt)
+ 		occluder_volume = SoundRender->get_occlusion(p_source.position, .2f, occluder);
+ 		smooth_volume = p_source.base_volume * p_source.volume * (owner_data->s_type == st_Effect
+ 			                                                          ? psSoundVEffects * psSoundVFactor
+-			                                                          : psSoundVMusic) * (b2D ? 1.f : occluder_volume);
++			                                                          : psSoundVMusic * psSoundVMusicFactor) * (b2D ? 1.f : occluder_volume);
+ 		e_current = e_target = *SoundRender->get_environment(p_source.position);
+ 		if (update_culling(dt))
+ 		{
+@@ -297,7 +297,7 @@ BOOL CSoundRender_Emitter::update_culling(float dt)
+ 		float fade_scale = bStopping || (att * p_source.base_volume * p_source.volume * (owner_data->s_type == st_Effect
+ 			                                                                                 ? psSoundVEffects *
+ 			                                                                                 psSoundVFactor
+-			                                                                                 : psSoundVMusic) <
++			                                                                                 : psSoundVMusic * psSoundVMusicFactor) <
+ 			                   psSoundCull)
+ 			                   ? -1.f
+ 			                   : 1.f;
+@@ -313,7 +313,7 @@ BOOL CSoundRender_Emitter::update_culling(float dt)
+ 	clamp(fade_volume, 0.f, 1.f);
+ 	// Update smoothing
+ 	smooth_volume = .9f * smooth_volume + .1f * (p_source.base_volume * p_source.volume * (
+-			owner_data->s_type == st_Effect ? psSoundVEffects * psSoundVFactor : psSoundVMusic) * occluder_volume *
++			owner_data->s_type == st_Effect ? psSoundVEffects * psSoundVFactor : psSoundVMusic * psSoundVMusicFactor) * occluder_volume *
+ 		fade_volume);
+ 	if (smooth_volume < psSoundCull) return FALSE; // allow volume to go up
+ 	// Here we has enought "PRIORITY" to be soundable
 @@ -333,6 +333,9 @@ float CSoundRender_Emitter::priority()
  
  void CSoundRender_Emitter::update_environment(float dt)
