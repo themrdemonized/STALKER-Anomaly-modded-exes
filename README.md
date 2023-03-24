@@ -117,6 +117,8 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Added `on_loading_screen_dismissed` callback for when player dismisses loading screen after "Press Any Key to Continue" pressed
   * Added `on_specific_character_dialog_list` callback that allows to manipulate available actor dialog list defined in characted_desc...xml files in `<actor_dialog>` tags
   * Added `on_specific_character_init` callback that allows to manipulate information about specific character such as rank, money, faction, etc.
+  * Added `bullet_on_impact` and `bullet_on_remove` callbacks, please refer to `callbacks_gameobject.script` file for available info about new callbacks
+  * Potential fix for stuck monsters from OGSR Engine repo in `control_animation_base_accel.cpp`
 
 * Fixes and features by DPurple
 
@@ -169,6 +171,11 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.03.25**:
+
+* Potential fix for stuck monsters from OGSR Engine repo in `control_animation_base_accel.cpp`
+* Added `bullet_on_impact` and `bullet_on_remove` callbacks, please refer to callbacks_gameobject.script file for available info about new callbacks
+
 **2023.03.19**:
 
 * Added true first person death camera (enabled by default), that will stay with player when he dies and will react accordingly to player's head transforms. Additional console commands
