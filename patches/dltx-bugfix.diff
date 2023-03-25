@@ -1499,7 +1499,7 @@ index 7087c3a..a45da94 100644
  
  void CGamePersistent::start_game_intro()
 diff --git a/src/xrGame/Level_Bullet_Manager.cpp b/src/xrGame/Level_Bullet_Manager.cpp
-index c68bb69..af8bd0d 100644
+index c68bb69..441a1b7 100644
 --- a/src/xrGame/Level_Bullet_Manager.cpp
 +++ b/src/xrGame/Level_Bullet_Manager.cpp
 @@ -12,6 +12,7 @@
@@ -1597,7 +1597,7 @@ index c68bb69..af8bd0d 100644
 +						bullet->bulletId,
 +						bullet->weapon_id,
 +						bullet->parent_id,
-+						E.dynamic ? bullet->targetID : 65535,
++						E.dynamic && E.R.O ? E.R.O->ID() : 65535,
 +						mt ? mt->m_Name.c_str() : NULL
 +					);
 +				}
