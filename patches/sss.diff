@@ -262,10 +262,10 @@ index 7ee8c11..cc27fbc 100644
  extern ECORE_API xr_token qsun_shafts_token[];
  
 diff --git a/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp b/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp
-index bb08aa2..e7bc4af 100644
+index bb08aa2..f30f39b 100644
 --- a/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp
 +++ b/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp
-@@ -110,6 +110,19 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
+@@ -110,6 +110,20 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
  	static shared_str strArray("array");
  	static shared_str strXForm("xform");
  
@@ -273,7 +273,8 @@ index bb08aa2..e7bc4af 100644
 +
 +	// Grass benders data ( Player + Characters )
 +	Fvector4 bender_pos[16];
-+	int BendersQty = ps_ssfx_grass_interactive.y + 1;
++	int temp = ((int)ps_ssfx_grass_interactive.y) + 1;
++	int BendersQty = temp < 16 ? temp : 16;
 +
 +	// Add Player?
 +	if (ps_ssfx_grass_interactive.x > 0)
@@ -285,7 +286,7 @@ index bb08aa2..e7bc4af 100644
  	Device.Statistic->RenderDUMP_DT_Count = 0;
  
  	// Matrices and offsets
-@@ -146,6 +159,17 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
+@@ -146,6 +160,21 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
  				RCache.set_c(strDir2D, wind);
  				RCache.set_c(strXForm, Device.mFullTransform);
  
@@ -297,13 +298,17 @@ index bb08aa2..e7bc4af 100644
 +				}
 +				VERIFY(c_grass);
 +
-+				for (int Bend = 0; Bend < BendersQty; Bend++)
-+					c_grass[Bend].set(bender_pos[Bend]);
-+
++				if (c_grass) {
++					for (int Bend = 0; Bend < BendersQty; Bend++) {
++						c_grass[Bend].set(bender_pos[Bend]);
++					}
++				}
++				
++					
  				//ref_constant constArray = RCache.get_c(strArray);
  				//VERIFY(constArray);
  
-@@ -176,8 +200,20 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
+@@ -176,8 +205,20 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
  						SlotItem& Instance = **_iI;
  						u32 base = dwBatch * 4;
  
@@ -325,7 +330,7 @@ index bb08aa2..e7bc4af 100644
  						Fmatrix& M = Instance.mRotY;
  						c_storage[base + 0].set(M._11 * scale, M._21 * scale, M._31 * scale, M._41);
  						c_storage[base + 1].set(M._12 * scale, M._22 * scale, M._32 * scale, M._42);
-@@ -233,13 +269,16 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
+@@ -233,13 +274,16 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
  			}
  			// Clean up
  			// KD: we must not clear vis on r2 since we want details shadows
