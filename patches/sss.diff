@@ -181,7 +181,7 @@ index 274542b..40a0ede 100644
  				return false;
  
 diff --git a/src/Layers/xrRender/xrRender_console.cpp b/src/Layers/xrRender/xrRender_console.cpp
-index 19cf561..03aeb48 100644
+index 19cf561..1744430 100644
 --- a/src/Layers/xrRender/xrRender_console.cpp
 +++ b/src/Layers/xrRender/xrRender_console.cpp
 @@ -292,6 +292,13 @@ Fvector4 ps_dev_param_8 = { .0f, .0f, .0f, .0f };
@@ -240,7 +240,7 @@ index 19cf561..03aeb48 100644
 +	// Screen Space Shaders
 +	CMD4(CCC_Vector4, "ssfx_grass_shadows", &ps_ssfx_grass_shadows, Fvector4().set(0, 0, 0, 0), Fvector4().set(3, 1, 100, 100));
 +	CMD4(CCC_ssfx_cascades, "ssfx_shadow_cascades", &ps_ssfx_shadow_cascades, Fvector3().set(1.0f, 1.0f, 1.0f), Fvector3().set(300, 300, 300));
-+	CMD4(CCC_Vector4, "ssfx_grass_interactive", &ps_ssfx_grass_interactive, Fvector4().set(0, 0, 0, 0), Fvector4().set(1, 15, 1500, 0));
++	CMD4(CCC_Vector4, "ssfx_grass_interactive", &ps_ssfx_grass_interactive, Fvector4().set(0, 0, 0, 0), Fvector4().set(1, 15, 5000, 0));
 +	CMD4(CCC_Vector4, "ssfx_wpn_dof_1", &ps_ssfx_wpn_dof_1, tw2_min, tw2_max);
 +	CMD4(CCC_Float, "ssfx_wpn_dof_2", &ps_ssfx_wpn_dof_2, 0, 1);
  
@@ -262,7 +262,7 @@ index 7ee8c11..cc27fbc 100644
  extern ECORE_API xr_token qsun_shafts_token[];
  
 diff --git a/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp b/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp
-index bb08aa2..f30f39b 100644
+index bb08aa2..73a65da 100644
 --- a/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp
 +++ b/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp
 @@ -110,6 +110,20 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
@@ -286,29 +286,31 @@ index bb08aa2..f30f39b 100644
  	Device.Statistic->RenderDUMP_DT_Count = 0;
  
  	// Matrices and offsets
-@@ -146,6 +160,21 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
+@@ -146,6 +160,23 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
  				RCache.set_c(strDir2D, wind);
  				RCache.set_c(strXForm, Device.mFullTransform);
  
-+				Fvector4* c_grass;
++				if (ps_ssfx_grass_interactive.y > 0)
 +				{
-+					void* GrassData;
-+					RCache.get_ConstantDirect(strPos, BendersQty * sizeof(Fvector4), &GrassData, 0, 0);
-+					c_grass = (Fvector4*)GrassData;
-+				}
-+				VERIFY(c_grass);
++					Fvector4* c_grass;
++					{
++						void* GrassData;
++						RCache.get_ConstantDirect(strPos, BendersQty * sizeof(Fvector4), &GrassData, 0, 0);
++						c_grass = (Fvector4*)GrassData;
++					}
++					VERIFY(c_grass);
 +
-+				if (c_grass) {
-+					for (int Bend = 0; Bend < BendersQty; Bend++) {
-+						c_grass[Bend].set(bender_pos[Bend]);
++					if (c_grass)
++					{
++						for (int Bend = 0; Bend < BendersQty; Bend++)
++							c_grass[Bend].set(bender_pos[Bend]);
 +					}
 +				}
-+				
-+					
++
  				//ref_constant constArray = RCache.get_c(strArray);
  				//VERIFY(constArray);
  
-@@ -176,8 +205,20 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
+@@ -176,8 +207,20 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
  						SlotItem& Instance = **_iI;
  						u32 base = dwBatch * 4;
  
@@ -330,7 +332,7 @@ index bb08aa2..f30f39b 100644
  						Fmatrix& M = Instance.mRotY;
  						c_storage[base + 0].set(M._11 * scale, M._21 * scale, M._31 * scale, M._41);
  						c_storage[base + 1].set(M._12 * scale, M._22 * scale, M._32 * scale, M._42);
-@@ -233,13 +274,16 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
+@@ -233,13 +276,16 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
  			}
  			// Clean up
  			// KD: we must not clear vis on r2 since we want details shadows
