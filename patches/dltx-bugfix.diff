@@ -1330,6 +1330,30 @@ index 14eefbd..931a042 100644
  	}
  
  	effector->m_WeaponID = weapon->ID();
+diff --git a/src/xrGame/CustomOutfit.cpp b/src/xrGame/CustomOutfit.cpp
+index 350d6f1..df7f414 100644
+--- a/src/xrGame/CustomOutfit.cpp
++++ b/src/xrGame/CustomOutfit.cpp
+@@ -110,7 +110,8 @@ void CCustomOutfit::Load(LPCSTR section)
+ 
+ 	m_full_icon_name = pSettings->r_string(section, "full_icon_name");
+ 	m_artefact_count = READ_IF_EXISTS(pSettings, r_u32, section, "artefact_count", 0);
+-	clamp(m_artefact_count, (u32)0, (u32)5);
++	//clamp(m_artefact_count, (u32)0, (u32)5);
++	m_artefact_count = _max(m_artefact_count, (u32)0);
+ 
+ 	m_BonesProtectionSect = READ_IF_EXISTS(pSettings, r_string, section, "bones_koeff_protection", "");
+ 	bIsHelmetAvaliable = !!READ_IF_EXISTS(pSettings, r_bool, section, "helmet_avaliable", true);
+@@ -363,7 +364,8 @@ bool CCustomOutfit::install_upgrade_impl(LPCSTR section, bool test)
+ 	clamp(m_fPowerLoss, 0.0f, 1.0f);
+ 
+ 	result |= process_if_exists(section, "artefact_count", &CInifile::r_u32, m_artefact_count, test);
+-	clamp(m_artefact_count, (u32)0, (u32)5);
++	//clamp(m_artefact_count, (u32)0, (u32)5);
++	m_artefact_count = _max(m_artefact_count, (u32)0);
+ 
+ 	return result;
+ }
 diff --git a/src/xrGame/EffectorBobbing.cpp b/src/xrGame/EffectorBobbing.cpp
 index ffd7c19..f728fb7 100644
 --- a/src/xrGame/EffectorBobbing.cpp

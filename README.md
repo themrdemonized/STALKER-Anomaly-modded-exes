@@ -119,6 +119,7 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Added `on_specific_character_init` callback that allows to manipulate information about specific character such as rank, money, faction, etc.
   * Added `bullet_on_impact` and `bullet_on_remove` callbacks, please refer to `callbacks_gameobject.script` file for available info about new callbacks
   * Potential fix for stuck monsters from OGSR Engine repo in `control_animation_base_accel.cpp`
+  * Removed maximum engine limit of 5 artefacts on belt
 
 * Fixes and features by DPurple
 
@@ -171,6 +172,11 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.03.31**:
+
+* SSS update
+* Removed maximum engine limit of 5 artefacts on belt
+
 **2023.03.25**:
 
 * Potential fix for stuck monsters from OGSR Engine repo in `control_animation_base_accel.cpp`
