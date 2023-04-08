@@ -1,3 +1,6 @@
+ src/Layers/xrRender/Blender_BmmD.cpp | 5 +++++
+ 1 file changed, 5 insertions(+)
+
 diff --git a/src/Layers/xrRender/Blender_BmmD.cpp b/src/Layers/xrRender/Blender_BmmD.cpp
 index 02e36cb..381d9ec 100644
 --- a/src/Layers/xrRender/Blender_BmmD.cpp
@@ -14,6 +17,9 @@ index 02e36cb..381d9ec 100644
  		C.r_dx10Sampler("smp_base");
  		C.r_dx10Sampler("smp_linear");
  
+ .../xrRender/Blender_Recorder_StandartBinding.cpp  | 42 ++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+
 diff --git a/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp b/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
 index 5035624..89c31c8 100644
 --- a/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
@@ -88,10 +94,50 @@ index 5035624..89c31c8 100644
  	// Shader stuff
  	r_Constant("shader_param_1", &dev_param_1);
  	r_Constant("shader_param_2", &dev_param_2);
+ src/Layers/xrRender/Blender_tree.cpp | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/Layers/xrRender/Blender_tree.cpp b/src/Layers/xrRender/Blender_tree.cpp
+index 7a8b831..234bee3 100644
+--- a/src/Layers/xrRender/Blender_tree.cpp
++++ b/src/Layers/xrRender/Blender_tree.cpp
+@@ -216,6 +216,11 @@ void CBlender_Tree::Compile(CBlender_Compile& C)
+ 	switch (C.iElement)
+ 	{
+ 	case SE_R2_NORMAL_HQ: // deffer
++
++		// Is a branch/bush. Use a different VS
++		if (oBlend.value)
++			tvs = "tree_branch";
++
+ 		if (bUseATOC)
+ 		{
+ 			uber_deffer(C, true, tvs, "base_atoc", oBlend.value, 0, true);
+ src/Layers/xrRender/DetailManager.cpp | 32 +++++++++++++++++++++++++++++---
+ 1 file changed, 29 insertions(+), 3 deletions(-)
+
 diff --git a/src/Layers/xrRender/DetailManager.cpp b/src/Layers/xrRender/DetailManager.cpp
-index 7d63982..486e44a 100644
+index 7d63982..bf1f074 100644
 --- a/src/Layers/xrRender/DetailManager.cpp
 +++ b/src/Layers/xrRender/DetailManager.cpp
+@@ -292,7 +292,7 @@ void CDetailManager::UpdateVisibleM()
+ 				continue;
+ 			}
+ 			u32 mask = 0xff;
+-			u32 res = View.testSAABB(MS.vis.sphere.P, MS.vis.sphere.R, MS.vis.box.data(), mask);
++			u32 res = View.testSphere(MS.vis.sphere.P, MS.vis.sphere.R, mask);
+ 			if (fcvNone == res)
+ 			{
+ 				continue; // invisible-view frustum
+@@ -319,7 +319,7 @@ void CDetailManager::UpdateVisibleM()
+ 				if (fcvPartial == res)
+ 				{
+ 					u32 _mask = mask;
+-					u32 _res = View.testSAABB(S.vis.sphere.P, S.vis.sphere.R, S.vis.box.data(), _mask);
++					u32 _res = View.testSphere(S.vis.sphere.P, S.vis.sphere.R, _mask);
+ 					if (fcvNone == _res)
+ 					{
+ 						continue; // invisible-view frustum
 @@ -370,7 +370,9 @@ void CDetailManager::UpdateVisibleM()
  							if (ssa > r_ssaCHEAP) vis_id = Item.vis_ID;
  
@@ -103,7 +149,7 @@ index 7d63982..486e44a 100644
  							//2							visible[vis_id][sp.id].push_back(&Item);
  						}
  					}
-@@ -458,3 +460,24 @@ void __stdcall CDetailManager::MT_CALC()
+@@ -458,3 +460,27 @@ void __stdcall CDetailManager::MT_CALC()
  		}
  	MT.Leave();
  }
@@ -112,6 +158,9 @@ index 7d63982..486e44a 100644
 +{
 +	// Disable fade, next render will be scene
 +	fade_distance = 99999;
++
++	if (ps_ssfx_grass_shadows.x <= 0)
++		return;
 +
 +	for (u32 x = 0; x < 3; x++)
 +	{
@@ -129,44 +178,77 @@ index 7d63982..486e44a 100644
 +	}
 +}
 \ No newline at end of file
-diff --git a/src/Layers/xrRender/DetailManager.h b/src/Layers/xrRender/DetailManager.h
-index 5851f93..95da475 100644
---- a/src/Layers/xrRender/DetailManager.h
-+++ b/src/Layers/xrRender/DetailManager.h
-@@ -64,6 +64,12 @@ const float		dm_fade = float(2 * dm_size) - .5f;
- class ECORE_API CDetailManager
- {
- public:
-+
-+	float fade_distance = 99999;
-+	Fvector light_position;
-+
-+	void details_clear();
-+
- 	struct SlotItem
- 	{
- 		// один кустик
-@@ -73,6 +79,8 @@ public:
- 		u32 vis_ID; // индекс в visibility списке он же тип [не качается, качается1, качается2]
- 		float c_hemi;
- 		float c_sun;
-+		float distance;
-+		Fvector position;
- #if RENDER==R_R1
- 		Fvector c_rgb;
- #endif
-diff --git a/src/Layers/xrRender/light.h b/src/Layers/xrRender/light.h
-index 8146a37..7b24183 100644
---- a/src/Layers/xrRender/light.h
-+++ b/src/Layers/xrRender/light.h
-@@ -70,6 +70,7 @@ public:
- 		bool		visible;		// visible/invisible
- 		bool		pending;		// test is still pending
- 		u16			smap_ID;
-+		float		distance;
- 	}				vis;
+ src/Layers/xrRender/FTreeVisual.cpp | 40 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+
+diff --git a/src/Layers/xrRender/FTreeVisual.cpp b/src/Layers/xrRender/FTreeVisual.cpp
+index 0489ef7..56773e2 100644
+--- a/src/Layers/xrRender/FTreeVisual.cpp
++++ b/src/Layers/xrRender/FTreeVisual.cpp
+@@ -19,6 +19,9 @@ shared_str c_c_bias;
+ shared_str c_c_scale;
+ shared_str c_c_sun;
  
- 	union			_xform	{
++shared_str c_c_BendersPos;
++shared_str c_c_BendersSetup;
++
+ FTreeVisual::FTreeVisual(void)
+ {
+ }
+@@ -91,6 +94,9 @@ void FTreeVisual::Load(const char* N, IReader* data, u32 dwFlags)
+ 	c_c_bias = "c_bias";
+ 	c_c_scale = "c_scale";
+ 	c_c_sun = "c_sun";
++
++	c_c_BendersPos = "benders_pos";
++	c_c_BendersSetup = "benders_setup";
+ }
+ 
+ struct FTreeVisual_setup
+@@ -160,6 +166,40 @@ void FTreeVisual::Render(float LOD)
+ 	                       s * c_bias.rgb.z + desc.ambient.z, s * c_bias.hemi); // bias
+ #endif
+ 	RCache.tree.set_c_sun(s * c_scale.sun, s * c_bias.sun, 0, 0); // sun
++
++#if RENDER==R_R4 || RENDER==R_R3
++
++	if (ps_ssfx_grass_interactive.y > 0)
++	{
++		// Grass benders data ( Player + Characters )
++		Fvector4 player_pos = { 0, 0, 0, 0 };
++		int BendersQty = _min(16, ps_ssfx_grass_interactive.y + 1);
++
++		// Add Player?
++		if (ps_ssfx_grass_interactive.x > 0)
++			player_pos.set(Device.vCameraPosition.x, Device.vCameraPosition.y, Device.vCameraPosition.z);
++
++		// Inter grass Settings
++		RCache.set_c(c_c_BendersSetup, ps_ssfx_int_grass_params_1);
++
++		Fvector4* c_grass;
++		{
++			void* GrassData;
++			RCache.get_ConstantDirect(c_c_BendersPos, BendersQty * sizeof(Fvector4), &GrassData, 0, 0);
++
++			c_grass = (Fvector4*)GrassData;
++		}
++		VERIFY(c_grass);
++
++		if (c_grass)
++		{
++			c_grass[0].set(player_pos);
++
++			for (int Bend = 1; Bend < BendersQty; Bend++)
++				c_grass[Bend].set(g_pGamePersistent->grass_shader_data.pos[Bend].x, g_pGamePersistent->grass_shader_data.pos[Bend].y, g_pGamePersistent->grass_shader_data.pos[Bend].z);
++		}
++	}
++#endif
+ }
+ 
+ #define PCOPY(a)	a = pFrom->a
+ src/Layers/xrRender/r__dsgraph_build.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 diff --git a/src/Layers/xrRender/r__dsgraph_build.cpp b/src/Layers/xrRender/r__dsgraph_build.cpp
 index 274542b..40a0ede 100644
 --- a/src/Layers/xrRender/r__dsgraph_build.cpp
@@ -180,25 +262,31 @@ index 274542b..40a0ede 100644
  				// don't need geometry behind the farest sun shadow cascade
  				return false;
  
+ src/Layers/xrRender/xrRender_console.cpp | 45 ++++++++++++++++++++++++++++++++
+ 1 file changed, 45 insertions(+)
+
 diff --git a/src/Layers/xrRender/xrRender_console.cpp b/src/Layers/xrRender/xrRender_console.cpp
-index 19cf561..1744430 100644
+index 19cf561..1b3877c 100644
 --- a/src/Layers/xrRender/xrRender_console.cpp
 +++ b/src/Layers/xrRender/xrRender_console.cpp
-@@ -292,6 +292,13 @@ Fvector4 ps_dev_param_8 = { .0f, .0f, .0f, .0f };
+@@ -292,6 +292,16 @@ Fvector4 ps_dev_param_8 = { .0f, .0f, .0f, .0f };
  
  /////////////////////////////////
  
 +// Screen Space Shaders Stuff
 +Fvector3 ps_ssfx_shadow_cascades = { 20, 40, 160 };
 +Fvector4 ps_ssfx_grass_shadows = { .0f, .35f, 30.0f, .0f };
++
 +Fvector4 ps_ssfx_grass_interactive = { .0f, .0f, 1000.0f, .0f };
++Fvector4 ps_ssfx_int_grass_params_1 = { 1.0f, 1.0f, 1.0f, 1.0f };
++
 +Fvector4 ps_ssfx_wpn_dof_1 = { .0f, .0f, .0f, .0f };
 +float ps_ssfx_wpn_dof_2 = 1.0f;
 +
  //	x - min (0), y - focus (1.4), z - max (100)
  Fvector3 ps_r2_dof = { -1.25f, 0.f, 600.f };
  float ps_r2_dof_sky = 30; //	distance to sky
-@@ -347,6 +354,33 @@ int opt_dynamic = 2;
+@@ -347,6 +357,33 @@ int opt_dynamic = 2;
  #include "../xrRenderDX10/StateManager/dx10SamplerStateCache.h"
  #endif	//	USE_DX10
  
@@ -232,7 +320,7 @@ index 19cf561..1744430 100644
  //-----------------------------------------------------------------------
  //AVO: detail draw radius
  #ifdef DETAIL_RADIUS
-@@ -1070,6 +1104,13 @@ void xrRender_initconsole()
+@@ -1070,6 +1107,14 @@ void xrRender_initconsole()
  	CMD4(CCC_Vector4, "shader_param_6", &ps_dev_param_6, tw2_min, tw2_max);
  	CMD4(CCC_Vector4, "shader_param_7", &ps_dev_param_7, tw2_min, tw2_max);
  	CMD4(CCC_Vector4, "shader_param_8", &ps_dev_param_8, tw2_min, tw2_max);
@@ -241,76 +329,66 @@ index 19cf561..1744430 100644
 +	CMD4(CCC_Vector4, "ssfx_grass_shadows", &ps_ssfx_grass_shadows, Fvector4().set(0, 0, 0, 0), Fvector4().set(3, 1, 100, 100));
 +	CMD4(CCC_ssfx_cascades, "ssfx_shadow_cascades", &ps_ssfx_shadow_cascades, Fvector3().set(1.0f, 1.0f, 1.0f), Fvector3().set(300, 300, 300));
 +	CMD4(CCC_Vector4, "ssfx_grass_interactive", &ps_ssfx_grass_interactive, Fvector4().set(0, 0, 0, 0), Fvector4().set(1, 15, 5000, 0));
++	CMD4(CCC_Vector4, "ssfx_int_grass_params_1", &ps_ssfx_int_grass_params_1, Fvector4().set(0, 0, 0, 0), Fvector4().set(5, 5, 5, 5));
 +	CMD4(CCC_Vector4, "ssfx_wpn_dof_1", &ps_ssfx_wpn_dof_1, tw2_min, tw2_max);
 +	CMD4(CCC_Float, "ssfx_wpn_dof_2", &ps_ssfx_wpn_dof_2, 0, 1);
  
  	// Geometry optimization
  	CMD4(CCC_Integer, "r__optimize_static_geom", &opt_static, 0, 4);
-diff --git a/src/Layers/xrRender/xrRender_console.h b/src/Layers/xrRender/xrRender_console.h
-index 7ee8c11..cc27fbc 100644
---- a/src/Layers/xrRender/xrRender_console.h
-+++ b/src/Layers/xrRender/xrRender_console.h
-@@ -3,6 +3,10 @@
- #pragma once
- 
- // Common
-+extern ECORE_API Fvector4 ps_ssfx_grass_shadows;
-+extern ECORE_API Fvector3 ps_ssfx_shadow_cascades;
-+extern ECORE_API Fvector4 ps_ssfx_grass_interactive;
-+
- extern ECORE_API u32 ps_r_sun_shafts; //=	0;
- extern ECORE_API xr_token qsun_shafts_token[];
- 
+ src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp | 61 +++++++++++++++++++++---
+ 1 file changed, 54 insertions(+), 7 deletions(-)
+
 diff --git a/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp b/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp
-index bb08aa2..73a65da 100644
+index bb08aa2..f8fad35 100644
 --- a/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp
 +++ b/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp
-@@ -110,6 +110,20 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
+@@ -110,6 +110,17 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
  	static shared_str strArray("array");
  	static shared_str strXForm("xform");
  
-+	static shared_str strPos("benders_pos");
++	static shared_str strBendersPos("benders_pos");
++	static shared_str strBendersSetup("benders_setup");
 +
-+	// Grass benders data ( Player + Characters )
-+	Fvector4 bender_pos[16];
-+	int temp = ((int)ps_ssfx_grass_interactive.y) + 1;
-+	int BendersQty = temp < 16 ? temp : 16;
++	// Grass benders data
++	Fvector4 player_pos = { 0, 0, 0, 0 };
++	int BendersQty = _min(16, ps_ssfx_grass_interactive.y + 1);
 +
 +	// Add Player?
 +	if (ps_ssfx_grass_interactive.x > 0)
-+		bender_pos[0].set(Device.vCameraPosition.x, Device.vCameraPosition.y, Device.vCameraPosition.z);
-+
-+	for (int i = 1; i < BendersQty; i++)
-+		bender_pos[i].set(g_pGamePersistent->grass_shader_data.pos[i].x, g_pGamePersistent->grass_shader_data.pos[i].y, g_pGamePersistent->grass_shader_data.pos[i].z);
++		player_pos.set(Device.vCameraPosition.x, Device.vCameraPosition.y, Device.vCameraPosition.z);
 +
  	Device.Statistic->RenderDUMP_DT_Count = 0;
  
  	// Matrices and offsets
-@@ -146,6 +160,23 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
+@@ -146,6 +157,27 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
  				RCache.set_c(strDir2D, wind);
  				RCache.set_c(strXForm, Device.mFullTransform);
  
 +				if (ps_ssfx_grass_interactive.y > 0)
 +				{
++					RCache.set_c(strBendersSetup, ps_ssfx_int_grass_params_1);
++
 +					Fvector4* c_grass;
 +					{
 +						void* GrassData;
-+						RCache.get_ConstantDirect(strPos, BendersQty * sizeof(Fvector4), &GrassData, 0, 0);
++						RCache.get_ConstantDirect(strBendersPos, BendersQty * sizeof(Fvector4), &GrassData, 0, 0);
 +						c_grass = (Fvector4*)GrassData;
 +					}
 +					VERIFY(c_grass);
 +
 +					if (c_grass)
 +					{
-+						for (int Bend = 0; Bend < BendersQty; Bend++)
-+							c_grass[Bend].set(bender_pos[Bend]);
++						c_grass[0].set(player_pos);
++
++						for (int Bend = 1; Bend < BendersQty; Bend++)
++							c_grass[Bend].set(g_pGamePersistent->grass_shader_data.pos[Bend].x, g_pGamePersistent->grass_shader_data.pos[Bend].y, g_pGamePersistent->grass_shader_data.pos[Bend].z);
 +					}
 +				}
 +
  				//ref_constant constArray = RCache.get_c(strArray);
  				//VERIFY(constArray);
  
-@@ -176,8 +207,20 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
+@@ -176,8 +208,20 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
  						SlotItem& Instance = **_iI;
  						u32 base = dwBatch * 4;
  
@@ -332,7 +410,7 @@ index bb08aa2..73a65da 100644
  						Fmatrix& M = Instance.mRotY;
  						c_storage[base + 0].set(M._11 * scale, M._21 * scale, M._31 * scale, M._41);
  						c_storage[base + 1].set(M._12 * scale, M._22 * scale, M._32 * scale, M._42);
-@@ -233,13 +276,16 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
+@@ -233,13 +277,16 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
  			}
  			// Clean up
  			// KD: we must not clear vis on r2 since we want details shadows
@@ -355,6 +433,9 @@ index bb08aa2..73a65da 100644
  		}
  		vOffset += hw_BatchSize * Object.number_vertices;
  		iOffset += hw_BatchSize * Object.number_indices;
+ src/Layers/xrRenderDX10/dx10ResourceManager_Scripting.cpp | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
 diff --git a/src/Layers/xrRenderDX10/dx10ResourceManager_Scripting.cpp b/src/Layers/xrRenderDX10/dx10ResourceManager_Scripting.cpp
 index 70d8640..e748ddf 100644
 --- a/src/Layers/xrRenderDX10/dx10ResourceManager_Scripting.cpp
@@ -380,6 +461,9 @@ index 70d8640..e748ddf 100644
  		.def("dx10atoc", &adopt_compiler::_dx10ATOC, return_reference_to(_1))
  		.def("dx10zfunc", &adopt_compiler::_dx10ZFunc, return_reference_to(_1))
  
+ src/Layers/xrRenderPC_R4/light_vis.cpp | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
 diff --git a/src/Layers/xrRenderPC_R4/light_vis.cpp b/src/Layers/xrRenderPC_R4/light_vis.cpp
 index f4334ea..ca2ca94 100644
 --- a/src/Layers/xrRenderPC_R4/light_vis.cpp
@@ -395,6 +479,9 @@ index f4334ea..ca2ca94 100644
  	{
  		// small error
  		vis.visible = true;
+ src/Layers/xrRenderPC_R4/r2_R_lights.cpp | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
 diff --git a/src/Layers/xrRenderPC_R4/r2_R_lights.cpp b/src/Layers/xrRenderPC_R4/r2_R_lights.cpp
 index a66b3e0..378121f 100644
 --- a/src/Layers/xrRenderPC_R4/r2_R_lights.cpp
@@ -440,6 +527,9 @@ index a66b3e0..378121f 100644
  				L->X.S.transluent = FALSE;
  				if (bSpecial)
  				{
+ src/Layers/xrRenderPC_R4/r2_R_sun.cpp | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
 diff --git a/src/Layers/xrRenderPC_R4/r2_R_sun.cpp b/src/Layers/xrRenderPC_R4/r2_R_sun.cpp
 index 7d6c6e9..2b0671c 100644
 --- a/src/Layers/xrRenderPC_R4/r2_R_sun.cpp
@@ -474,8 +564,11 @@ index 7d6c6e9..2b0671c 100644
  			fuckingsun->X.D.transluent = FALSE;
  			if (bSpecial)
  			{
+ src/Layers/xrRenderPC_R4/r4.cpp | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
 diff --git a/src/Layers/xrRenderPC_R4/r4.cpp b/src/Layers/xrRenderPC_R4/r4.cpp
-index 77fb925..6e827bf 100644
+index 8ec2b1b..c085c34 100644
 --- a/src/Layers/xrRenderPC_R4/r4.cpp
 +++ b/src/Layers/xrRenderPC_R4/r4.cpp
 @@ -1223,6 +1223,8 @@ HRESULT CRender::shader_compile(
@@ -494,12 +587,12 @@ index 77fb925..6e827bf 100644
 +	
 +	if (ps_ssfx_grass_interactive.y > 0)
 +	{
-+		xr_sprintf(c_inter_grass, "%d", (int)ps_ssfx_grass_interactive.y);
++		xr_sprintf(c_inter_grass, "%d", u8(ps_ssfx_grass_interactive.y));
 +		defines[def_it].Name = "SSFX_INT_GRASS";
 +		defines[def_it].Definition = c_inter_grass;
 +		def_it++;
-+		sh_name[len] = '0' + char((int)ps_ssfx_grass_interactive.y);
-+		++len;
++		xr_strcat(sh_name, c_inter_grass);
++		len += xr_strlen(c_inter_grass);
 +	}
 +	else
 +	{
@@ -515,20 +608,26 @@ index 77fb925..6e827bf 100644
  
  	//Be carefull!!!!! this should be at the end to correctly generate
  	//compiled shader name;
+ src/Layers/xrRenderPC_R4/r4_R_render.cpp | 3 +++
+ 1 file changed, 3 insertions(+)
+
 diff --git a/src/Layers/xrRenderPC_R4/r4_R_render.cpp b/src/Layers/xrRenderPC_R4/r4_R_render.cpp
-index 46e1c03..1bd2cf4 100644
+index 46e1c03..02ee3f1 100644
 --- a/src/Layers/xrRenderPC_R4/r4_R_render.cpp
 +++ b/src/Layers/xrRenderPC_R4/r4_R_render.cpp
 @@ -538,6 +538,9 @@ void CRender::Render()
  		Target->phase_combine();
  	}
  
-+	if (Details && ps_ssfx_grass_shadows.x > 0)
++	if (Details)
 +		Details->details_clear();
 +
  	VERIFY(0==mapDistort.size());
  }
  
+ src/xrEngine/Environment_misc.cpp | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
 diff --git a/src/xrEngine/Environment_misc.cpp b/src/xrEngine/Environment_misc.cpp
 index bb5c882..eca3900 100644
 --- a/src/xrEngine/Environment_misc.cpp
@@ -553,6 +652,9 @@ index bb5c882..eca3900 100644
  
  	clamp(env->wetness_factor, 0.f, 1.f);
  
+ src/xrEngine/IGame_Persistent.cpp | 80 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 80 insertions(+)
+
 diff --git a/src/xrEngine/IGame_Persistent.cpp b/src/xrEngine/IGame_Persistent.cpp
 index b31df1e..5543226 100644
 --- a/src/xrEngine/IGame_Persistent.cpp
@@ -649,6 +751,132 @@ index b31df1e..5543226 100644
 +			grass_shader_data.id[i] = NULL;
 +}
 \ No newline at end of file
+ src/xrEngine/xr_ioc_cmd.cpp | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/xrEngine/xr_ioc_cmd.cpp b/src/xrEngine/xr_ioc_cmd.cpp
+index a1ec515..3539662 100644
+--- a/src/xrEngine/xr_ioc_cmd.cpp
++++ b/src/xrEngine/xr_ioc_cmd.cpp
+@@ -864,6 +864,8 @@ Ivector4 g_crosshair_color_temp;
+ float g_freelook_z_offset;
+ float g_ironsights_factor = 1.25f;
+ 
++Fvector3 ssfx_wetness_multiplier = Fvector3().set(1.0f, 0.3f, 0.0f);
++
+ void CCC_Register()
+ {
+ 	// General
+@@ -1023,6 +1025,7 @@ void CCC_Register()
+ 		CMD4(CCC_Float, "g_freelook_z_offset_factor", &g_freelook_z_offset, -3.f, 3.f);
+ 
+ 	CMD4(CCC_Float, "g_ironsights_zoom_factor", &g_ironsights_factor, 1.f, 2.f);
++	CMD4(CCC_Vector3, "ssfx_wetness_multiplier", &ssfx_wetness_multiplier, Fvector3().set(0.1f, 0.1f, 0.0f), Fvector3().set(20.0f, 20.0f, 0.0f));
+ 	
+ #ifdef DEBUG
+     extern BOOL debug_destroy;
+ src/xrGame/movement_manager.cpp | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/xrGame/movement_manager.cpp b/src/xrGame/movement_manager.cpp
+index 117d30d..9bb0af5 100644
+--- a/src/xrGame/movement_manager.cpp
++++ b/src/xrGame/movement_manager.cpp
+@@ -373,6 +373,9 @@ void CMovementManager::on_frame(CPHMovementControl* movement_control, Fvector& d
+ 		update_path();
+ 
+ 	move_along_path(movement_control, dest_position, object().client_update_fdelta());
++
++	// Update Grass benders
++	g_pGamePersistent->GrassBendersUpdate(object().ID(), grassbender_id, grassbender_frame, object().Position());
+ }
+ 
+ void CMovementManager::on_travel_point_change(const u32& previous_travel_point_index)
+ src/xrGame/PHMovementControl.cpp | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/xrGame/PHMovementControl.cpp b/src/xrGame/PHMovementControl.cpp
+index 7836b3c..b8be9d8 100644
+--- a/src/xrGame/PHMovementControl.cpp
++++ b/src/xrGame/PHMovementControl.cpp
+@@ -1125,6 +1125,11 @@ void CPHMovementControl::PHReleaseObject()
+ void CPHMovementControl::DestroyCharacter()
+ {
+ 	VERIFY(m_character);
++
++	// Remove Grass bender if PHCharacter is not NULL
++	if (m_character->PhysicsRefObject() != NULL)
++		g_pGamePersistent->GrassBendersRemoveById(m_character->PhysicsRefObject()->ObjectID());
++
+ 	m_character->Destroy();
+ 	phcapture_destroy(m_capture);
+ 	//xr_delete(m_capture);
+ src/Layers/xrRender/DetailManager.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/Layers/xrRender/DetailManager.h b/src/Layers/xrRender/DetailManager.h
+index 5851f93..95da475 100644
+--- a/src/Layers/xrRender/DetailManager.h
++++ b/src/Layers/xrRender/DetailManager.h
+@@ -64,6 +64,12 @@ const float		dm_fade = float(2 * dm_size) - .5f;
+ class ECORE_API CDetailManager
+ {
+ public:
++
++	float fade_distance = 99999;
++	Fvector light_position;
++
++	void details_clear();
++
+ 	struct SlotItem
+ 	{
+ 		// один кустик
+@@ -73,6 +79,8 @@ public:
+ 		u32 vis_ID; // индекс в visibility списке он же тип [не качается, качается1, качается2]
+ 		float c_hemi;
+ 		float c_sun;
++		float distance;
++		Fvector position;
+ #if RENDER==R_R1
+ 		Fvector c_rgb;
+ #endif
+ src/Layers/xrRender/light.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/Layers/xrRender/light.h b/src/Layers/xrRender/light.h
+index 8146a37..7b24183 100644
+--- a/src/Layers/xrRender/light.h
++++ b/src/Layers/xrRender/light.h
+@@ -70,6 +70,7 @@ public:
+ 		bool		visible;		// visible/invisible
+ 		bool		pending;		// test is still pending
+ 		u16			smap_ID;
++		float		distance;
+ 	}				vis;
+ 
+ 	union			_xform	{
+ src/Layers/xrRender/xrRender_console.h | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/Layers/xrRender/xrRender_console.h b/src/Layers/xrRender/xrRender_console.h
+index 7ee8c11..53bc733 100644
+--- a/src/Layers/xrRender/xrRender_console.h
++++ b/src/Layers/xrRender/xrRender_console.h
+@@ -3,6 +3,11 @@
+ #pragma once
+ 
+ // Common
++extern ECORE_API Fvector4 ps_ssfx_grass_shadows;
++extern ECORE_API Fvector3 ps_ssfx_shadow_cascades;
++extern ECORE_API Fvector4 ps_ssfx_grass_interactive;
++extern ECORE_API Fvector4 ps_ssfx_int_grass_params_1;
++
+ extern ECORE_API u32 ps_r_sun_shafts; //=	0;
+ extern ECORE_API xr_token qsun_shafts_token[];
+ 
+ src/xrEngine/IGame_Persistent.h | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
 diff --git a/src/xrEngine/IGame_Persistent.h b/src/xrEngine/IGame_Persistent.h
 index a39152f..4edb285 100644
 --- a/src/xrEngine/IGame_Persistent.h
@@ -671,57 +899,9 @@ index a39152f..4edb285 100644
  
  public:
  	void destroy_particles(const bool& all_particles);
-diff --git a/src/xrEngine/xr_ioc_cmd.cpp b/src/xrEngine/xr_ioc_cmd.cpp
-index a1ec515..3539662 100644
---- a/src/xrEngine/xr_ioc_cmd.cpp
-+++ b/src/xrEngine/xr_ioc_cmd.cpp
-@@ -864,6 +864,8 @@ Ivector4 g_crosshair_color_temp;
- float g_freelook_z_offset;
- float g_ironsights_factor = 1.25f;
- 
-+Fvector3 ssfx_wetness_multiplier = Fvector3().set(1.0f, 0.3f, 0.0f);
-+
- void CCC_Register()
- {
- 	// General
-@@ -1023,6 +1025,7 @@ void CCC_Register()
- 		CMD4(CCC_Float, "g_freelook_z_offset_factor", &g_freelook_z_offset, -3.f, 3.f);
- 
- 	CMD4(CCC_Float, "g_ironsights_zoom_factor", &g_ironsights_factor, 1.f, 2.f);
-+	CMD4(CCC_Vector3, "ssfx_wetness_multiplier", &ssfx_wetness_multiplier, Fvector3().set(0.1f, 0.1f, 0.0f), Fvector3().set(20.0f, 20.0f, 0.0f));
- 	
- #ifdef DEBUG
-     extern BOOL debug_destroy;
-diff --git a/src/xrGame/PHMovementControl.cpp b/src/xrGame/PHMovementControl.cpp
-index 7836b3c..b8be9d8 100644
---- a/src/xrGame/PHMovementControl.cpp
-+++ b/src/xrGame/PHMovementControl.cpp
-@@ -1125,6 +1125,11 @@ void CPHMovementControl::PHReleaseObject()
- void CPHMovementControl::DestroyCharacter()
- {
- 	VERIFY(m_character);
-+
-+	// Remove Grass bender if PHCharacter is not NULL
-+	if (m_character->PhysicsRefObject() != NULL)
-+		g_pGamePersistent->GrassBendersRemoveById(m_character->PhysicsRefObject()->ObjectID());
-+
- 	m_character->Destroy();
- 	phcapture_destroy(m_capture);
- 	//xr_delete(m_capture);
-diff --git a/src/xrGame/movement_manager.cpp b/src/xrGame/movement_manager.cpp
-index 117d30d..9bb0af5 100644
---- a/src/xrGame/movement_manager.cpp
-+++ b/src/xrGame/movement_manager.cpp
-@@ -373,6 +373,9 @@ void CMovementManager::on_frame(CPHMovementControl* movement_control, Fvector& d
- 		update_path();
- 
- 	move_along_path(movement_control, dest_position, object().client_update_fdelta());
-+
-+	// Update Grass benders
-+	g_pGamePersistent->GrassBendersUpdate(object().ID(), grassbender_id, grassbender_frame, object().Position());
- }
- 
- void CMovementManager::on_travel_point_change(const u32& previous_travel_point_index)
+ src/xrGame/movement_manager.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
 diff --git a/src/xrGame/movement_manager.h b/src/xrGame/movement_manager.h
 index 2427493..4f7fe8b 100644
 --- a/src/xrGame/movement_manager.h

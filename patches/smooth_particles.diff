@@ -1,0 +1,319 @@
+diff --git a/src/Layers/xrRender/ParticleEffect.cpp b/src/Layers/xrRender/ParticleEffect.cpp
+index 872ed30..52f4d32 100644
+--- a/src/Layers/xrRender/ParticleEffect.cpp
++++ b/src/Layers/xrRender/ParticleEffect.cpp
+@@ -12,9 +12,6 @@
+ using namespace PAPI;
+ using namespace PS;
+ 
+-const u32 PS::uDT_STEP = 33;
+-const float PS::fDT_STEP = float(uDT_STEP) / 1000.f;
+-
+ static void ApplyTexgen(const Fmatrix& mVP)
+ {
+ 	Fmatrix mTexgen;
+@@ -135,6 +132,8 @@ void CParticleEffect::OnFrame(u32 frame_dt)
+ 		m_MemDT += frame_dt;
+ 
+ 		int StepCount = 0;
++		u32 uDT_STEP = m_Def->GetUStep();
++		float fDT_STEP = m_Def->GetFStep();
+ 		if (m_MemDT >= uDT_STEP)
+ 		{
+ 			// allow maximum of three steps (99ms) to avoid slowdown after loading
+@@ -507,11 +506,11 @@ void ParticleRenderStream(FVF::LIT* pv, u32 count, PAPI::Particle * particles, C
+ 						Fvector p;
+ 						pPE->m_XFORM.transform_tiny(p, m.pos);
+ 						M.mulA_43(pPE->m_XFORM);
+-						FillSprite(pv, M.k, M.i, p, lt, rb, r_x, r_y, m.color, sina, cosa);
++						FillSprite(pv, M.k, M.i, p, lt, rb, r_x, r_y, color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina, cosa);
+ 					}
+ 					else
+ 					{
+-						FillSprite(pv, M.k, M.i, m.pos, lt, rb, r_x, r_y, m.color, sina, cosa);
++						FillSprite(pv, M.k, M.i, m.pos, lt, rb, r_x, r_y, color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina, cosa);
+ 					}
+ 				}
+ 				else if ((speed >= EPS_S) && pPE->m_Def->m_Flags.is(CPEDef::dfFaceAlign))
+@@ -531,11 +530,11 @@ void ParticleRenderStream(FVF::LIT* pv, u32 count, PAPI::Particle * particles, C
+ 						Fvector p;
+ 						pPE->m_XFORM.transform_tiny(p, m.pos);
+ 						M.mulA_43(pPE->m_XFORM);
+-						FillSprite(pv, M.j, M.i, p, lt, rb, r_x, r_y, m.color, sina, cosa);
++						FillSprite(pv, M.j, M.i, p, lt, rb, r_x, r_y, color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina, cosa);
+ 					}
+ 					else
+ 					{
+-						FillSprite(pv, M.j, M.i, m.pos, lt, rb, r_x, r_y, m.color, sina, cosa);
++						FillSprite(pv, M.j, M.i, m.pos, lt, rb, r_x, r_y, color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina, cosa);
+ 					}
+ 				}
+ 				else
+@@ -550,11 +549,11 @@ void ParticleRenderStream(FVF::LIT* pv, u32 count, PAPI::Particle * particles, C
+ 						Fvector p, d;
+ 						pPE->m_XFORM.transform_tiny(p, m.pos);
+ 						pPE->m_XFORM.transform_dir(d, dir);
+-						FillSprite(pv, p, d, lt, rb, r_x, r_y, m.color, sina, cosa);
++						FillSprite(pv, p, d, lt, rb, r_x, r_y, color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina, cosa);
+ 					}
+ 					else
+ 					{
+-						FillSprite(pv, m.pos, dir, lt, rb, r_x, r_y, m.color, sina, cosa);
++						FillSprite(pv, m.pos, dir, lt, rb, r_x, r_y, color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina, cosa);
+ 					}
+ 				}
+ 			}
+@@ -564,11 +563,11 @@ void ParticleRenderStream(FVF::LIT* pv, u32 count, PAPI::Particle * particles, C
+ 				{
+ 					Fvector p;
+ 					pPE->m_XFORM.transform_tiny(p, m.pos);
+-					FillSprite(pv, RDEVICE.vCameraTop, RDEVICE.vCameraRight, p, lt, rb, r_x, r_y, m.color, sina, cosa);
++					FillSprite(pv, RDEVICE.vCameraTop, RDEVICE.vCameraRight, p, lt, rb, r_x, r_y, color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina, cosa);
+ 				}
+ 				else
+ 				{
+-					FillSprite(pv, RDEVICE.vCameraTop, RDEVICE.vCameraRight, m.pos, lt, rb, r_x, r_y, m.color, sina, cosa);
++					FillSprite(pv, RDEVICE.vCameraTop, RDEVICE.vCameraRight, m.pos, lt, rb, r_x, r_y, color_rgba_f(m.colorR, m.colorG, m.colorB, m.colorA), sina, cosa);
+ 				}
+ 			}
+ 		}
+diff --git a/src/Layers/xrRender/ParticleEffect.h b/src/Layers/xrRender/ParticleEffect.h
+index 26fc1c9..5c69ff6 100644
+--- a/src/Layers/xrRender/ParticleEffect.h
++++ b/src/Layers/xrRender/ParticleEffect.h
+@@ -98,9 +98,6 @@ namespace PS
+ 
+ 	void OnEffectParticleBirth(void* owner, u32 param, PAPI::Particle& m, u32 idx);
+ 	void OnEffectParticleDead(void* owner, u32 param, PAPI::Particle& m, u32 idx);
+-
+-	extern const u32 uDT_STEP;
+-	extern const float fDT_STEP;
+ }
+ 
+ //---------------------------------------------------------------------------
+diff --git a/src/Layers/xrRender/ParticleEffectDef.cpp b/src/Layers/xrRender/ParticleEffectDef.cpp
+index 81eaad4..eecfb0b 100644
+--- a/src/Layers/xrRender/ParticleEffectDef.cpp
++++ b/src/Layers/xrRender/ParticleEffectDef.cpp
+@@ -15,12 +15,16 @@
+ using namespace PAPI;
+ using namespace PS;
+ 
++extern float ps_particle_update_coeff;
++
+ //------------------------------------------------------------------------------
+ // class CParticleEffectDef
+ //------------------------------------------------------------------------------
+ CPEDef::CPEDef()
+ {
+ 	m_Frame.InitDefault();
++	m_uStep = 33;
++	m_fStep = float(m_uStep) / 1000.f;
+ 	m_MaxParticles = 0;
+ 	m_CachedShader = 0;
+ 	m_fTimeLimit = 0.f;
+@@ -43,6 +47,16 @@ CPEDef::~CPEDef()
+ #endif
+ }
+ 
++u32 CPEDef::GetUStep()
++{
++	return m_uStep * ps_particle_update_coeff;
++}
++
++float CPEDef::GetFStep()
++{
++	return m_fStep * ps_particle_update_coeff;
++}
++
+ void CPEDef::CreateShader()
+ {
+ 	if (*m_ShaderName && *m_TextureName)
+@@ -283,6 +297,11 @@ BOOL CPEDef::Load(IReader& F)
+ BOOL CPEDef::Load2(CInifile& ini)
+ {
+ 	//.	u16 version		= ini.r_u16("_effect", "version");
++	if (ini.line_exist("_effect", "update_step")) 
++	{
++		m_uStep = ini.r_u32("_effect", "update_step");
++		m_fStep = float(m_uStep) / 1000.f;
++	}
+ 	m_MaxParticles = ini.r_u32("_effect", "max_particles");
+ 	m_Flags.assign(ini.r_u32("_effect", "flags"));
+ 
+diff --git a/src/Layers/xrRender/ParticleEffectDef.h b/src/Layers/xrRender/ParticleEffectDef.h
+index 4ca68bf..1099d65 100644
+--- a/src/Layers/xrRender/ParticleEffectDef.h
++++ b/src/Layers/xrRender/ParticleEffectDef.h
+@@ -85,7 +85,9 @@ namespace PS
+ 		SFrame m_Frame;
+ 		// compiled actions
+ 		CMemoryWriter m_Actions;
+-		// def        
++		// def
++		u32 m_uStep;		// update rate of this effect in ms
++		float m_fStep;		// update rate of this effect in s
+ 		float m_fTimeLimit; // time limit
+ 		int m_MaxParticles; // max particle count
+ 		Fvector m_VelocityScale; // velocity scale
+@@ -105,6 +107,9 @@ namespace PS
+ 		CPEDef();
+ 		~CPEDef();
+ 
++		u32 GetUStep();
++		float GetFStep();
++
+ 		void SetName(LPCSTR name);
+ 		IC LPCSTR Name() const { return *m_Name; }
+ 		void CreateShader();
+diff --git a/src/Layers/xrRender/ParticleGroup.cpp b/src/Layers/xrRender/ParticleGroup.cpp
+index 5349383..1797c51 100644
+--- a/src/Layers/xrRender/ParticleGroup.cpp
++++ b/src/Layers/xrRender/ParticleGroup.cpp
+@@ -217,7 +217,7 @@ void CParticleGroup::SItem::StartRelatedChild(CParticleEffect* emitter, LPCSTR e
+ 	M.identity();
+ 	Fvector vel;
+ 	vel.sub(m.pos, m.posB);
+-	vel.div(fDT_STEP);
++	vel.div(C->m_Def->GetFStep());
+ 	if (emitter->m_RT_Flags.is(CParticleEffect::flRT_XFORM))
+ 	{
+ 		M.set(emitter->m_XFORM);
+@@ -251,7 +251,7 @@ void CParticleGroup::SItem::StartFreeChild(CParticleEffect* emitter, LPCSTR nm,
+ 		M.identity();
+ 		Fvector vel;
+ 		vel.sub(m.pos, m.posB);
+-		vel.div(fDT_STEP);
++		vel.div(C->m_Def->GetFStep());
+ 		if (emitter->m_RT_Flags.is(CParticleEffect::flRT_XFORM))
+ 		{
+ 			M.set(emitter->m_XFORM);
+@@ -389,7 +389,7 @@ void CParticleGroup::SItem::OnFrame(u32 u_dt, const CPGDef::SEffect& def, Fbox&
+ 						M.translate(m.pos);
+ 						Fvector vel;
+ 						vel.sub(m.pos, m.posB);
+-						vel.div(fDT_STEP);
++						vel.div(C->m_Def->GetFStep());
+ 						C->UpdateParent(M, vel,FALSE);
+ 					}
+ 				}
+diff --git a/src/Layers/xrRender/xrRender_console.cpp b/src/Layers/xrRender/xrRender_console.cpp
+index 19cf561..8757f8f 100644
+--- a/src/Layers/xrRender/xrRender_console.cpp
++++ b/src/Layers/xrRender/xrRender_console.cpp
+@@ -290,6 +290,8 @@ Fvector4 ps_dev_param_6 = { .0f, .0f, .0f, .0f };
+ Fvector4 ps_dev_param_7 = { .0f, .0f, .0f, .0f };
+ Fvector4 ps_dev_param_8 = { .0f, .0f, .0f, .0f };
+ 
++float ps_particle_update_coeff = 1.f;
++
+ /////////////////////////////////
+ 
+ //	x - min (0), y - focus (1.4), z - max (100)
+@@ -1071,6 +1073,8 @@ void xrRender_initconsole()
+ 	CMD4(CCC_Vector4, "shader_param_7", &ps_dev_param_7, tw2_min, tw2_max);
+ 	CMD4(CCC_Vector4, "shader_param_8", &ps_dev_param_8, tw2_min, tw2_max);
+ 
++	CMD4(CCC_Float, "particle_update_mod", &ps_particle_update_coeff, 0.04f, 10.f);
++
+ 	// Geometry optimization
+ 	CMD4(CCC_Integer, "r__optimize_static_geom", &opt_static, 0, 4);
+ 	CMD4(CCC_Integer, "r__optimize_dynamic_geom", &opt_dynamic, 0, 4);
+diff --git a/src/xrParticles/particle_actions_collection.cpp b/src/xrParticles/particle_actions_collection.cpp
+index e023fa2..8d9fa45 100644
+--- a/src/xrParticles/particle_actions_collection.cpp
++++ b/src/xrParticles/particle_actions_collection.cpp
+@@ -1504,21 +1504,30 @@ void PASpeedLimit::Execute(ParticleEffect* effect, const float dt, float& tm_max
+ void PASpeedLimit::Transform(const Fmatrix&) { ; }
+ //-------------------------------------------------------------------------------------------------
+ 
++#define STEP_DEFAULT 0.033F
++
+ // Change color of all particles toward the specified color
+ void PATargetColor::Execute(ParticleEffect* effect, const float dt, float& tm_max)
+-{
+-	float scaleFac = scale * dt;
+-	Fcolor c_p, c_t;
++{	
++
++	float COEFF = STEP_DEFAULT / dt;
++	float scaleFac = scale * STEP_DEFAULT;
++	Fcolor c_p, c_t, c_n;
+ 
+ 	for (u32 i = 0; i < effect->p_count; i++)
+ 	{
+ 		Particle& m = effect->particles[i];
+ 		if (m.age < timeFrom * tm_max || m.age > timeTo * tm_max) continue;
+ 
+-		c_p.set(m.color);
+-		c_t.set(c_p.r + (color.x - c_p.r) * scaleFac, c_p.g + (color.y - c_p.g) * scaleFac,
+-		        c_p.b + (color.z - c_p.b) * scaleFac, c_p.a + (alpha - c_p.a) * scaleFac);
+-		m.color = c_t.get();
++		c_p.set(m.colorR, m.colorG, m.colorB, m.colorA);
++		c_t.set(color.x, color.y, color.z, alpha);
++		c_n.lerp(c_p, c_t, scaleFac);
++		c_n.set(c_n.get());
++
++		m.colorR -= (m.colorR - c_n.r) / COEFF;
++		m.colorG -= (m.colorG - c_n.g) / COEFF;
++		m.colorB -= (m.colorB - c_n.b) / COEFF;
++		m.colorA -= (m.colorA - c_n.a) / COEFF;
+ 	}
+ }
+ 
+@@ -1736,6 +1745,8 @@ struct TES_PARAMS
+ 	float magnitude;
+ };
+ 
++extern float ps_particle_update_coeff;
++
+ 
+ void PATurbulenceExecuteStream(LPVOID lpvParams)
+ {
+@@ -1837,7 +1848,7 @@ void PATurbulence::Execute(ParticleEffect* effect, const float dt, float& tm_max
+ 	tesParams.epsilon = epsilon;
+ 	tesParams.frequency = frequency;
+ 	tesParams.octaves = octaves;
+-	tesParams.magnitude = magnitude;
++	tesParams.magnitude = magnitude*ps_particle_update_coeff;
+ 	PATurbulenceExecuteStream(&tesParams);
+ }
+ 
+diff --git a/src/xrParticles/particle_effect.h b/src/xrParticles/particle_effect.h
+index 79f4778..a2523b5 100644
+--- a/src/xrParticles/particle_effect.h
++++ b/src/xrParticles/particle_effect.h
+@@ -98,7 +98,11 @@ namespace PAPI
+ 				P.size = size;
+ 				P.rot.x = rot.x;
+ 				P.vel = vel;
+-				P.color = color;
++				float f = float(1.0) / float(255.0);
++				P.colorA = f * ((color >> 24) & 0xff);
++				P.colorR = f * ((color >> 16) & 0xff);
++				P.colorG = f * ((color >> 8) & 0xff);
++				P.colorB = f * ((color >> 0) & 0xff);
+ 				P.age = age;
+ 				P.frame = frame;
+ 				P.flags.assign(flags);
+diff --git a/src/xrParticles/psystem.h b/src/xrParticles/psystem.h
+index b706abc..1fd92f8 100644
+--- a/src/xrParticles/psystem.h
++++ b/src/xrParticles/psystem.h
+@@ -123,11 +123,14 @@ namespace PAPI
+ 		pVector posB; // 12
+ 		pVector vel; // 12  	
+ 		pVector size; // 12
+-		u32 color; // 4
++		float colorR; // 4
++		float colorG; // 4
++		float colorB; // 4
++		float colorA; // 4
+ 		float age; // 4       
+ 		u16 frame; // 2
+ 		Flags16 flags; // 2
+-	}; // = 64
++	}; // = 76
+ 
+ 	typedef void (* OnBirthParticleCB)(void* owner, u32 param, PAPI::Particle& P, u32 idx);
+ 	typedef void (* OnDeadParticleCB)(void* owner, u32 param, PAPI::Particle& P, u32 idx);
