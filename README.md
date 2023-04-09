@@ -176,6 +176,9 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.04.09**:
+* Put extra shader files in 000_shader_placeholder.db0, CLEAN SHADER CACHE IS REQUIRED
+
 **2023.04.08**:
 
 * SSS update
