@@ -1109,6 +1109,252 @@ index dd65e49..6f2f339 100644
  		assertion_info,
  		"Fatal Error",
  		MB_OK | MB_ICONERROR | MB_SYSTEMMODAL
+diff --git a/src/xrEngine/FDemoRecord.cpp b/src/xrEngine/FDemoRecord.cpp
+index aa96cfb..0499b90 100644
+--- a/src/xrEngine/FDemoRecord.cpp
++++ b/src/xrEngine/FDemoRecord.cpp
+@@ -20,7 +20,8 @@ BOOL stored_cross;
+ BOOL stored_red_text;
+ 
+ CDemoRecord* xrDemoRecord = 0;
+-CDemoRecord::force_position CDemoRecord::g_position = {false, {0, 0, 0}};
++CDemoRecord::force_position CDemoRecord::g_position = { false, {0, 0, 0} };
++CDemoRecord::force_direction CDemoRecord::g_direction = {false, {0, 0, 0}};
+ 
+ Fbox curr_lm_fbox;
+ 
+@@ -77,6 +78,8 @@ CDemoRecord::CDemoRecord(const char* name, float life_time) : CEffectorCam(cefDe
+ 	m_b_redirect_input_to_level = false;
+ 	_unlink(name);
+ 	file = FS.w_open(name);
++	isInputBlocked = FALSE;
++	pDemoRecords = nullptr;
+ 	if (file)
+ 	{
+ 		g_position.set_position = false;
+@@ -123,6 +126,23 @@ CDemoRecord::CDemoRecord(const char* name, float life_time) : CEffectorCam(cefDe
+ 	}
+ }
+ 
++CDemoRecord::CDemoRecord(const char* name, std::unordered_set<CDemoRecord*>* pDemoRecords, BOOL isInputBlocked, float life_time) : CDemoRecord(name, life_time)
++{
++	pDemoRecords->insert(this);
++	this->pDemoRecords = pDemoRecords;
++	this->isInputBlocked = isInputBlocked;
++	if (!file) {
++		StopDemo();
++	}
++}
++
++void CDemoRecord::StopDemo() {
++	fLifeTime = -1;
++	if (pDemoRecords) {
++		pDemoRecords->erase(this);
++	}
++}
++
+ CDemoRecord::~CDemoRecord()
+ {
+ 	if (file)
+@@ -130,6 +150,9 @@ CDemoRecord::~CDemoRecord()
+ 		IR_Release(); // release input
+ 		FS.w_close(file);
+ 	}
++	if (pDemoRecords) {
++		pDemoRecords->erase(this);
++	}
+ 	g_bDisableRedText = stored_red_text;
+ 
+ 	Device.seqRender.Remove(this);
+@@ -372,6 +395,13 @@ BOOL CDemoRecord::ProcessCam(SCamEffectorInfo& info)
+ 		}
+ 		else
+ 			g_position.p.set(m_Position);
++
++		if (g_direction.set_direction)
++		{
++			m_HPB.set(g_direction.d);
++			g_direction.set_direction = false;
++		} else
++			g_direction.d.set(m_Position);
+ 		// move
+ 		Fvector vmove;
+ 
+@@ -399,6 +429,9 @@ BOOL CDemoRecord::ProcessCam(SCamEffectorInfo& info)
+ 		info.p.set(m_Camera.c);
+ 
+ 		fLifeTime -= Device.fTimeDelta;
++		if (fLifeTime < 0) {
++			StopDemo();
++		}
+ 
+ 		m_vT.set(0, 0, 0);
+ 		m_vR.set(0, 0, 0);
+@@ -420,43 +453,54 @@ void CDemoRecord::IR_OnMouseRelease(int btn)
+ 
+ void CDemoRecord::IR_OnKeyboardPress(int dik)
+ {
+-	if (dik == DIK_MULTIPLY) m_b_redirect_input_to_level = !m_b_redirect_input_to_level;
+-
+-	if (m_b_redirect_input_to_level)
+-	{
+-		g_pGameLevel->IR_OnKeyboardPress(dik);
+-		return;
+-	}
+-	if (dik == DIK_GRAVE)
+-		Console->Show();
+-	if (dik == DIK_SPACE) RecordKey();
+-	if (dik == DIK_BACK) MakeCubemap();
+-	if (dik == DIK_F11) MakeLevelMapScreenshot(IR_GetKeyState(DIK_LCONTROL));
+-	if (dik == DIK_F12) MakeScreenshot();
+-	if (dik == DIK_ESCAPE) fLifeTime = -1;
+-
+-	//Alundaio: Teleport to demo cam
+-	//#ifndef MASTER_GOLD
+-	if (dik == DIK_RETURN)
+-	{
+-		if (strstr(Core.Params, "-dbg"))
++	if (isInputBlocked) {
++		if (dik == DIK_PAUSE)
++			Device.Pause(!Device.Paused(), TRUE, TRUE, "demo_record");
++		if (dik == DIK_GRAVE)
++			Console->Show();
++		if (dik == DIK_ESCAPE)
++			Console->Execute("main_menu on");
++	} else {
++		if (dik == DIK_MULTIPLY) m_b_redirect_input_to_level = !m_b_redirect_input_to_level;
++
++		if (m_b_redirect_input_to_level)
+ 		{
+-			if (g_pGameLevel->CurrentEntity())
++			g_pGameLevel->IR_OnKeyboardPress(dik);
++			return;
++		}
++		if (dik == DIK_GRAVE)
++			Console->Show();
++		if (dik == DIK_SPACE) RecordKey();
++		if (dik == DIK_BACK) MakeCubemap();
++		if (dik == DIK_F11) MakeLevelMapScreenshot(IR_GetKeyState(DIK_LCONTROL));
++		if (dik == DIK_F12) MakeScreenshot();
++		if (dik == DIK_ESCAPE) StopDemo();
++
++		//Alundaio: Teleport to demo cam
++		//#ifndef MASTER_GOLD
++		if (dik == DIK_RETURN)
++		{
++			if (strstr(Core.Params, "-dbg"))
+ 			{
+-				g_pGameLevel->CurrentEntity()->ForceTransform(m_Camera);
+-				fLifeTime = -1;
++				if (g_pGameLevel->CurrentEntity())
++				{
++					g_pGameLevel->CurrentEntity()->ForceTransform(m_Camera);
++					StopDemo();
++				}
+ 			}
+ 		}
+-	}
+-	//#endif // #ifndef MASTER_GOLD
+-	//-Alundaio
++		//#endif // #ifndef MASTER_GOLD
++		//-Alundaio
+ 
+-	if (dik == DIK_PAUSE)
+-		Device.Pause(!Device.Paused(), TRUE, TRUE, "demo_record");
++		if (dik == DIK_PAUSE)
++			Device.Pause(!Device.Paused(), TRUE, TRUE, "demo_record");
++	}
++	
+ }
+ 
+ void CDemoRecord::IR_OnKeyboardRelease(int dik)
+ {
++	if (isInputBlocked) return;
+ 	if (m_b_redirect_input_to_level)
+ 		g_pGameLevel->IR_OnKeyboardRelease(dik);
+ }
+@@ -471,6 +515,7 @@ static void update_whith_timescale(Fvector& v, const Fvector& v_delta)
+ 
+ void CDemoRecord::IR_OnKeyboardHold(int dik)
+ {
++	if (isInputBlocked) return;
+ 	if (m_b_redirect_input_to_level)
+ 	{
+ 		g_pGameLevel->IR_OnKeyboardHold(dik);
+@@ -526,6 +571,7 @@ void CDemoRecord::IR_OnKeyboardHold(int dik)
+ 
+ void CDemoRecord::IR_OnMouseMove(int dx, int dy)
+ {
++	if (isInputBlocked) return;
+ 	if (m_b_redirect_input_to_level)
+ 	{
+ 		g_pGameLevel->IR_OnMouseMove(dx, dy);
+@@ -545,6 +591,7 @@ void CDemoRecord::IR_OnMouseMove(int dx, int dy)
+ 
+ void CDemoRecord::IR_OnMouseHold(int btn)
+ {
++	if (isInputBlocked) return;
+ 	if (m_b_redirect_input_to_level)
+ 	{
+ 		g_pGameLevel->IR_OnMouseHold(btn);
+diff --git a/src/xrEngine/FDemoRecord.h b/src/xrEngine/FDemoRecord.h
+index 2e8de06..5890079 100644
+--- a/src/xrEngine/FDemoRecord.h
++++ b/src/xrEngine/FDemoRecord.h
+@@ -6,6 +6,8 @@
+ #include "iinputreceiver.h"
+ #include "effector.h"
+ 
++#include <unordered_set>
++
+ class ENGINE_API CDemoRecord :
+ 	public CEffectorCam,
+ 	public IInputReceiver,
+@@ -18,6 +20,12 @@ private:
+ 		Fvector p;
+ 	} g_position;
+ 
++	static struct force_direction
++	{
++		bool set_direction;
++		Fvector d;
++	} g_direction;
++
+ 	int iCount;
+ 	IWriter* file;
+ 	Fvector m_HPB;
+@@ -44,6 +52,9 @@ private:
+ 	float m_fAngSpeed2;
+ 	float m_fAngSpeed3;
+ 
++	BOOL isInputBlocked;
++	std::unordered_set<CDemoRecord*>* pDemoRecords;
++
+ 	void MakeCubeMapFace(Fvector& D, Fvector& N);
+ 	void MakeLevelMapProcess();
+ 	void MakeScreenshotFace();
+@@ -53,6 +64,7 @@ private:
+ 	void MakeLevelMapScreenshot(BOOL bHQ);
+ public:
+ 	CDemoRecord(const char* name, float life_time = 60 * 60 * 1000);
++	CDemoRecord(const char* name, std::unordered_set<CDemoRecord*>* pDemoRecords, BOOL isInputBlocked = 0, float life_time = 60 * 60 * 1000);
+ 	virtual ~CDemoRecord();
+ 
+ 	virtual void IR_OnKeyboardPress(int dik);
+@@ -62,10 +74,13 @@ public:
+ 	virtual void IR_OnMouseHold(int btn);
+ 	virtual void IR_OnMousePress(int btn);
+ 	virtual void IR_OnMouseRelease(int btn);
++	void StopDemo();
+ 
+ 	virtual BOOL ProcessCam(SCamEffectorInfo& info);
+ 	static void SetGlobalPosition(const Fvector& p) { g_position.p.set(p), g_position.set_position = true; }
+ 	static void GetGlobalPosition(Fvector& p) { p.set(g_position.p); }
++	static void SetGlobalDirection(const Fvector& d) { g_direction.d.set(d), g_direction.set_direction = true; }
++	static void GetGlobalDirection(Fvector& d) { d.set(g_direction.d); }
+ 	BOOL m_b_redirect_input_to_level;
+ 	virtual void OnRender();
+ };
 diff --git a/src/xrEngine/xr_ioc_cmd.cpp b/src/xrEngine/xr_ioc_cmd.cpp
 index a1ec515..b206c4e 100644
 --- a/src/xrEngine/xr_ioc_cmd.cpp
@@ -1330,6 +1576,27 @@ index 14eefbd..931a042 100644
  	}
  
  	effector->m_WeaponID = weapon->ID();
+diff --git a/src/xrGame/Artefact.h b/src/xrGame/Artefact.h
+index 35f5e1c..2298a74 100644
+--- a/src/xrGame/Artefact.h
++++ b/src/xrGame/Artefact.h
+@@ -70,7 +70,6 @@ protected:
+ 	float m_fTrailLightRange;
+ 	u8 m_af_rank;
+ 	bool m_bLightsEnabled;
+-	float m_additional_weight;
+ 
+ 	virtual void UpdateLights();
+ public:
+@@ -91,6 +90,8 @@ public:
+ 	{
+ 	};
+ 
++	float m_additional_weight;
++
+ 	float AdditionalInventoryWeight() const { return m_additional_weight; }
+ 	bool m_bCanSpawnZone;
+ 	float m_fHealthRestoreSpeed;
 diff --git a/src/xrGame/CustomOutfit.cpp b/src/xrGame/CustomOutfit.cpp
 index 350d6f1..df7f414 100644
 --- a/src/xrGame/CustomOutfit.cpp
@@ -2112,11 +2379,28 @@ index 908d83f..696ee7c 100644
  		if (!obj || !obj->m_pPhysicsShell || (itm && itm->IsQuestItem())) continue;
  
  		Fvector dir;
+diff --git a/src/xrGame/artefact_script.cpp b/src/xrGame/artefact_script.cpp
+index 90f6dcf..c3f787c 100644
+--- a/src/xrGame/artefact_script.cpp
++++ b/src/xrGame/artefact_script.cpp
+@@ -33,6 +33,7 @@ void CArtefact::script_register(lua_State* L)
+ 		.def_readwrite("m_fSatietyRestoreSpeed", &CArtefact::m_fSatietyRestoreSpeed)
+ 		.def_readwrite("m_fPowerRestoreSpeed", &CArtefact::m_fPowerRestoreSpeed)
+ 		.def_readwrite("m_fBleedingRestoreSpeed", &CArtefact::m_fBleedingRestoreSpeed)
++		.def_readwrite("m_additional_weight", &CArtefact::m_additional_weight)
+ 		.def("FollowByPath", &CArtefact::FollowByPath)
+ 		.def("SwitchVisibility", &CArtefact::SwitchVisibility)
+ 		.def("GetAfRank", &CArtefact::GetAfRank),
 diff --git a/src/xrGame/console_commands.cpp b/src/xrGame/console_commands.cpp
-index 2841970..db51ea9 100644
+index 2841970..dbd8d64 100644
 --- a/src/xrGame/console_commands.cpp
 +++ b/src/xrGame/console_commands.cpp
-@@ -110,6 +110,10 @@ float streff;
+@@ -1,3 +1,4 @@
++#include <unordered_set>
+ #include "pch_script.h"
+ #include "../xrEngine/xr_ioconsole.h"
+ #include "../xrEngine/xr_ioc_cmd.h"
+@@ -110,6 +111,10 @@ float streff;
  
  extern BOOL g_ai_die_in_anomaly; //Alundaio
  
@@ -2127,10 +2411,112 @@ index 2841970..db51ea9 100644
  ENGINE_API extern float g_console_sensitive;
  
  u32 g_dead_body_collision = 1;
-@@ -515,6 +519,56 @@ public:
+@@ -458,6 +463,7 @@ public:
+ };
+ 
+ //-----------------------------------------------------------------------
++std::unordered_set<CDemoRecord*> pDemoRecords;
+ class CCC_DemoRecord : public IConsole_Command
+ {
+ public:
+@@ -482,7 +488,55 @@ public:
+ 		string_path fn;
+ 		FS.update_path(fn, "$game_saves$", fn_);
+ 
+-		g_pGameLevel->Cameras().AddCamEffector(xr_new<CDemoRecord>(fn));
++		auto pDemoRecord = xr_new<CDemoRecord>(fn, &pDemoRecords);
++		g_pGameLevel->Cameras().AddCamEffector(pDemoRecord);
++	}
++};
++
++class CCC_DemoRecordBlockedInput : public IConsole_Command
++{
++public:
++
++	CCC_DemoRecordBlockedInput(LPCSTR N) : IConsole_Command(N)
++	{
++	};
++
++	virtual void Execute(LPCSTR args)
++	{
++#ifndef	DEBUG
++		//if (GameID() != eGameIDSingle)
++		//{
++		//	Msg("For this game type Demo Record is disabled.");
++		//	return;
++		//};
++#endif
++		Console->Hide();
++
++		LPSTR fn_;
++		STRCONCAT(fn_, args, ".xrdemo");
++		string_path fn;
++		FS.update_path(fn, "$game_saves$", fn_);
++
++		auto pDemoRecord = xr_new<CDemoRecord>(fn, &pDemoRecords, TRUE);
++		g_pGameLevel->Cameras().AddCamEffector(pDemoRecord);
++	}
++};
++
++class CCC_DemoRecordStop : public IConsole_Command
++{
++public:
++
++	CCC_DemoRecordStop(LPCSTR N) : IConsole_Command(N)
++	{
++		bEmptyArgsHandled = true;
++	};
++
++	virtual void Execute(LPCSTR args)
++	{
++		for (auto pDemoRecord : pDemoRecords) {
++			pDemoRecord->StopDemo();
++		}
++		pDemoRecords.clear();
+ 	}
+ };
+ 
+@@ -515,6 +569,35 @@ public:
  
  Fvector CCC_DemoRecordSetPos::p = {0, 0, 0};
  
++class CCC_DemoRecordSetDir : public CCC_Vector3
++{
++	static Fvector d;
++public:
++
++	CCC_DemoRecordSetDir(LPCSTR N) : CCC_Vector3(N, &d, Fvector().set(-FLT_MAX, -FLT_MAX, -FLT_MAX),
++		Fvector().set(FLT_MAX, FLT_MAX, FLT_MAX))
++	{
++	};
++
++	virtual void Execute(LPCSTR args)
++	{
++#ifndef	DEBUG
++		//if (GameID() != eGameIDSingle)
++		//{
++		//	Msg("For this game type Demo Record is disabled.");
++		//	return;
++		//};
++#endif
++		CDemoRecord::GetGlobalDirection(d);
++		CCC_Vector3::Execute(args);
++		CDemoRecord::SetGlobalDirection(d);
++	}
++
++	virtual void Save(IWriter* F) { ; }
++};
++
++Fvector CCC_DemoRecordSetDir::d = { 0, 0, 0 };
++
+ class CCC_DemoPlay : public IConsole_Command
+ {
+ public:
+@@ -555,6 +638,57 @@ public:
+ 	}
+ };
+ 
++// First Person Death
 +extern float offsetH;
 +extern float offsetP;
 +extern float offsetB;
@@ -2181,10 +2567,21 @@ index 2841970..db51ea9 100644
 +};
 +Fvector CCC_FPDPositionOffset::d = { 0, 0, 0 };
 +
- class CCC_DemoPlay : public IConsole_Command
- {
- public:
-@@ -2448,6 +2502,8 @@ void CCC_RegisterCommands()
+ // helper functions --------------------------------------------
+ 
+ bool valid_saved_game_name(LPCSTR file_name)
+@@ -2072,7 +2206,10 @@ void CCC_RegisterCommands()
+ 	//#ifndef MASTER_GOLD
+ 	CMD1(CCC_DemoPlay, "demo_play");
+ 	CMD1(CCC_DemoRecord, "demo_record");
++	CMD1(CCC_DemoRecordBlockedInput, "demo_record_blocked_input");
++	CMD1(CCC_DemoRecordStop, "demo_record_stop");
+ 	CMD1(CCC_DemoRecordSetPos, "demo_set_cam_position");
++	CMD1(CCC_DemoRecordSetDir, "demo_set_cam_direction");
+ 	//#endif // #ifndef MASTER_GOLD
+ 
+ #ifndef MASTER_GOLD
+@@ -2448,6 +2585,8 @@ void CCC_RegisterCommands()
  
  	CMD4(CCC_Integer, "ai_die_in_anomaly", &g_ai_die_in_anomaly, 0, 1); //Alundaio
  
@@ -2193,7 +2590,7 @@ index 2841970..db51ea9 100644
  	CMD4(CCC_Float, "ai_aim_predict_time", &g_aim_predict_time, 0.f, 10.f);
  
  	CMD4(CCC_Float, "head_bob_factor", &g_head_bob_factor, 0.f, 2.f);
-@@ -2508,6 +2564,14 @@ void CCC_RegisterCommands()
+@@ -2508,6 +2647,14 @@ void CCC_RegisterCommands()
  	CMD3(CCC_Mask, "g_feel_grenade", &psDeviceFlags2, rsFeelGrenade);
  	CMD3(CCC_Mask, "g_always_active", &psDeviceFlags2, rsAlwaysActive);
  
@@ -2558,7 +2955,7 @@ index 5489997..9a1a917 100644
  LPCSTR CScriptGameObject::bone_name(u16 id, bool bHud)
  {
 diff --git a/src/xrGame/script_game_object.h b/src/xrGame/script_game_object.h
-index 640dcab..08f6153 100644
+index 640dcab..34aec57 100644
 --- a/src/xrGame/script_game_object.h
 +++ b/src/xrGame/script_game_object.h
 @@ -683,6 +683,7 @@ public:
@@ -2569,7 +2966,17 @@ index 640dcab..08f6153 100644
  	LPCSTR bone_name(u16 id, bool bHud);
  	bool is_body_turning() const;
  	cphysics_shell_scripted* get_physics_shell() const;
-@@ -1027,6 +1028,10 @@ public:
+@@ -998,6 +999,9 @@ public:
+ 	void SetArtefactBleedingRestoreSpeed(float value);
+ 	void SetArtefactImmunity(ALife::EHitType hit_type, float value);
+ 
++	float GetArtefactAdditionalInventoryWeight();
++	void SetArtefactAdditionalInventoryWeight(float value);
++
+ 	//Eatable items
+ 	void SetRemainingUses(u8 value);
+ 	u8 GetRemainingUses();
+@@ -1027,6 +1031,10 @@ public:
  	void SetActorRunCoef(float run_coef);
  	float GetActorRunBackCoef() const;
  	void SetActorRunBackCoef(float run_back_coef);
@@ -2580,6 +2987,33 @@ index 640dcab..08f6153 100644
  
  	void SetCharacterIcon(LPCSTR iconName);
  #endif
+diff --git a/src/xrGame/script_game_object3.cpp b/src/xrGame/script_game_object3.cpp
+index c7b3f95..d2d6f94 100644
+--- a/src/xrGame/script_game_object3.cpp
++++ b/src/xrGame/script_game_object3.cpp
+@@ -1540,6 +1540,22 @@ void CScriptGameObject::SetArtefactImmunity(ALife::EHitType hit_type, float valu
+ 	return artefact->SetImmunity(hit_type, value);
+ }
+ 
++float CScriptGameObject::GetArtefactAdditionalInventoryWeight()
++{
++	CArtefact* artefact = smart_cast<CArtefact*>(&object());
++	THROW(artefact);
++
++	return artefact->m_additional_weight;
++}
++
++void CScriptGameObject::SetArtefactAdditionalInventoryWeight(float value)
++{
++	CArtefact* artefact = smart_cast<CArtefact*>(&object());
++	THROW(artefact);
++
++	artefact->m_additional_weight = value;
++}
++
+ void CScriptGameObject::AttachVehicle(CScriptGameObject* veh, bool bForce)
+ {
+ 	CActor* actor = smart_cast<CActor*>(&object());
 diff --git a/src/xrGame/script_game_object_inventory_owner.cpp b/src/xrGame/script_game_object_inventory_owner.cpp
 index 3ad0a2f..d7697f7 100644
 --- a/src/xrGame/script_game_object_inventory_owner.cpp
@@ -2641,7 +3075,7 @@ index 3ad0a2f..d7697f7 100644
  {
  	CInventoryOwner* pInventoryOwner = smart_cast<CInventoryOwner*>(&object());
 diff --git a/src/xrGame/script_game_object_script3.cpp b/src/xrGame/script_game_object_script3.cpp
-index aeeaf8f..1b4f437 100644
+index aeeaf8f..236d588 100644
 --- a/src/xrGame/script_game_object_script3.cpp
 +++ b/src/xrGame/script_game_object_script3.cpp
 @@ -115,6 +115,7 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
@@ -2652,7 +3086,23 @@ index aeeaf8f..1b4f437 100644
  
  		.def("bone_name", &CScriptGameObject::bone_name)
  		.def("is_body_turning", &CScriptGameObject::is_body_turning)
-@@ -536,6 +537,12 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
+@@ -304,6 +305,7 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
+ 		.def("get_artefact_power", &CScriptGameObject::GetArtefactPowerRestoreSpeed)
+ 		.def("get_artefact_bleeding", &CScriptGameObject::GetArtefactBleedingRestoreSpeed)
+ 		.def("get_artefact_immunity", &CScriptGameObject::GetArtefactImmunity)
++		.def("get_artefact_additional_inventory_weight", &CScriptGameObject::GetArtefactAdditionalInventoryWeight)
+ 
+ 		.def("set_artefact_health", &CScriptGameObject::SetArtefactHealthRestoreSpeed)
+ 		.def("set_artefact_radiation", &CScriptGameObject::SetArtefactRadiationRestoreSpeed)
+@@ -311,6 +313,7 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
+ 		.def("set_artefact_power", &CScriptGameObject::SetArtefactPowerRestoreSpeed)
+ 		.def("set_artefact_bleeding", &CScriptGameObject::SetArtefactBleedingRestoreSpeed)
+ 		.def("set_artefact_immunity", &CScriptGameObject::SetArtefactImmunity)
++		.def("set_artefact_additional_inventory_weight", &CScriptGameObject::SetArtefactAdditionalInventoryWeight)
+ 
+ 		//HELICOPTER
+ 		.def("get_helicopter", &CScriptGameObject::get_helicopter)
+@@ -536,6 +539,12 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
  		.def("get_actor_runback_coef", &CScriptGameObject::GetActorRunBackCoef)
  		.def("set_actor_runback_coef", &CScriptGameObject::SetActorRunBackCoef)
  		//end AVO
