@@ -1109,6 +1109,46 @@ index dd65e49..6f2f339 100644
  		assertion_info,
  		"Fatal Error",
  		MB_OK | MB_ICONERROR | MB_SYSTEMMODAL
+diff --git a/src/xrEngine/CameraManager.cpp b/src/xrEngine/CameraManager.cpp
+index 4eb5146..206b3ac 100644
+--- a/src/xrEngine/CameraManager.cpp
++++ b/src/xrEngine/CameraManager.cpp
+@@ -225,6 +225,21 @@ void CCameraManager::RemoveCamEffector(ECamEffectorType type)
+ 		}
+ }
+ 
++// demonized: removecameffector by pointer
++void CCameraManager::RemoveCamEffector(CEffectorCam* ef)
++{
++	for (EffectorCamIt it = m_EffectorsCam.begin(); it != m_EffectorsCam.end(); it++)
++	{
++		CEffectorCam* cam = (*it);
++		if (cam == ef)
++		{
++			OnEffectorReleased(cam);
++			m_EffectorsCam.erase(it);
++			return;
++		}
++	}
++}
++
+ CEffectorPP* CCameraManager::GetPPEffector(EEffectorPPType type)
+ {
+ 	for (EffectorPPIt it = m_EffectorsPP.begin(); it != m_EffectorsPP.end(); it++)
+diff --git a/src/xrEngine/CameraManager.h b/src/xrEngine/CameraManager.h
+index ca5bd2f..649a183 100644
+--- a/src/xrEngine/CameraManager.h
++++ b/src/xrEngine/CameraManager.h
+@@ -154,6 +154,9 @@ public:
+ 	CEffectorCam* GetCamEffector(ECamEffectorType type);
+ 	void RemoveCamEffector(ECamEffectorType type);
+ 
++	// demonized: removecameffector by pointer
++	void RemoveCamEffector(CEffectorCam* ef);
++
+ 	ECamEffectorType RequestCamEffectorId();
+ 	EEffectorPPType RequestPPEffectorId();
+ 	CEffectorPP* GetPPEffector(EEffectorPPType type);
 diff --git a/src/xrEngine/FDemoRecord.cpp b/src/xrEngine/FDemoRecord.cpp
 index aa96cfb..0499b90 100644
 --- a/src/xrEngine/FDemoRecord.cpp
@@ -1389,7 +1429,7 @@ index a1ec515..b206c4e 100644
  #ifdef DEBUG
      CMD3(CCC_Mask, "snd_stats", &g_stats_flags, st_sound);
 diff --git a/src/xrGame/Actor.cpp b/src/xrGame/Actor.cpp
-index 899a940..8064673 100644
+index 899a940..0273103 100644
 --- a/src/xrGame/Actor.cpp
 +++ b/src/xrGame/Actor.cpp
 @@ -246,6 +246,8 @@ CActor::CActor() : CEntityAlive(), current_ik_cam_shift(0)
@@ -1409,7 +1449,7 @@ index 899a940..8064673 100644
  
  void CActor::Die(CObject* who)
  {
-@@ -920,11 +923,24 @@ void CActor::Die(CObject* who)
+@@ -920,11 +923,25 @@ void CActor::Die(CObject* who)
  
  	if (IsGameTypeSingle())
  	{
@@ -1418,9 +1458,10 @@ index 899a940..8064673 100644
 -#else
 -		cam_Set(eacFreeLook);
 -#endif // FP_DEATH
++		// demonized: First Person Death
 +		if (firstPersonDeath) {
 +			cam_Set(eacFirstEye);
-+			m_FPCam = xr_new<CFPCamEffector>();
++			initFPCam();
 +			Fvector pos = Device.vCameraPosition;
 +			Fvector hpb;
 +			hpb.set(
@@ -1431,7 +1472,7 @@ index 899a940..8064673 100644
 +			m_FPCam->m_Position.set(pos);
 +			m_FPCam->m_HPB.set(hpb);
 +			m_FPCam->m_Camera.setHPB(hpb.x, hpb.y, hpb.z).translate_over(pos);
-+			Cameras().AddCamEffector(m_FPCam);
++			m_FPCam->m_customSmoothing = 0;
 +		}
 +		else
 +			cam_Set(eacFreeLook);
@@ -1439,8 +1480,39 @@ index 899a940..8064673 100644
  		CurrentGameUI()->HideShownDialogs();
  
  		/* avo: attempt to set camera on timer */
+@@ -1933,7 +1950,8 @@ extern	BOOL	g_ShowAnimationInfo		;
+ void CActor::OnHUDDraw(CCustomHUD*)
+ {
+ 	R_ASSERT(IsFocused());
+-	if (!((mstate_real & mcLookout) && !IsGameTypeSingle()))
++	//demonized: disable hud when FPCam is on
++	if (!((mstate_real & mcLookout) && !IsGameTypeSingle()) && !m_FPCam)
+ 		g_player_hud->render_hud();
+ 
+ 
+@@ -2675,3 +2693,20 @@ void CActor::SwitchNightVision(bool vision_on, bool use_sounds, bool send_event)
+ 		//Msg("GE_TRADER_FLAGS event sent %d", m_trader_flags.get());
+ 	}
+ }
++
++// demonized: First Person Death
++void CActor::initFPCam()
++{
++	if (!m_FPCam) {
++		m_FPCam = xr_new<CFPCamEffector>();
++		Cameras().AddCamEffector(m_FPCam);
++	}
++}
++
++void CActor::removeFPCam() 
++{
++	if (m_FPCam) {
++		Cameras().RemoveCamEffector(m_FPCam);
++		m_FPCam = NULL;
++	}
++}
 diff --git a/src/xrGame/Actor.h b/src/xrGame/Actor.h
-index 1440969..78de06a 100644
+index 1440969..bd9000f 100644
 --- a/src/xrGame/Actor.h
 +++ b/src/xrGame/Actor.h
 @@ -61,6 +61,7 @@ class CActorStatisticMgr;
@@ -1451,12 +1523,17 @@ index 1440969..78de06a 100644
  
  class CActor :
  	public CEntityAlive,
-@@ -81,6 +82,9 @@ public:
+@@ -81,6 +82,14 @@ public:
  	CActor();
  	virtual ~CActor();
  
-+protected:
++// demonized: First Person Death
++public:
 +	CFPCamEffector* m_FPCam;
++
++public:
++	void initFPCam();
++	void removeFPCam();
 +
  public:
  	virtual BOOL AlwaysTheCrow() { return TRUE; }
@@ -1622,26 +1699,28 @@ index 350d6f1..df7f414 100644
  	return result;
  }
 diff --git a/src/xrGame/EffectorBobbing.cpp b/src/xrGame/EffectorBobbing.cpp
-index ffd7c19..f728fb7 100644
+index ffd7c19..4ac05a2 100644
 --- a/src/xrGame/EffectorBobbing.cpp
 +++ b/src/xrGame/EffectorBobbing.cpp
-@@ -113,3 +113,48 @@ BOOL CEffectorBobbing::ProcessCam(SCamEffectorInfo& info)
+@@ -113,3 +113,56 @@ BOOL CEffectorBobbing::ProcessCam(SCamEffectorInfo& info)
  	//	}
  	return TRUE;
  }
 +
++// demonized: First Person Death (Cam Effector, can be used in scripts any time to set custom position and direction)
 +CFPCamEffector::CFPCamEffector() : CEffectorCam(eCEUser, INT_MAX) {
 +	m_Camera.identity();
 +	m_Camera.setHPB(0, 0, 0);
 +	m_HPB.set(0, 0, 0);
 +	m_Position.set(0, 0, 0);
++	m_customSmoothing = 0;
 +}
 +
 +// EMA smoothing for changing values, frame independent
 +int firstPersonDeathPositionSmoothing = 6;
 +int firstPersonDeathDirectionSmoothing = 12;
 +
-+void CFPCamEffector::ema(Fvector &current, Fvector &target, int steps) {
++void CFPCamEffector::ema(Fvector &current, Fvector &target, unsigned int steps) {
 +	float smoothing_alpha = 2.0 / (steps + 1);
 +	float delta = Device.dwTimeDelta;
 +
@@ -1664,9 +1743,15 @@ index ffd7c19..f728fb7 100644
 +	temp.identity().setHPB(m_HPB.x, m_HPB.y, m_HPB.z).translate_over(m_Position);
 +
 +	// Smooth out transition between current camera and target
-+	ema(m_Camera.j, temp.j, firstPersonDeathDirectionSmoothing);
-+	ema(m_Camera.k, temp.k, firstPersonDeathDirectionSmoothing);
-+	ema(m_Camera.c, temp.c, firstPersonDeathPositionSmoothing);
++	if (m_customSmoothing) {
++		ema(m_Camera.j, temp.j, m_customSmoothing);
++		ema(m_Camera.k, temp.k, m_customSmoothing);
++		ema(m_Camera.c, temp.c, m_customSmoothing);
++	} else {
++		ema(m_Camera.j, temp.j, firstPersonDeathDirectionSmoothing);
++		ema(m_Camera.k, temp.k, firstPersonDeathDirectionSmoothing);
++		ema(m_Camera.c, temp.c, firstPersonDeathPositionSmoothing);
++	}
 +
 +	// update camera
 +	info.n.set(m_Camera.j);
@@ -1676,21 +1761,23 @@ index ffd7c19..f728fb7 100644
 +}
 \ No newline at end of file
 diff --git a/src/xrGame/EffectorBobbing.h b/src/xrGame/EffectorBobbing.h
-index 854b7a7..1a216d2 100644
+index 854b7a7..e202596 100644
 --- a/src/xrGame/EffectorBobbing.h
 +++ b/src/xrGame/EffectorBobbing.h
-@@ -33,3 +33,17 @@ public:
+@@ -33,3 +33,19 @@ public:
  };
  
  #endif //_EFFECTOR_BOBBING_H
 +
++// demonized: First Person Death Cam Effector
 +class CFPCamEffector : public CEffectorCam
 +{
 +public:
 +	Fvector m_Position;
 +	Fvector m_HPB;
 +	Fmatrix m_Camera;
-+	virtual void ema(Fvector& current, Fvector& target, int steps);
++	unsigned int m_customSmoothing; // 0 - use FPDeath smoothing params, no custom smoothing
++	virtual void ema(Fvector& current, Fvector& target, unsigned int steps);
 +	
 +public:
 +	CFPCamEffector();
@@ -1967,11 +2054,72 @@ index 3c89e6d..6e490ca 100644
  void CScriptXmlInit::ParseFile(LPCSTR xml_file)
  {
  	m_xml.Load(CONFIG_PATH, UI_PATH, xml_file);
+diff --git a/src/xrGame/Weapon.cpp b/src/xrGame/Weapon.cpp
+index 080f84d..a95c37f 100644
+--- a/src/xrGame/Weapon.cpp
++++ b/src/xrGame/Weapon.cpp
+@@ -641,6 +641,19 @@ void CWeapon::Load(LPCSTR section)
+ 	m_shoot_shake_mat.identity();
+ }
+ 
++// demonized: World model on stalkers adjustments
++void CWeapon::set_mFirePoint(Fvector &fire_point) {
++	vLoadedFirePoint = fire_point;
++}
++
++void CWeapon::set_mFirePoint2(Fvector &fire_point) {
++	vLoadedFirePoint2 = fire_point;
++}
++
++void CWeapon::set_mShellPoint(Fvector &fire_point) {
++	vLoadedShellPoint = fire_point;
++}
++
+ void CWeapon::LoadFireParams(LPCSTR section)
+ {
+ 	cam_recoil.Dispersion = deg2rad(pSettings->r_float(section, "cam_dispersion"));
+@@ -1775,6 +1788,21 @@ void CWeapon::reload(LPCSTR section)
+ 	m_ef_weapon_type = READ_IF_EXISTS(pSettings, r_u32, section, "ef_weapon_type", u32(-1));
+ }
+ 
++// demonized: World model on stalkers adjustments
++void CWeapon::set_mOffset(Fvector position, Fvector orientation) {
++	orientation.mul(PI / 180.f);
++
++	m_Offset.setHPB(orientation.x, orientation.y, orientation.z);
++	m_Offset.translate_over(position);
++}
++
++void CWeapon::set_mStrapOffset(Fvector position, Fvector orientation) {
++	orientation.mul(PI / 180.f);
++
++	m_StrapOffset.setHPB(orientation.x, orientation.y, orientation.z);
++	m_StrapOffset.translate_over(position);
++}
++
+ void CWeapon::create_physic_shell()
+ {
+ 	CPhysicsShellHolder::create_physic_shell();
 diff --git a/src/xrGame/Weapon.h b/src/xrGame/Weapon.h
-index 9880065..428ec4a 100644
+index 9880065..4add752 100644
 --- a/src/xrGame/Weapon.h
 +++ b/src/xrGame/Weapon.h
-@@ -386,7 +386,16 @@ public:
+@@ -103,6 +103,14 @@ public:
+ 
+ 	virtual void reinit();
+ 	virtual void reload(LPCSTR section);
++
++	// demonized: World model on stalkers adjustments
++	void set_mOffset(Fvector position, Fvector orientation);
++	void set_mStrapOffset(Fvector position, Fvector orientation);
++	void set_mFirePoint(Fvector &fire_point);
++	void set_mFirePoint2(Fvector &fire_point);
++	void set_mShellPoint(Fvector &fire_point);
++
+ 	virtual void create_physic_shell();
+ 	virtual void activate_physic_shell();
+ 	virtual void setup_physic_shell();
+@@ -386,7 +394,16 @@ public:
  	LPCSTR GetScopeNameScript() const { return *GetScopeName(); }
  	float GetFireDispersionScript() const { return fireDispersionBase; }
  	float RPMScript() const { return fOneShotTime; }
@@ -1988,7 +2136,7 @@ index 9880065..428ec4a 100644
  
  	virtual float Weight() const;
  	virtual u32 Cost() const;
-@@ -563,6 +572,42 @@ public:
+@@ -563,6 +580,42 @@ public:
  	CameraRecoil cam_recoil; // simple mode (walk, run)
  	CameraRecoil zoom_cam_recoil; // using zoom =(ironsight or scope)
  
@@ -2031,7 +2179,7 @@ index 9880065..428ec4a 100644
  protected:
  	//ôàêòîð óâåëè÷åíèÿ äèñïåðñèè ïðè ìàêñèìàëüíîé èçíîøåíîñòè
  	//(íà ñêîëüêî ïðîöåíòîâ óâåëè÷èòñÿ äèñïåðñèÿ)
-@@ -590,6 +635,17 @@ public:
+@@ -590,6 +643,17 @@ public:
  		return misfireEndCondition;
  	};
  
@@ -2049,7 +2197,7 @@ index 9880065..428ec4a 100644
  protected:
  	struct SPDM
  	{
-@@ -750,6 +806,107 @@ public:
+@@ -750,6 +814,107 @@ public:
  	{
  		return m_first_bullet_controller.get_fire_dispertion();
  	};
@@ -2157,7 +2305,7 @@ index 9880065..428ec4a 100644
  protected:
  	int iAmmoElapsed; // ammo in magazine, currently
  	int iMagazineSize; // size (in bullets) of magazine
-@@ -795,6 +952,20 @@ public:
+@@ -795,6 +960,20 @@ public:
  	virtual float GetHitPowerCritical() { return fvHitPowerCritical[g_SingleGameDifficulty]; };
  	virtual float GetHitImpulse() { return fHitImpulse; };
  	virtual float GetFireDistance() { return fireDistance; };
@@ -2179,7 +2327,7 @@ index 9880065..428ec4a 100644
  	IC u8 GetZoomType() const
  	{
 diff --git a/src/xrGame/WeaponAK74.cpp b/src/xrGame/WeaponAK74.cpp
-index 6f55903..5e8a276 100644
+index 6f55903..45f79bc 100644
 --- a/src/xrGame/WeaponAK74.cpp
 +++ b/src/xrGame/WeaponAK74.cpp
 @@ -62,7 +62,9 @@ void CWeaponAK74::script_register	(lua_State *L)
@@ -2192,7 +2340,7 @@ index 6f55903..5e8a276 100644
  			.def("GetZoomType", &CWeapon::GetZoomType)
  			
  			.def("Get_PDM_Base", &CWeapon::Get_PDM_Base)
-@@ -93,6 +95,76 @@ void CWeaponAK74::script_register	(lua_State *L)
+@@ -93,6 +95,83 @@ void CWeaponAK74::script_register	(lua_State *L)
  			.def("GetFireMode", &CWeapon::GetCurrentFireMode)
  
  			.def("GetInertionAimFactor", &CWeapon::GetInertionAimFactor)
@@ -2229,6 +2377,13 @@ index 6f55903..5e8a276 100644
 +			.def("SetHitPowerCritical", &CWeapon::SetHitPowerCritical)
 +			.def("SetHitImpulse", &CWeapon::SetHitImpulse)
 +			.def("SetFireDistance", &CWeapon::SetFireDistance)
++
++			// demonized: World model on stalkers adjustments
++			.def("Set_mOffset", &CWeapon::set_mOffset)
++			.def("Set_mStrapOffset", &CWeapon::set_mStrapOffset)
++			.def("Set_mFirePoint", &CWeapon::set_mFirePoint)
++			.def("Set_mFirePoint2", &CWeapon::set_mFirePoint2)
++			.def("Set_mShellPoint", &CWeapon::set_mShellPoint)
 +
 +			// Cam Recoil
 +			// Getters
@@ -2379,6 +2534,36 @@ index 908d83f..696ee7c 100644
  		if (!obj || !obj->m_pPhysicsShell || (itm && itm->IsQuestItem())) continue;
  
  		Fvector dir;
+diff --git a/src/xrGame/alife_simulator_script.cpp b/src/xrGame/alife_simulator_script.cpp
+index e5b96f1..34e7719 100644
+--- a/src/xrGame/alife_simulator_script.cpp
++++ b/src/xrGame/alife_simulator_script.cpp
+@@ -412,6 +412,15 @@ CSE_Abstract* reprocess_spawn(CALifeSimulator* self, CSE_Abstract* object)
+ 	return (self->server().Process_spawn(packet, clientID));
+ }
+ 
++// demonized: iterate alife objects
++void CALifeSimulator__iterate_objects(const CALifeSimulator* self, luabind::functor<bool> functor)
++{
++	const CALifeObjectRegistry &objects = self->objects();
++	for (const auto& se_obj : objects.objects()) {
++		if (functor(se_obj.second)) break;
++	}
++}
++
+ CSE_Abstract* try_to_clone_object(CALifeSimulator* self, CSE_Abstract* object, LPCSTR section, const Fvector& position,
+                                   u32 level_vertex_id, GameGraph::_GRAPH_ID game_vertex_id, ALife::_OBJECT_ID id_parent,
+                                   bool bRegister = true)
+@@ -514,6 +523,9 @@ void CALifeSimulator::script_register(lua_State* L)
+ 		.def("get_children", &get_children, return_stl_iterator)
+ 		//Alundaio: END
+ 
++		// demonized: iterate alife objects
++		.def("iterate_objects", &CALifeSimulator__iterate_objects)
++
+ 		, def("alife", &alife)
+ 	];
+ 
 diff --git a/src/xrGame/artefact_script.cpp b/src/xrGame/artefact_script.cpp
 index 90f6dcf..c3f787c 100644
 --- a/src/xrGame/artefact_script.cpp
@@ -2644,10 +2829,46 @@ index 0d3548b..e55621e 100644
  }; //class first_bullet_controller
  
 diff --git a/src/xrGame/level_script.cpp b/src/xrGame/level_script.cpp
-index c16d21c..b38133f 100644
+index c16d21c..919c249 100644
 --- a/src/xrGame/level_script.cpp
 +++ b/src/xrGame/level_script.cpp
-@@ -679,6 +679,15 @@ void set_snd_volume(float v)
+@@ -50,6 +50,7 @@
+ #include "../xrEngine/GameMtlLib.h"
+ #include "../xrEngine/xr_input.h"
+ #include "script_ini_file.h"
++#include "EffectorBobbing.h"
+ 
+ using namespace luabind;
+ 
+@@ -626,6 +627,27 @@ float add_cam_effector(LPCSTR fn, int id, bool cyclic, LPCSTR cb_func, float cam
+ 	return e->GetAnimatorLength();
+ }
+ 
++// demonized: Set custom camera position and direction with movement smoothing (for cutscenes, etc)
++void set_cam_position_direction(Fvector& position, Fvector& direction, unsigned int smoothing)
++{
++	CActor* actor = Actor();
++	actor->initFPCam();
++	actor->m_FPCam->m_HPB.set(direction);
++	actor->m_FPCam->m_Position.set(position);
++	actor->m_FPCam->m_customSmoothing = smoothing;
++}
++
++void set_cam_position_direction(Fvector& position, Fvector& direction)
++{
++	set_cam_position_direction(position, direction, 1);
++}
++
++void remove_cam_position_direction() 
++{
++	CActor* actor = Actor();
++	actor->removeFPCam();
++}
++
+ void remove_cam_effector(int id)
+ {
+ 	Actor()->Cameras().RemoveCamEffector((ECamEffectorType)id);
+@@ -679,6 +701,15 @@ void set_snd_volume(float v)
  	clamp(psSoundVFactor, 0.0f, 1.0f);
  }
  
@@ -2663,7 +2884,7 @@ index c16d21c..b38133f 100644
  #include "actor_statistic_mgr.h"
  
  void add_actor_points(LPCSTR sect, LPCSTR detail_key, int cnt, int pts)
-@@ -1705,6 +1714,8 @@ void CLevel::script_register(lua_State* L)
+@@ -1705,10 +1736,18 @@ void CLevel::script_register(lua_State* L)
  			def("get_snd_volume", &get_snd_volume),
  			def("get_rain_volume", &get_rain_volume),
  			def("set_snd_volume", &set_snd_volume),
@@ -2672,7 +2893,17 @@ index c16d21c..b38133f 100644
  			def("add_cam_effector", ((float (*)(LPCSTR, int, bool, LPCSTR))&add_cam_effector)),
  			def("add_cam_effector", ((float (*)(LPCSTR, int, bool, LPCSTR, float))&add_cam_effector)),
  			def("add_cam_effector", ((float (*)(LPCSTR, int, bool, LPCSTR, float, bool))&add_cam_effector)),
-@@ -1762,6 +1773,21 @@ void CLevel::script_register(lua_State* L)
+ 			def("add_cam_effector", ((float (*)(LPCSTR, int, bool, LPCSTR, float, bool, float))&add_cam_effector)),
++
++			// demonized: Set custom camera position and direction with movement smoothing (for cutscenes, etc)
++			def("set_cam_custom_position_direction", ((void (*)(Fvector&, Fvector&, unsigned int))&set_cam_position_direction)),
++			def("set_cam_custom_position_direction", ((void (*)(Fvector&, Fvector&))&set_cam_position_direction)),
++			def("remove_cam_custom_position_direction", &remove_cam_position_direction),
++
+ 			def("remove_cam_effector", &remove_cam_effector),
+ 			def("set_cam_effector_factor", &set_cam_effector_factor),
+ 			def("get_cam_effector_factor", &get_cam_effector_factor),
+@@ -1762,6 +1801,21 @@ void CLevel::script_register(lua_State* L)
  		.def_readonly("object", &script_rq_result::O)
  		.def_readonly("range", &script_rq_result::range)
  		.def_readonly("element", &script_rq_result::element)

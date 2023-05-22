@@ -176,6 +176,16 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.05.22**
+  * `alife():iterate_object(function(se_obj))` function to iterate all objects that are in the game
+  * `level.set_cam_custom_position_direction(Fvector position, Fvector direction)` and `level.remove_cam_custom_position_direction()` to manipulate camera in world coordinates
+  * CWeapon additional methods: world model on stalkers adjustments
+    * function Set_mOffset(Fvector position, Fvector orientation)
+    * function Set_mStrapOffset(Fvector position, Fvector orientation)
+    * function Set_mFirePoint(Fvector position)
+    * function Set_mFirePoint2(Fvector position)
+    * function Set_mShellPoint(Fvector position) 
+
 **2023.04.27**
 * SSS update
 
