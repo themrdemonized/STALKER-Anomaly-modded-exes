@@ -120,6 +120,7 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Added `bullet_on_impact` and `bullet_on_remove` callbacks, please refer to `callbacks_gameobject.script` file for available info about new callbacks
   * Potential fix for stuck monsters from OGSR Engine repo in `control_animation_base_accel.cpp`
   * Removed maximum engine limit of 5 artefacts on belt
+  * In case of missing translation for a string, the engine will fallback to english text for this string. To disable the behaviour, use console command `use_english_text_for_missing_translations 0`
 
 * Fixes and features by DPurple
 
@@ -176,6 +177,9 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.05.29**
+  * In case of missing translation for a string, the engine will fallback to english text for this string. To disable the behaviour, use console command `use_english_text_for_missing_translations 0`
+
 **2023.05.27**
   * `local res, obj_id = game.ui2world(pos)` for unprojecting from ui coordinates (ie. mouse cursor) to the world
 

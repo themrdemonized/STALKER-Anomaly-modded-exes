@@ -1097,10 +1097,41 @@ index dd3958c..f39a6c6 100644
    <ItemGroup>
      <ResourceCompile Include="xrCore.rc">
 diff --git a/src/xrCore/xrDebugNew.cpp b/src/xrCore/xrDebugNew.cpp
-index dd65e49..6f2f339 100644
+index dd65e49..1c3a710 100644
 --- a/src/xrCore/xrDebugNew.cpp
 +++ b/src/xrCore/xrDebugNew.cpp
-@@ -232,7 +232,7 @@ void xrDebug::backend(const char* expression, const char* description, const cha
+@@ -67,6 +67,20 @@ XRCORE_API xrDebug Debug;
+ 
+ static bool error_after_dialog = false;
+ 
++namespace crash_saving
++{
++    void (*save_impl)() = nullptr;
++	BOOL enabled = TRUE;
++
++    void save()
++    {
++        if (enabled && save_impl != nullptr)
++        {
++            (*save_impl)();
++        }
++    }
++}
++
+ //extern void BuildStackTrace();
+ //extern char g_stackTrace[100][4096];
+ //extern int g_stackTraceCount;
+@@ -206,6 +220,9 @@ void xrDebug::do_exit(const std::string& message)
+ void xrDebug::backend(const char* expression, const char* description, const char* argument0, const char* argument1,
+                       const char* file, int line, const char* function, bool& ignore_always)
+ {
++    // we save first
++    crash_saving::save();
++    
+ 	static xrCriticalSection CS
+ #ifdef PROFILE_CRITICAL_SECTIONS
+         (MUTEX_PROFILE_ID(xrDebug::backend))
+@@ -232,7 +249,7 @@ void xrDebug::backend(const char* expression, const char* description, const cha
  	ShowCursor(true);
  	ShowWindow(GetActiveWindow(), SW_FORCEMINIMIZE);
  	MessageBox(
@@ -1876,6 +1907,100 @@ index 7087c3a..a45da94 100644
  }
  
  void CGamePersistent::start_game_intro()
+diff --git a/src/xrGame/Level.cpp b/src/xrGame/Level.cpp
+index 2f93a35..b1e4c6a 100644
+--- a/src/xrGame/Level.cpp
++++ b/src/xrGame/Level.cpp
+@@ -96,6 +96,74 @@ u16	GetSpawnInfo(NET_Packet &P, u16 &parent_id)
+ #endif
+ //-AVO
+ 
++namespace crash_saving {
++	extern void(*save_impl)();
++	static bool g_isSaving = false;
++	int saveCountMax = 10;
++
++	void _save_impl()
++	{
++		if (g_isSaving) return;
++		if (saveCountMax <= 0) return;
++
++		int saveCount = -1;
++		g_isSaving = true;
++		NET_Packet net_packet;
++		net_packet.w_begin(M_SAVE_GAME);
++
++		std::string path = "fatal_ctd_save_";
++		std::string path_mask(path);
++		std::string path_ext = ".scop";
++		path_mask.append("*").append(path_ext);
++
++		FS_FileSet fset_temp;
++		FS.file_list(fset_temp, "$game_saves$", FS_ListFiles | FS_RootOnly, path_mask.c_str());
++
++		std::vector<FS_File> fset(fset_temp.begin(), fset_temp.end());
++		struct {
++			bool operator()(FS_File& a, FS_File& b) {
++				return a.time_write > b.time_write;
++			}
++		} sortFilesDesc;
++		std::sort(fset.begin(), fset.end(), sortFilesDesc);
++
++		//Msg("save mask %s", path_mask.c_str());
++
++		for (auto &file : fset)
++		{
++			string128 name;
++			xr_strcpy(name, sizeof(name), file.name.c_str());
++			std::string name_string(name);
++			name_string.erase(name_string.length() - path_ext.length());
++
++			//Msg("found save file %s, save_name %s", name, name_string.c_str());
++
++			try {
++				//Msg("save number %s", name_string.substr(path.length()).c_str());
++				int name_count = std::stoi(name_string.substr(path.length()));
++				saveCount = name_count;
++				break;
++			} catch (...) {
++				Msg("!error getting save number from %s", name);
++			}
++		}
++
++		saveCount++;
++		if (saveCount >= saveCountMax) {
++			saveCount = 0;
++		}
++
++		path.append(std::to_string(saveCount));
++		net_packet.w_stringZ(path.c_str());
++		net_packet.w_u8(1);
++		CLevel& level = Level();
++		if (&level != nullptr)
++		{
++			level.Send(net_packet, net_flags(1));
++		}
++
++	}
++}
+ 
+ CLevel::CLevel() :
+ 	IPureClient(Device.GetTimerGlobal())
+@@ -141,12 +209,14 @@ CLevel::CLevel() :
+ 	g_player_hud = xr_new<player_hud>();
+ 	g_player_hud->load_default();
+ 	Msg("%s", Core.Params);
++	crash_saving::save_impl = crash_saving::_save_impl; // CLevel ready, we can save now
+ }
+ 
+ extern CAI_Space* g_ai_space;
+ 
+ CLevel::~CLevel()
+ {
++	crash_saving::save_impl = nullptr; // CLevel not available, disable crash save
+ 	xr_delete(g_player_hud);
+ 	delete_data(hud_zones_list);
+ 	hud_zones_list = nullptr;
 diff --git a/src/xrGame/Level_Bullet_Manager.cpp b/src/xrGame/Level_Bullet_Manager.cpp
 index c68bb69..441a1b7 100644
 --- a/src/xrGame/Level_Bullet_Manager.cpp
@@ -2438,7 +2563,7 @@ index 10bd71f..02d3e9f 100644
  	float acceleration = accel_get(eAV_Braking);
  	float braking_dist = (nominal_speed * ((braking_mode) ? nominal_speed : m_man->movement().velocity_current())) / (2
 diff --git a/src/xrGame/ai/monsters/pseudogigant/pseudo_gigant.cpp b/src/xrGame/ai/monsters/pseudogigant/pseudo_gigant.cpp
-index 908d83f..696ee7c 100644
+index 908d83f..313f802 100644
 --- a/src/xrGame/ai/monsters/pseudogigant/pseudo_gigant.cpp
 +++ b/src/xrGame/ai/monsters/pseudogigant/pseudo_gigant.cpp
 @@ -17,6 +17,13 @@
@@ -2449,7 +2574,7 @@ index 908d83f..696ee7c 100644
 +#include "pch_script.h"
 +#include "../../script_game_object.h"
 +
-+//Flag for damaging NPCs and other objects by the stomp attack
++// demonized: Flag for damaging NPCs and other objects by the stomp attack
 +BOOL pseudogiantCanDamageObjects = 1;
 +
  
@@ -2577,7 +2702,7 @@ index 90f6dcf..c3f787c 100644
  		.def("SwitchVisibility", &CArtefact::SwitchVisibility)
  		.def("GetAfRank", &CArtefact::GetAfRank),
 diff --git a/src/xrGame/console_commands.cpp b/src/xrGame/console_commands.cpp
-index 2841970..dbd8d64 100644
+index 2841970..601f10e 100644
 --- a/src/xrGame/console_commands.cpp
 +++ b/src/xrGame/console_commands.cpp
 @@ -1,3 +1,4 @@
@@ -2585,18 +2710,23 @@ index 2841970..dbd8d64 100644
  #include "pch_script.h"
  #include "../xrEngine/xr_ioconsole.h"
  #include "../xrEngine/xr_ioc_cmd.h"
-@@ -110,6 +111,10 @@ float streff;
+@@ -110,6 +111,15 @@ float streff;
  
  extern BOOL g_ai_die_in_anomaly; //Alundaio
  
++//demonized: new console vars
 +extern BOOL firstPersonDeath;
-+
 +extern BOOL pseudogiantCanDamageObjects;
++extern BOOL use_english_text_for_missing_translations;
++namespace crash_saving {
++	extern BOOL enabled;
++	extern int saveCountMax;
++}
 +
  ENGINE_API extern float g_console_sensitive;
  
  u32 g_dead_body_collision = 1;
-@@ -458,6 +463,7 @@ public:
+@@ -458,6 +468,7 @@ public:
  };
  
  //-----------------------------------------------------------------------
@@ -2604,7 +2734,7 @@ index 2841970..dbd8d64 100644
  class CCC_DemoRecord : public IConsole_Command
  {
  public:
-@@ -482,7 +488,55 @@ public:
+@@ -482,7 +493,55 @@ public:
  		string_path fn;
  		FS.update_path(fn, "$game_saves$", fn_);
  
@@ -2661,7 +2791,7 @@ index 2841970..dbd8d64 100644
  	}
  };
  
-@@ -515,6 +569,35 @@ public:
+@@ -515,6 +574,35 @@ public:
  
  Fvector CCC_DemoRecordSetPos::p = {0, 0, 0};
  
@@ -2697,7 +2827,7 @@ index 2841970..dbd8d64 100644
  class CCC_DemoPlay : public IConsole_Command
  {
  public:
-@@ -555,6 +638,57 @@ public:
+@@ -555,6 +643,57 @@ public:
  	}
  };
  
@@ -2755,7 +2885,7 @@ index 2841970..dbd8d64 100644
  // helper functions --------------------------------------------
  
  bool valid_saved_game_name(LPCSTR file_name)
-@@ -2072,7 +2206,10 @@ void CCC_RegisterCommands()
+@@ -2072,7 +2211,10 @@ void CCC_RegisterCommands()
  	//#ifndef MASTER_GOLD
  	CMD1(CCC_DemoPlay, "demo_play");
  	CMD1(CCC_DemoRecord, "demo_record");
@@ -2766,7 +2896,7 @@ index 2841970..dbd8d64 100644
  	//#endif // #ifndef MASTER_GOLD
  
  #ifndef MASTER_GOLD
-@@ -2448,6 +2585,8 @@ void CCC_RegisterCommands()
+@@ -2448,6 +2590,8 @@ void CCC_RegisterCommands()
  
  	CMD4(CCC_Integer, "ai_die_in_anomaly", &g_ai_die_in_anomaly, 0, 1); //Alundaio
  
@@ -2775,10 +2905,13 @@ index 2841970..dbd8d64 100644
  	CMD4(CCC_Float, "ai_aim_predict_time", &g_aim_predict_time, 0.f, 10.f);
  
  	CMD4(CCC_Float, "head_bob_factor", &g_head_bob_factor, 0.f, 2.f);
-@@ -2508,6 +2647,14 @@ void CCC_RegisterCommands()
+@@ -2508,6 +2652,21 @@ void CCC_RegisterCommands()
  	CMD3(CCC_Mask, "g_feel_grenade", &psDeviceFlags2, rsFeelGrenade);
  	CMD3(CCC_Mask, "g_always_active", &psDeviceFlags2, rsAlwaysActive);
  
++	// demonized: use_english_text_for_missing_translations
++	CMD4(CCC_Integer, "use_english_text_for_missing_translations", &use_english_text_for_missing_translations, 0, 1);
++
 +	//First Person Death
 +	CMD4(CCC_Integer, "first_person_death", &firstPersonDeath, 0, 1);
 +	CMD1(CCC_FPDDirectionOffset, "first_person_death_direction_offset");
@@ -2786,6 +2919,10 @@ index 2841970..dbd8d64 100644
 +	CMD4(CCC_Integer, "first_person_death_position_smoothing", &firstPersonDeathPositionSmoothing, 1, 30);
 +	CMD4(CCC_Integer, "first_person_death_direction_smoothing", &firstPersonDeathDirectionSmoothing, 1, 60);
 +	CMD4(CCC_Float, "first_person_death_near_plane_offset", &viewportNearOffset, -0.1, 0.5);
++
++	//Toggle crash saving
++	CMD4(CCC_Integer, "crash_save", &crash_saving::enabled, 0, 1);
++	CMD4(CCC_Integer, "crash_save_count", &crash_saving::saveCountMax, 0, 20);
 +
  	if (strstr(Core.Params, "-dbgdev"))
  		CMD4(CCC_Float, "g_streff", &streff, -10.f, 10.f);
@@ -3456,6 +3593,133 @@ index aeeaf8f..236d588 100644
  #endif
  
  		.def("set_can_be_harmed", &CScriptGameObject::SetCanBeHarmed)
+diff --git a/src/xrGame/string_table.cpp b/src/xrGame/string_table.cpp
+index bc29288..300c635 100644
+--- a/src/xrGame/string_table.cpp
++++ b/src/xrGame/string_table.cpp
+@@ -30,6 +30,8 @@ void CStringTable::rescan()
+ 
+ extern void refresh_npc_names();
+ 
++// demonized: use english text if locale text string is missing
++BOOL use_english_text_for_missing_translations = TRUE;
+ void CStringTable::Init()
+ {
+ 	if (NULL != pData) return;
+@@ -39,6 +41,24 @@ void CStringTable::Init()
+ 	//имя языка, если не задано (NULL), то первый <text> в <string> в XML
+ 	pData->m_sLanguage = READ_IF_EXISTS(pSettings, r_string, "string_table", "language", "eng");
+ 
++	// demonized: parse english files first, then they will be replaced by current locale
++	if (use_english_text_for_missing_translations && xr_strcmp(pData->m_sLanguage, "eng") != 0) {
++		FS_FileSet fset;
++		string_path files_mask;
++		xr_sprintf(files_mask, "text\\%s\\*.xml", "eng");
++		FS.file_list(fset, "$game_config$", FS_ListFiles, files_mask);
++		FS_FileSetIt fit = fset.begin();
++		FS_FileSetIt fit_e = fset.end();
++
++		for (; fit != fit_e; ++fit)
++		{
++			string_path fn, ext;
++			_splitpath((*fit).name.c_str(), 0, 0, fn, ext);
++			xr_strcat(fn, ext);
++
++			Load(fn, "eng");
++		}
++	}
+ 
+ 	//---
+ 	FS_FileSet fset;
+@@ -77,11 +97,12 @@ void CStringTable::Init()
+ 	discord_gameinfo.ex_update = true;
+ }
+ 
+-void CStringTable::Load(LPCSTR xml_file_full)
++void CStringTable::Load(LPCSTR xml_file_full, LPCSTR lang_in)
+ {
++	LPCSTR lang = lang_in ? lang_in : pData->m_sLanguage.c_str();
+ 	CUIXml uiXml;
+ 	string_path _s;
+-	strconcat(sizeof(_s), _s, "text\\", pData->m_sLanguage.c_str());
++	strconcat(sizeof(_s), _s, "text\\", lang);
+ 
+ 	uiXml.Load(CONFIG_PATH, _s, xml_file_full);
+ 
+@@ -98,7 +119,7 @@ void CStringTable::Load(LPCSTR xml_file_full)
+ 		LPCSTR string_text = uiXml.Read(uiXml.GetRoot(), "string:text", i, NULL);
+ 
+ 		if (m_bWriteErrorsToLog && string_text)
+-			Msg("[string table] '%s' no translation in '%s'", string_name, pData->m_sLanguage.c_str());
++			Msg("[string table] '%s' no translation in '%s'", string_name, lang);
+ 
+ 		VERIFY3(string_text, "string table entry does not have a text", string_name);
+ 
+diff --git a/src/xrGame/string_table.h b/src/xrGame/string_table.h
+index 1f0faea..0132c16 100644
+--- a/src/xrGame/string_table.h
++++ b/src/xrGame/string_table.h
+@@ -33,7 +33,7 @@ public:
+ 	void ReloadLanguage();
+ private:
+ 	void Init();
+-	void Load(LPCSTR xml_file);
++	void Load(LPCSTR xml_file, LPCSTR lang = 0);
+ 	static STRING_VALUE ParseLine(LPCSTR str, LPCSTR key, bool bFirst);
+ 	static STRING_TABLE_DATA* pData;
+ };
+diff --git a/src/xrGame/ui/UILines.cpp b/src/xrGame/ui/UILines.cpp
+index d639789..44b48a1 100644
+--- a/src/xrGame/ui/UILines.cpp
++++ b/src/xrGame/ui/UILines.cpp
+@@ -7,6 +7,7 @@
+ // Copyright 2005 GSC Game World
+ 
+ #include "StdAfx.h"
++#include <cstdio>
+ 
+ #include "UILines.h"
+ #include "UIXmlInit.h"
+@@ -158,7 +159,12 @@ void CUILines::ParseText(bool force)
+ 				{
+ 					bNewLines = TRUE;
+ 					*pszTemp = '\0';
+-					ptmp_line->AddSubLine(pszSearch, tcolor);
++					CUISubLine subline;
++					subline.m_text = pszSearch;
++					subline.m_color = tcolor;
++					subline.m_last_in_line = true;
++					//ptmp_line->AddSubLine(pszSearch, tcolor);
++					ptmp_line->AddSubLine(&subline);
+ 					pszSearch = pszTemp + 2;
+ 				}
+ 				ptmp_line->AddSubLine(pszSearch, tcolor);
+@@ -201,8 +207,9 @@ void CUILines::ParseText(bool force)
+ 		{
+ 			for (int i = 0; i < vsz; i++)
+ 			{
+-				const char* pszText = line->m_subLines[i].m_text.c_str();
+-				const u32 tcolor = line->m_subLines[i].m_color;
++				CUISubLine* pSubLine = &line->m_subLines[i];
++				const char* pszText = pSubLine->m_text.c_str();
++				const u32 tcolor = pSubLine->m_color;
+ 				u16 uFrom = 0, uPartLen = 0;
+ 				VERIFY(pszText);
+ 				u16 nMarkers = m_pFont->SplitByWidth(aMarkers, UBUFFER_SIZE, fTargetWidth, pszText);
+@@ -222,8 +229,11 @@ void CUILines::ParseText(bool force)
+ 				}
+ 				strncpy_s(szTempLine, pszText + uFrom, MAX_MB_CHARS);
+ 				tmp_line.AddSubLine(szTempLine, tcolor);
+-				m_lines.push_back(tmp_line);
+-				tmp_line.Clear();
++				if (pSubLine->m_last_in_line || i == (vsz -1))
++				{
++					m_lines.push_back(tmp_line);
++					tmp_line.Clear();
++				}
+ 			}
+ 		}
+ 	}
 diff --git a/src/xrGame/ui/UILogsWnd.cpp b/src/xrGame/ui/UILogsWnd.cpp
 index cda3adc..6d1fad1 100644
 --- a/src/xrGame/ui/UILogsWnd.cpp
