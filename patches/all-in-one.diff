@@ -5026,7 +5026,7 @@ index 2f93a35..b1e4c6a 100644
  	delete_data(hud_zones_list);
  	hud_zones_list = nullptr;
 diff --git a/src/xrGame/Level_Bullet_Manager.cpp b/src/xrGame/Level_Bullet_Manager.cpp
-index c68bb69..441a1b7 100644
+index c68bb69..1c59f4b 100644
 --- a/src/xrGame/Level_Bullet_Manager.cpp
 +++ b/src/xrGame/Level_Bullet_Manager.cpp
 @@ -12,6 +12,7 @@
@@ -5055,7 +5055,32 @@ index c68bb69..441a1b7 100644
  }
  
  
-@@ -836,6 +841,13 @@ bool CBulletManager::trajectory_check_error(
+@@ -229,6 +234,24 @@ void CBulletManager::AddBullet(const Fvector& position,
+ 	            e_hit_type, maximum_distance, cartridge, air_resistance_factor, SendHit, iShotNum);
+ 	//	bullet.frame_num			= Device.dwFrame;
+ 	bullet.flags.aim_bullet = AimBullet;
++
++	// demonized - bullet on init callback
++	luabind::functor<void> funct;
++	if (ai().script_engine().functor("_G.CBulletOnInit", funct)) {
++		funct(
++			position,
++			direction,
++			starting_speed,
++			0,
++			bullet.catridgeSection,
++			bullet.bulletId,
++			bullet.weapon_id,
++			bullet.parent_id,
++			65535,
++			NULL
++		);
++	}
++
+ 	if (!IsGameTypeSingle())
+ 	{
+ 		if (SendHit)
+@@ -836,6 +859,13 @@ bool CBulletManager::trajectory_check_error(
  	bullet.start_velocity = Fvector().mul(bullet.dir, bullet.speed);
  	bullet.born_time += iFloor(data.collide_time * 1000.f);
  	bullet.life_time = 0.f;
@@ -5069,7 +5094,7 @@ index c68bb69..441a1b7 100644
  	return (false);
  }
  
-@@ -866,6 +878,32 @@ static bool try_update_bullet(SBullet& bullet, Fvector const& gravity, float con
+@@ -866,6 +896,32 @@ static bool try_update_bullet(SBullet& bullet, Fvector const& gravity, float con
  
  	bullet.bullet_pos = new_position;
  	bullet.dir = Fvector(new_velocity).normalize_safe();
@@ -5102,7 +5127,7 @@ index c68bb69..441a1b7 100644
  	bullet.life_time = time;
  	return (true);
  }
-@@ -1108,16 +1146,52 @@ void CBulletManager::CommitEvents() // @ the start of frame
+@@ -1108,16 +1164,52 @@ void CBulletManager::CommitEvents() // @ the start of frame
  	for (u32 _it = 0; _it < m_Events.size(); _it++)
  	{
  		_event& E = m_Events[_it];
