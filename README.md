@@ -1,9 +1,9 @@
-# STALKER-Anomaly-modded-exes
+![Untitled](https://github.com/themrdemonized/STALKER-Anomaly-modded-exes/assets/46323442/b5b57f01-1013-41db-8f37-7512dc316370)# STALKER-Anomaly-modded-exes
 
 Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by community required for some advanced mods to work.
 
 # Read the instructions PLEASE!!!
- ![image](https://media.moddb.com/images/members/1/772/771864/profile/image.png)
+![image](https://github.com/themrdemonized/STALKER-Anomaly-modded-exes/assets/46323442/f945491e-0de7-4bdc-9449-77344e807c3f)
 
 Download STALKER-Anomaly-modded-exes.zip archive.
 Unpack all directories directly into your Anomaly game folder, overwrite files if requested.
