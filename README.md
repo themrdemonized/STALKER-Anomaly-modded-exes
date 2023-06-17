@@ -1,4 +1,4 @@
-![Untitled](https://github.com/themrdemonized/STALKER-Anomaly-modded-exes/assets/46323442/b5b57f01-1013-41db-8f37-7512dc316370)# STALKER-Anomaly-modded-exes
+# STALKER-Anomaly-modded-exes
 
 Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by community required for some advanced mods to work.
 
