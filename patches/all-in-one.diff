@@ -2262,6 +2262,19 @@ index 0b59b29..2d6adab 100644
  	}
  
  
+diff --git a/src/build_config_defines.h b/src/build_config_defines.h
+index 3f15b2c..8158b52 100644
+--- a/src/build_config_defines.h
++++ b/src/build_config_defines.h
+@@ -6,7 +6,7 @@
+ #define INVENTORY_UPGRADE_CALLBACKS						// calls lua function inventory_upgrades.effect_upgrade_item
+ #define ACTOR_BEFORE_DEATH_CALLBACK						// For extending the life of the actor to fake death or do other tasks that need to happen before actor is dead
+ #define INPUT_CALLBACKS									// (eKeyPress, eKeyRelease, eKeyHold)
+-//#define MOUSE_INPUT_CALLBACKS							// (eMouseMove, eMouseWheel)
++#define MOUSE_INPUT_CALLBACKS							// (eMouseMove, eMouseWheel)
+ #define ENGINE_LUA_ALIFE_STORAGE_MANAGER_CALLBACKS		// calls lua functions from engine in a script named alife_storage_manager.script  (alife_storage_manager.CALifeStorageManager_save) and (alife_storage_manager.CALifeStorageManager_load)
+ #define ENGINE_LUA_ALIFE_UPDAGE_MANAGER_CALLBACKS		// calls lua function named on_before_change_level and on_after_new_game in _G.script when enabled
+ //-CALLBACKS
 diff --git a/src/xrCore/Xr_ini.cpp b/src/xrCore/Xr_ini.cpp
 index 3f5ac84..cce213c 100644
 --- a/src/xrCore/Xr_ini.cpp
@@ -4172,7 +4185,7 @@ index a1ec515..21a3385 100644
      extern BOOL debug_destroy;
      CMD4(CCC_Integer, "debug_destroy", &debug_destroy, FALSE, TRUE);
 diff --git a/src/xrGame/Actor.cpp b/src/xrGame/Actor.cpp
-index 899a940..0273103 100644
+index 899a940..9bf276b 100644
 --- a/src/xrGame/Actor.cpp
 +++ b/src/xrGame/Actor.cpp
 @@ -246,6 +246,8 @@ CActor::CActor() : CEntityAlive(), current_ik_cam_shift(0)
@@ -4223,7 +4236,35 @@ index 899a940..0273103 100644
  		CurrentGameUI()->HideShownDialogs();
  
  		/* avo: attempt to set camera on timer */
-@@ -1933,7 +1950,8 @@ extern	BOOL	g_ShowAnimationInfo		;
+@@ -1566,8 +1583,26 @@ void CActor::shedule_Update(u32 DT)
+ 		if (bHudView)
+ 		{
+ 			CInventoryItem* pInvItem = inventory().ActiveItem();
+-			if (!pInvItem)
++			if (pInvItem)
++			{
++				CHudItem* pHudItem = smart_cast<CHudItem*>(pInvItem);
++				if (pHudItem)
++				{
++					if (pHudItem->IsHidden())
++					{
++						g_player_hud->detach_item(pHudItem);
++					}
++					else
++					{
++						g_player_hud->attach_item(pHudItem);
++					}
++				}
++			}
++			else
++			{
+ 				g_player_hud->detach_item_idx(0);
++				//Msg("---No active item in inventory(), item 0 detached.");
++			}
+ 		}
+ 		else
+ 		{
+@@ -1933,7 +1968,8 @@ extern	BOOL	g_ShowAnimationInfo		;
  void CActor::OnHUDDraw(CCustomHUD*)
  {
  	R_ASSERT(IsFocused());
@@ -4233,7 +4274,7 @@ index 899a940..0273103 100644
  		g_player_hud->render_hud();
  
  
-@@ -2675,3 +2693,20 @@ void CActor::SwitchNightVision(bool vision_on, bool use_sounds, bool send_event)
+@@ -2675,3 +2711,20 @@ void CActor::SwitchNightVision(bool vision_on, bool use_sounds, bool send_event)
  		//Msg("GE_TRADER_FLAGS event sent %d", m_trader_flags.get());
  	}
  }
@@ -4255,7 +4296,7 @@ index 899a940..0273103 100644
 +	}
 +}
 diff --git a/src/xrGame/Actor.h b/src/xrGame/Actor.h
-index 1440969..bd9000f 100644
+index 1440969..eee4444 100644
 --- a/src/xrGame/Actor.h
 +++ b/src/xrGame/Actor.h
 @@ -61,6 +61,7 @@ class CActorStatisticMgr;
@@ -4281,6 +4322,16 @@ index 1440969..bd9000f 100644
  public:
  	virtual BOOL AlwaysTheCrow() { return TRUE; }
  
+@@ -458,6 +467,9 @@ public:
+ 	float m_fRun_StrafeFactor;
+ 	float m_fSprint_StrafeFactor;
+ 
++	// demonized: lookout modifier
++	float m_fLookoutFactor = 1;
++
+ public:
+ 	Fvector GetMovementSpeed() { return NET_SavedAccel; };
+ 	//////////////////////////////////////////////////////////////////////////
 diff --git a/src/xrGame/ActorCameras.cpp b/src/xrGame/ActorCameras.cpp
 index 19a5c6c..0b324e9 100644
 --- a/src/xrGame/ActorCameras.cpp
@@ -4391,6 +4442,20 @@ index 8499334..ad4f3ec 100644
  }
  
  static u16 SlotsToCheck [] = {
+diff --git a/src/xrGame/Actor_Movement.cpp b/src/xrGame/Actor_Movement.cpp
+index b95ff6c..b49421b 100644
+--- a/src/xrGame/Actor_Movement.cpp
++++ b/src/xrGame/Actor_Movement.cpp
+@@ -426,6 +426,9 @@ void CActor::g_Orientate(u32 mstate_rl, float dt)
+ 	{
+ 		tgt_roll = (mstate_rl & mcLLookout) ? -ACTOR_LLOOKOUT_ANGLE : ACTOR_RLOOKOUT_ANGLE;
+ 
++		// demonized: add lookout modifier
++		tgt_roll *= m_fLookoutFactor;
++
+ 		if ((mstate_rl & mcLLookout) && (mstate_rl & mcRLookout))
+ 			tgt_roll = 0.0f;
+ 	}
 diff --git a/src/xrGame/Actor_Weapon.cpp b/src/xrGame/Actor_Weapon.cpp
 index 14eefbd..931a042 100644
 --- a/src/xrGame/Actor_Weapon.cpp
@@ -8023,7 +8088,7 @@ index 5489997..9a1a917 100644
  LPCSTR CScriptGameObject::bone_name(u16 id, bool bHud)
  {
 diff --git a/src/xrGame/script_game_object.h b/src/xrGame/script_game_object.h
-index 640dcab..34aec57 100644
+index 640dcab..233e7fa 100644
 --- a/src/xrGame/script_game_object.h
 +++ b/src/xrGame/script_game_object.h
 @@ -683,6 +683,7 @@ public:
@@ -8044,7 +8109,7 @@ index 640dcab..34aec57 100644
  	//Eatable items
  	void SetRemainingUses(u8 value);
  	u8 GetRemainingUses();
-@@ -1027,6 +1031,10 @@ public:
+@@ -1027,6 +1031,14 @@ public:
  	void SetActorRunCoef(float run_coef);
  	float GetActorRunBackCoef() const;
  	void SetActorRunBackCoef(float run_back_coef);
@@ -8052,6 +8117,10 @@ index 640dcab..34aec57 100644
 +	void SetActorWalkAccel(float val);
 +	float GetActorWalkBackCoef() const;
 +	void SetActorWalkBackCoef(float val);
++
++	// demonized: Adjust Lookout coeff
++	float GetActorLookoutCoef() const;
++	void SetActorLookoutCoef(float val);
  
  	void SetCharacterIcon(LPCSTR iconName);
  #endif
@@ -8083,7 +8152,7 @@ index c7b3f95..d2d6f94 100644
  {
  	CActor* actor = smart_cast<CActor*>(&object());
 diff --git a/src/xrGame/script_game_object_inventory_owner.cpp b/src/xrGame/script_game_object_inventory_owner.cpp
-index 3ad0a2f..d7697f7 100644
+index 3ad0a2f..377a214 100644
 --- a/src/xrGame/script_game_object_inventory_owner.cpp
 +++ b/src/xrGame/script_game_object_inventory_owner.cpp
 @@ -2491,6 +2491,55 @@ void CScriptGameObject::SetActorRunBackCoef(float run_back_coef)
@@ -8142,8 +8211,39 @@ index 3ad0a2f..d7697f7 100644
  void CScriptGameObject::SetCharacterIcon(LPCSTR iconName)
  {
  	CInventoryOwner* pInventoryOwner = smart_cast<CInventoryOwner*>(&object());
+@@ -2503,5 +2552,30 @@ void CScriptGameObject::SetCharacterIcon(LPCSTR iconName)
+ 	}
+ 	return pInventoryOwner->SetIcon(iconName);
+ }
++
++// demonized: Adjust Lookout factor
++float CScriptGameObject::GetActorLookoutCoef() const
++{
++	CActor* pActor = smart_cast<CActor*>(&object());
++	if (!pActor)
++	{
++		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
++			"CActor : cannot access class member GetActorLookoutCoef!");
++		return (false);
++	}
++	return (pActor->m_fLookoutFactor);
++}
++void CScriptGameObject::SetActorLookoutCoef(float val)
++{
++	CActor* pActor = smart_cast<CActor*>(&object());
++	if (!pActor)
++	{
++		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
++			"CActor : cannot access class member SetActorLookoutCoef!");
++		return;
++	}
++	pActor->m_fLookoutFactor = val;
++}
++
+ #endif
+ //Alundaio: END
 diff --git a/src/xrGame/script_game_object_script3.cpp b/src/xrGame/script_game_object_script3.cpp
-index aeeaf8f..236d588 100644
+index aeeaf8f..0a1e46c 100644
 --- a/src/xrGame/script_game_object_script3.cpp
 +++ b/src/xrGame/script_game_object_script3.cpp
 @@ -115,6 +115,7 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
@@ -8170,7 +8270,7 @@ index aeeaf8f..236d588 100644
  
  		//HELICOPTER
  		.def("get_helicopter", &CScriptGameObject::get_helicopter)
-@@ -536,6 +539,12 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
+@@ -536,6 +539,16 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
  		.def("get_actor_runback_coef", &CScriptGameObject::GetActorRunBackCoef)
  		.def("set_actor_runback_coef", &CScriptGameObject::SetActorRunBackCoef)
  		//end AVO
@@ -8180,6 +8280,10 @@ index aeeaf8f..236d588 100644
 +		.def("set_actor_walk_accel", &CScriptGameObject::SetActorWalkAccel)
 +		.def("get_actor_walk_back_coef", &CScriptGameObject::GetActorWalkBackCoef)
 +		.def("set_actor_walk_back_coef", &CScriptGameObject::SetActorWalkBackCoef)
++
++		// demonized: Adjust Lookout factor
++		.def("get_actor_lookout_coef", &CScriptGameObject::GetActorLookoutCoef)
++		.def("set_actor_lookout_coef", &CScriptGameObject::SetActorLookoutCoef)
  #endif
  
  		.def("set_can_be_harmed", &CScriptGameObject::SetCanBeHarmed)

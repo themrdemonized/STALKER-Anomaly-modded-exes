@@ -12,7 +12,6 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
 # List of patches
 
 * DLTX by MerelyMezz with edits and bugfixes by demonized, differences compare to original:
-
   * Attempting to override sections no longer crash the game, but prints the message into the log. All sections that triggers that error will be printed
   * Duplicate section errors now prints the root file where the error happened for easier checking mod_... ltxes
   * Print of class and script errors in console
@@ -51,44 +50,22 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Here you can get the LTXDiff tool with set of scripts for converting ordinary mods to DLTX format (https://www.moddb.com/mods/stalker-anomaly/addons/dltxify-by-right-click-for-modders-tool).
 
 * DXML by demonized
-
   * Allows to modify contents of loaded xml files before processing by engine by utilizing Lua scripts
   * For more information see DXML.md guide.
 
-* Possiblity to unlocalize Lua variables in scripts before loading, making them global to the script namespace by demonized
-
+* Possibility to unlocalize Lua variables in scripts before loading, making them global to the script namespace
   * For unlocalizing a variable in the script, please refer to documentation in test file in `gamedata/configs/unlocalizers` folder
 
 * Doppler effect of sounds based on code by Cribbledirge and edited by demonized.
-
-  * To edit effect strength, type in console `snd_doppler_power [0, 5]`. Choosing power 0 will disable the feature
-
-* True First Person Death Camera, that will stay with player when he dies and will react accordingly to player's head transforms, by demonized, with possibility to adjust its settings.
+* True First Person Death Camera, that will stay with player when he dies and will react accordingly to player's head transforms, with possibility to adjust its settings.
   * Known bugs:
     * If the player falls with face straight into the ground, the camera will clip underground due to model being clipped as well with
-    
-  * Additional console commands
-    * `first_person_death` // Enable First Person Death Camera
-    * `first_person_death_direction_offset` // FPD Camera Direction Offset (in DEGREES)
-    * `first_person_death_position_offset` // FPD Camera Position Offset (x, y, z)
-    * `first_person_death_position_smoothing` // FPD Camera Position Change Smoothing
-    * `first_person_death_direction_smoothing` // FPD Camera Direction Change Smoothing
-    * `first_person_death_near_plane_offset` // FPD Camera Near Plane Offset
 
+* Pseudogiant stomps now can kill and damage any object, stalker or mutant, instead of only actor, configurable via console commands
 
-* Additions to demo_record commands by demonized
+* New console commands for demo record stuff
 
-  * New console commands:
-    * `demo_record_blocked_input 1` will start demo_record but you won't be available to move it or stop it, its intended for manipulation via scripts executing console commands below. The console and Esc key are available
-    * `demo_record_stop` will stop all launched `demo_record` commands, including with blocked input ones 
-    * `demo_set_cam_direction <head, pitch, roll>` will set the direction the camera is facing and its roll. The parameters are in RADIANS, beware. Use this with `demo_set_cam_position <x, y, z>` to manipulate camera via scripts
-
-* Added CGameObject::NetSpawn and NetDestroy callbacks to Lua (file callbacks_gameobject.script), to register callback use
-
-  ```lua
-  RegisterScriptCallback("game_object_on_net_spawn", function(obj))
-  RegisterScriptCallback("game_object_on_net_destroy", function(obj))
-  ```
+* Added CGameObject::NetSpawn and NetDestroy callbacks to Lua
 
 * Added `gameobjects_registry` table in `callbacks_gameobject.script` that contains all online game objects and updates accordingly. Additionally, a global iterator `game_objects_iter` added that will go through all online game objects
 
@@ -98,29 +75,21 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   end
   ```
 
-* Pseudogiant stomps now can kill and damage any object, stalker or mutant, instead of only actor. New callbacks provided for pseudogiants attacks in callbacks_gameobject.script
+* In case of missing translation for a string, the engine will fallback to english text for this string.
 
-  * To disable new functionality, type in console `pseudogiant_can_damage_objects_on_stomp 0`
+* Additional functions and console commands described in `lua_help_ex.script`
+
+* Additional callbacks described in `callbacks_gameobject.script`
 
 * Additional edits and bugfixes by demonized
-  
-  * Additional callbacks and exports described in `lua_help_ex.script`
   * Restored "Fatal Error" MessageBox popup in case of encountering fatal engine errors like it was on Windows 7 or lower
   * In case of typical first person model/animation errors, the game will print the section that has defined model
   * MAX_TRIS const increased from 1024 to 16384
   * Enabled death animations for CWeaponAutomaticShotgun class
   * Fixed sorting news in News Tab in PDA
   * Added getting material of ray_pick() result with all of its properties
-  * Added `bone_direction()` function for game objects
-  * Added `level.get_music_volume()` and `level.set_music_volume()` functions to adjust music volume in runtime without messing with console commands
-  * Added `on_loading_screen_key_prompt` callback for when loading screen happens and "Press Any Key to Continue" prompt appears
-  * Added `on_loading_screen_dismissed` callback for when player dismisses loading screen after "Press Any Key to Continue" pressed
-  * Added `on_specific_character_dialog_list` callback that allows to manipulate available actor dialog list defined in characted_desc...xml files in `<actor_dialog>` tags
-  * Added `on_specific_character_init` callback that allows to manipulate information about specific character such as rank, money, faction, etc.
-  * Added `bullet_on_init`, `bullet_on_impact` and `bullet_on_remove` callbacks, please refer to `callbacks_gameobject.script` file for available info about new callbacks
   * Potential fix for stuck monsters from OGSR Engine repo in `control_animation_base_accel.cpp`
   * Removed maximum engine limit of 5 artefacts on belt
-  * In case of missing translation for a string, the engine will fallback to english text for this string. To disable the behaviour, use console command `use_english_text_for_missing_translations 0`
 
 * Fixes and features by DPurple
 
@@ -177,6 +146,11 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.06.30**
+* Added mouse wheel callback `on_mouse_wheel`, please refer to callbacks_gameobject.script file for available info about new callback
+* Added `db.actor:get_actor_lookout_coef()` and `db.actor:set_actor_lookout_coef(float)` functions for manipulating maximum lean angle
+* 3rd person fix by 
+
 **2023.06.17**
 * Added `bullet_on_init` callback, please refer to callbacks_gameobject.script file for available info about new callback
 * Small cleanup of dxml_core.script
