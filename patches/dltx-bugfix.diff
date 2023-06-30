@@ -2235,6 +2235,30 @@ index 80938ef..5fb4aab 100644
  
  	float fly_dist; //дистанция которую пуля пролетела
  	Fvector tracer_start_position;
+diff --git a/src/xrGame/Level_input.cpp b/src/xrGame/Level_input.cpp
+index 3d06b55..a410863 100644
+--- a/src/xrGame/Level_input.cpp
++++ b/src/xrGame/Level_input.cpp
+@@ -56,7 +56,18 @@ void CLevel::IR_OnMouseWheel(int direction)
+ 
+ 	/* avo: script callback */
+ #ifdef MOUSE_INPUT_CALLBACKS
+-    if (g_actor) g_actor->callback(GameObject::eMouseWheel)(direction);
++    if (g_actor) {
++        // demonized: add mouse wheel callback with consuming input
++        luabind::functor<bool> funct;
++        if (ai().script_engine().functor("_G.COnMouseWheel", funct))
++        {
++            if (!funct(direction))
++            {
++                return;
++            }
++        }
++        //g_actor->callback(GameObject::eMouseWheel)(direction);
++    }
+ #endif
+ 	/* avo: end */
+ 
 diff --git a/src/xrGame/ScriptXMLInit.cpp b/src/xrGame/ScriptXMLInit.cpp
 index 3c89e6d..6e490ca 100644
 --- a/src/xrGame/ScriptXMLInit.cpp
