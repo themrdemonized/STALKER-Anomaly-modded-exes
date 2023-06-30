@@ -148,7 +148,7 @@ How to compile exes:
 **2023.06.30**
 * Added mouse wheel callback `on_mouse_wheel`, please refer to callbacks_gameobject.script file for available info about new callback
 * Added `db.actor:get_actor_lookout_coef()` and `db.actor:set_actor_lookout_coef(float)` functions for manipulating maximum lean angle
-* 3rd person fix by 
+* Fix of gun disappearing when switching between 1st and 3rd person view
 
 **2023.06.17**
 * Added `bullet_on_init` callback, please refer to callbacks_gameobject.script file for available info about new callback
