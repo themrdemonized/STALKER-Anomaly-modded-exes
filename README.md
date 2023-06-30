@@ -92,9 +92,12 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Removed maximum engine limit of 5 artefacts on belt
 
 * Fixes and features by DPurple
-
   * Fix of using `%c[color]` tag with multibyte font causing unexpected line ending by DPurple
   * Ability to autosave the game before crash occurs, can be disabled with console command `crash_save 0` and enabled with `crash_save 1`. Maximum amount of saves can be specified with command `crash_save_count <number>`, where number is between 0 to 20 (default is 10)
+
+* Smooth Particles with configurable update rate by vegeta1k95
+  * To change update rate use console command `particle_update_mod` which takes values from 0.04 to 10.0 (default is 1.0). 1.0 corresponds to 30hz, 0.5 - 60hz and so on. The setting is also available in the options menu in "Modded Exes" group
+  * Possibility to set particle update delta in milliseconds in .pe files for fine tuning with `update_step` field
 
 * Shader Scopes by CrookR and enhanced by Edzan, comes ready to use in the archive, delete old version first
 
@@ -122,10 +125,6 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
 * Screen Space Shaders by Ascii1457 (https://www.moddb.com/mods/stalker-anomaly/addons/screen-space-shaders)
 
 * Heatvision by vegeta1k95 (https://www.moddb.com/mods/stalker-anomaly/addons/heatvision-v02-extension-for-beefs-nvg-dx11engine-mod/)
-
-* Smooth Particles with configurable update rate by vegeta1k95
-  * To change update rate use console command `particle_update_mod` which takes values from 0.04 to 10.0 (default is 1.0). 1.0 corresponds to 30hz, 0.5 - 60hz and so on. The setting is also available in the options menu in "Modded Exes" group
-  * Possibility to set particle update delta in milliseconds in .pe files for fine tuning with `update_step` field
 
 ## Optional patches (not used in exes)
 
