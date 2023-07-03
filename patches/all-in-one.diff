@@ -7569,7 +7569,7 @@ index 0d3548b..e55621e 100644
  }; //class first_bullet_controller
  
 diff --git a/src/xrGame/level_script.cpp b/src/xrGame/level_script.cpp
-index c16d21c..50f469e 100644
+index c16d21c..14b450b 100644
 --- a/src/xrGame/level_script.cpp
 +++ b/src/xrGame/level_script.cpp
 @@ -50,6 +50,7 @@
@@ -7580,7 +7580,20 @@ index c16d21c..50f469e 100644
  
  using namespace luabind;
  
-@@ -626,6 +627,27 @@ float add_cam_effector(LPCSTR fn, int id, bool cyclic, LPCSTR cb_func, float cam
+@@ -333,6 +334,12 @@ void map_remove_object_spot(u16 id, LPCSTR spot_type)
+ 	Level().MapManager().RemoveMapLocation(spot_type, id);
+ }
+ 
++// demonized: remove all map object spots by id
++void map_remove_all_object_spots(u16 id)
++{
++	Level().MapManager().RemoveAllMapLocationsById(id);
++}
++
+ u16 map_has_object_spot(u16 id, LPCSTR spot_type)
+ {
+ 	return Level().MapManager().HasMapLocation(spot_type, id);
+@@ -626,6 +633,27 @@ float add_cam_effector(LPCSTR fn, int id, bool cyclic, LPCSTR cb_func, float cam
  	return e->GetAnimatorLength();
  }
  
@@ -7608,7 +7621,7 @@ index c16d21c..50f469e 100644
  void remove_cam_effector(int id)
  {
  	Actor()->Cameras().RemoveCamEffector((ECamEffectorType)id);
-@@ -679,6 +701,15 @@ void set_snd_volume(float v)
+@@ -679,6 +707,15 @@ void set_snd_volume(float v)
  	clamp(psSoundVFactor, 0.0f, 1.0f);
  }
  
@@ -7624,7 +7637,7 @@ index c16d21c..50f469e 100644
  #include "actor_statistic_mgr.h"
  
  void add_actor_points(LPCSTR sect, LPCSTR detail_key, int cnt, int pts)
-@@ -1374,6 +1405,98 @@ const Fvector2 world2ui(Fvector pos, bool hud = false)
+@@ -1374,6 +1411,98 @@ const Fvector2 world2ui(Fvector pos, bool hud = false)
  	return { x,y };
  }
  
@@ -7723,7 +7736,17 @@ index c16d21c..50f469e 100644
  const float get_env_rads()
  {
  	if (!CurrentGameUI())
-@@ -1705,10 +1828,18 @@ void CLevel::script_register(lua_State* L)
+@@ -1675,6 +1804,9 @@ void CLevel::script_register(lua_State* L)
+ 			def("map_has_object_spot", map_has_object_spot),
+ 			def("map_change_spot_hint", map_change_spot_hint),
+ 
++			// demonized: remove all map object spots by id
++			def("map_remove_all_object_spots", map_remove_all_object_spots),
++
+ 			def("add_dialog_to_render", add_dialog_to_render),
+ 			def("remove_dialog_to_render", remove_dialog_to_render),
+ 			def("hide_indicators", hide_indicators),
+@@ -1705,10 +1837,18 @@ void CLevel::script_register(lua_State* L)
  			def("get_snd_volume", &get_snd_volume),
  			def("get_rain_volume", &get_rain_volume),
  			def("set_snd_volume", &set_snd_volume),
@@ -7742,7 +7765,7 @@ index c16d21c..50f469e 100644
  			def("remove_cam_effector", &remove_cam_effector),
  			def("set_cam_effector_factor", &set_cam_effector_factor),
  			def("get_cam_effector_factor", &get_cam_effector_factor),
-@@ -1762,6 +1893,21 @@ void CLevel::script_register(lua_State* L)
+@@ -1762,6 +1902,21 @@ void CLevel::script_register(lua_State* L)
  		.def_readonly("object", &script_rq_result::O)
  		.def_readonly("range", &script_rq_result::range)
  		.def_readonly("element", &script_rq_result::element)
@@ -7764,7 +7787,7 @@ index c16d21c..50f469e 100644
  		.def(constructor<>()),
  		class_<enum_exporter<collide::rq_target>>("rq_target")
  		.enum_("targets")
-@@ -1887,6 +2033,8 @@ void CLevel::script_register(lua_State* L)
+@@ -1887,6 +2042,8 @@ void CLevel::script_register(lua_State* L)
  		def("prefetch_texture", prefetch_texture),
  		def("prefetch_model", prefetch_model),
  		def("get_visual_userdata", GetVisualUserdata),
@@ -7882,6 +7905,47 @@ index 596cc31..79359b6 100644
  	u32 m_NextTrackTime;
  	int m_CurrentTrack;
  public:
+diff --git a/src/xrGame/map_manager.cpp b/src/xrGame/map_manager.cpp
+index b354e38..dc72c28 100644
+--- a/src/xrGame/map_manager.cpp
++++ b/src/xrGame/map_manager.cpp
+@@ -170,6 +170,21 @@ void CMapManager::RemoveMapLocation(const shared_str& spot_type, u16 id)
+ 	}
+ }
+ 
++// demonized: remove all map object spots by id
++void CMapManager::RemoveAllMapLocationsById(u16 id)
++{
++	for (Locations_it it = Locations().begin(); it != Locations().end(); ) {
++		if (it->object_id == id) {
++			if (IsGameTypeSingle())
++				Level().GameTaskManager().MapLocationRelcase((*it).location);
++			Destroy((*it).location);
++			it = Locations().erase(it);
++		} else {
++			it++;
++		}
++	}
++}
++
+ void CMapManager::RemoveMapLocationByObjectID(u16 id) //call on destroy object
+ {
+ 	FindLocationByID key(id);
+diff --git a/src/xrGame/map_manager.h b/src/xrGame/map_manager.h
+index a49b14a..56eb0ee 100644
+--- a/src/xrGame/map_manager.h
++++ b/src/xrGame/map_manager.h
+@@ -21,6 +21,10 @@ public:
+ 	CMapLocation* AddMapLocation(const shared_str& spot_type, u16 id);
+ 	CMapLocation* AddRelationLocation(CInventoryOwner* pInvOwner);
+ 	void RemoveMapLocation(const shared_str& spot_type, u16 id);
++
++	// demonized: remove all map object spots by id
++	void RemoveAllMapLocationsById(u16 id);
++
+ 	bool HasMapLocation(const shared_str& spot_type, u16 id);
+ 	void RemoveMapLocationByObjectID(u16 id); //call on destroy object
+ 	void RemoveMapLocation(CMapLocation* ml);
 diff --git a/src/xrGame/movement_manager.cpp b/src/xrGame/movement_manager.cpp
 index 117d30d..59769bd 100644
 --- a/src/xrGame/movement_manager.cpp

@@ -145,6 +145,9 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.07.03**
+* Added level.map_remove_all_object_spots(id) function
+
 **2023.07.01**
 * Mouse wheel callback `on_mouse_wheel` can consume input if flags.ret_value is false, please refer to callbacks_gameobject.script file for available info about new callback
 * Added global variable MODDED_EXES_VERSION
