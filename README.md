@@ -145,6 +145,20 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.07.04**
+* `ai_die_in_anomalies` command now works in real time
+* Revised the code that described behaviour of NPCs and monsters when they are near anomalies
+  * Anomalies are always visible for AI on engine level, previously it was defined by console variable `ai_die_in_anomalies`
+  * Monsters will always try to evade anomalies
+  * NPCs behaviour works this way
+    * if `ai_die_in_anomalies` is 1, they will try to evade anomalies and will receive damage if they cant
+    * otherwise its defined per NPC (by default its vanilla behaviour - no pathfinding and no damage) that can be changed via scripts
+* New game object functions for NPCs:
+  * npc:get_enable_anomalies_pathfinding() - get the state of anomalies pathfinding
+  * npc:set_enable_anomalies_pathfinding(bool) - enable or disable anomalies pathfinding
+  * npc:get_enable_anomalies_damage() -  get the state of anomalies damage
+  * npc:set_enable_anomalies_damage(bool) -  enable or disable anomalies damage
+
 **2023.07.03**
 * Added level.map_remove_all_object_spots(id) function
 

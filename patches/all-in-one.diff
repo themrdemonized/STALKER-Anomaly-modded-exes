@@ -7238,6 +7238,108 @@ index 908d83f..bf0aaa1 100644
  	// играть партиклы
  	PlayParticles(m_kick_particles, pos, Direction());
  
+diff --git a/src/xrGame/ai/stalker/ai_stalker.h b/src/xrGame/ai/stalker/ai_stalker.h
+index 0409ea5..8b4965f 100644
+--- a/src/xrGame/ai/stalker/ai_stalker.h
++++ b/src/xrGame/ai/stalker/ai_stalker.h
+@@ -157,6 +157,10 @@ public:
+ public:
+ 	bool m_wounded;
+ 
++	// demonized: add enabling pathfinding and damage by anomalies flags
++	bool m_enable_anomalies_pathfinding = false;
++	bool m_enable_anomalies_damage = false;
++
+ public:
+ 	CAI_Stalker();
+ 	virtual ~CAI_Stalker();
+diff --git a/src/xrGame/ai/stalker/ai_stalker_events.cpp b/src/xrGame/ai/stalker/ai_stalker_events.cpp
+index f38ad85..c578a68 100644
+--- a/src/xrGame/ai/stalker/ai_stalker_events.cpp
++++ b/src/xrGame/ai/stalker/ai_stalker_events.cpp
+@@ -15,6 +15,7 @@
+ #include "../../level.h"
+ #include "../../ai_monster_space.h"
+ #include "../../characterphysicssupport.h"
++#include "space_restrictor.h"
+ 
+ using namespace StalkerSpace;
+ using namespace MonsterSpace;
+@@ -139,6 +140,7 @@ void CAI_Stalker::UpdateAvailableDialogs(CPhraseDialogManager* partner)
+ 	CAI_PhraseDialogManager::UpdateAvailableDialogs(partner);
+ }
+ 
++extern BOOL g_ai_die_in_anomaly;
+ void CAI_Stalker::feel_touch_new(CObject* O)
+ {
+ 	//	Msg					("FEEL_TOUCH::NEW : %s",*O->cName());
+@@ -146,6 +148,14 @@ void CAI_Stalker::feel_touch_new(CObject* O)
+ 	if (Remote()) return;
+ 	if ((O->spatial.type | STYPE_VISIBLEFORAI) != O->spatial.type) return;
+ 
++	// demonized: add g_ai_die_in_anomaly == 0 check
++	if (!(g_ai_die_in_anomaly || m_enable_anomalies_pathfinding)) {
++		CSpaceRestrictor* sr = smart_cast<CSpaceRestrictor*>(O);
++		if (sr) {
++			return;
++		}
++	}
++
+ 	// Now, test for game specific logical objects to minimize traffic
+ 	CInventoryItem* I = smart_cast<CInventoryItem*>(O);
+ 
+diff --git a/src/xrGame/ai/stalker/ai_stalker_feel.cpp b/src/xrGame/ai/stalker/ai_stalker_feel.cpp
+index c0d54c9..1abc2f7 100644
+--- a/src/xrGame/ai/stalker/ai_stalker_feel.cpp
++++ b/src/xrGame/ai/stalker/ai_stalker_feel.cpp
+@@ -14,6 +14,7 @@
+ #include "../../sight_manager.h"
+ #include "../../stalker_movement_manager_smart_cover.h"
+ #include "../../stalker_animation_manager.h"
++#include "space_restrictor.h"
+ 
+ #ifdef DEBUG
+ #	include "../../ai_debug.h"
+@@ -56,6 +57,7 @@ bool CAI_Stalker::bfCheckForNodeVisibility(u32 dwNodeID, bool bIfRayPick)
+ 	return (memory().visual().visible(dwNodeID, movement().m_head.current.yaw, ffGetFov()));
+ }
+ 
++extern BOOL g_ai_die_in_anomaly;
+ bool CAI_Stalker::feel_touch_contact(CObject* O)
+ {
+ 	if (!m_take_items_enabled && smart_cast<CInventoryItem*>(O))
+@@ -71,6 +73,15 @@ bool CAI_Stalker::feel_touch_contact(CObject* O)
+ 	if (!game_object)
+ 		return (false);
+ 
++	// demonized: add g_ai_die_in_anomaly == 0 and m_enable_anomalies_pathfinding check
++	// when 0 - disable pathfinding around anomaly
++	if (!(g_ai_die_in_anomaly || m_enable_anomalies_pathfinding)) {
++		CSpaceRestrictor* sr = smart_cast<CSpaceRestrictor*>(O);
++		if (sr && (sr->spatial.type & STYPE_VISIBLEFORAI)) {
++			return false;
++		}
++	}
++
+ 	return (game_object->feel_touch_on_contact(this));
+ }
+ 
+@@ -81,6 +92,15 @@ bool CAI_Stalker::feel_touch_on_contact(CObject* O)
+ 	if ((O->spatial.type | STYPE_VISIBLEFORAI) != O->spatial.type)
+ 		return (false);
+ 
++	// demonized: add g_ai_die_in_anomaly == 0 and m_enable_anomalies_damage check
++	// when 0 - prevent any damage from anomalies
++	if (!(g_ai_die_in_anomaly || m_enable_anomalies_damage)) {
++		CSpaceRestrictor* sr = smart_cast<CSpaceRestrictor*>(O);
++		if (sr) {
++			return false;
++		}
++	}
++
+ 	return (inherited::feel_touch_on_contact(O));
+ }
+ 
 diff --git a/src/xrGame/alife_simulator_script.cpp b/src/xrGame/alife_simulator_script.cpp
 index e5b96f1..34e7719 100644
 --- a/src/xrGame/alife_simulator_script.cpp
@@ -8176,7 +8278,7 @@ index 5489997..9a1a917 100644
  LPCSTR CScriptGameObject::bone_name(u16 id, bool bHud)
  {
 diff --git a/src/xrGame/script_game_object.h b/src/xrGame/script_game_object.h
-index 640dcab..233e7fa 100644
+index 640dcab..ed31343 100644
 --- a/src/xrGame/script_game_object.h
 +++ b/src/xrGame/script_game_object.h
 @@ -683,6 +683,7 @@ public:
@@ -8187,7 +8289,20 @@ index 640dcab..233e7fa 100644
  	LPCSTR bone_name(u16 id, bool bHud);
  	bool is_body_turning() const;
  	cphysics_shell_scripted* get_physics_shell() const;
-@@ -998,6 +999,9 @@ public:
+@@ -937,6 +938,12 @@ public:
+ 	u8 GetRestrictionType();
+ 	void SetRestrictionType(u8 typ);
+ 
++	// demonized: add getters and setters for pathfinding for npcs around anomalies and damage for npcs
++	bool get_enable_anomalies_pathfinding();
++	void set_enable_anomalies_pathfinding(bool v);
++	bool get_enable_anomalies_damage();
++	void set_enable_anomalies_damage(bool v);
++
+ 	//Weapon
+ 	void Weapon_AddonAttach(CScriptGameObject* item);
+ 	void Weapon_AddonDetach(LPCSTR item_section, bool b_spawn_item = true);
+@@ -998,6 +1005,9 @@ public:
  	void SetArtefactBleedingRestoreSpeed(float value);
  	void SetArtefactImmunity(ALife::EHitType hit_type, float value);
  
@@ -8197,7 +8312,7 @@ index 640dcab..233e7fa 100644
  	//Eatable items
  	void SetRemainingUses(u8 value);
  	u8 GetRemainingUses();
-@@ -1027,6 +1031,14 @@ public:
+@@ -1027,6 +1037,14 @@ public:
  	void SetActorRunCoef(float run_coef);
  	float GetActorRunBackCoef() const;
  	void SetActorRunBackCoef(float run_back_coef);
@@ -8213,7 +8328,7 @@ index 640dcab..233e7fa 100644
  	void SetCharacterIcon(LPCSTR iconName);
  #endif
 diff --git a/src/xrGame/script_game_object3.cpp b/src/xrGame/script_game_object3.cpp
-index c7b3f95..d2d6f94 100644
+index c7b3f95..421b3f4 100644
 --- a/src/xrGame/script_game_object3.cpp
 +++ b/src/xrGame/script_game_object3.cpp
 @@ -1540,6 +1540,22 @@ void CScriptGameObject::SetArtefactImmunity(ALife::EHitType hit_type, float valu
@@ -8239,6 +8354,59 @@ index c7b3f95..d2d6f94 100644
  void CScriptGameObject::AttachVehicle(CScriptGameObject* veh, bool bForce)
  {
  	CActor* actor = smart_cast<CActor*>(&object());
+@@ -1823,5 +1839,51 @@ void CScriptGameObject::SetRestrictionType(u8 typ)
+ 			Level().space_restriction_manager().register_restrictor(restr, RestrictionSpace::ERestrictorTypes(typ));
+ 	}
+ }
++
++// demonized: add getters and setters for pathfinding for npcs around anomalies and damage for npcs
++bool CScriptGameObject::get_enable_anomalies_pathfinding()
++{
++	auto stalker = smart_cast<CAI_Stalker*>(&object());
++	if (!stalker)
++	{
++		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
++			"CGameObject : cannot access class member m_enable_anomalies_pathfinding!");
++		return false;
++	}
++	return stalker->m_enable_anomalies_pathfinding;
++}
++void CScriptGameObject::set_enable_anomalies_pathfinding(bool v)
++{
++	auto stalker = smart_cast<CAI_Stalker*>(&object());
++	if (!stalker)
++	{
++		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
++			"CGameObject : cannot access class member m_enable_anomalies_pathfinding!");
++		return;
++	}
++	stalker->m_enable_anomalies_pathfinding = v;
++}
++bool CScriptGameObject::get_enable_anomalies_damage()
++{
++	auto stalker = smart_cast<CAI_Stalker*>(&object());
++	if (!stalker)
++	{
++		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
++			"CGameObject : cannot access class member m_enable_anomalies_damage!");
++		return false;
++	}
++	return stalker->m_enable_anomalies_damage;
++}
++void CScriptGameObject::set_enable_anomalies_damage(bool v)
++{
++	auto stalker = smart_cast<CAI_Stalker*>(&object());
++	if (!stalker)
++	{
++		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,
++			"CGameObject : cannot access class member m_enable_anomalies_damage!");
++		return;
++	}
++	stalker->m_enable_anomalies_damage = v;
++}
+ #endif
+ //-Alundaio
+\ No newline at end of file
 diff --git a/src/xrGame/script_game_object_inventory_owner.cpp b/src/xrGame/script_game_object_inventory_owner.cpp
 index 3ad0a2f..377a214 100644
 --- a/src/xrGame/script_game_object_inventory_owner.cpp
@@ -8331,7 +8499,7 @@ index 3ad0a2f..377a214 100644
  #endif
  //Alundaio: END
 diff --git a/src/xrGame/script_game_object_script3.cpp b/src/xrGame/script_game_object_script3.cpp
-index aeeaf8f..0a1e46c 100644
+index aeeaf8f..477e99f 100644
 --- a/src/xrGame/script_game_object_script3.cpp
 +++ b/src/xrGame/script_game_object_script3.cpp
 @@ -115,6 +115,7 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
@@ -8358,12 +8526,12 @@ index aeeaf8f..0a1e46c 100644
  
  		//HELICOPTER
  		.def("get_helicopter", &CScriptGameObject::get_helicopter)
-@@ -536,6 +539,16 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
+@@ -536,6 +539,22 @@ class_<CScriptGameObject>& script_register_game_object2(class_<CScriptGameObject
  		.def("get_actor_runback_coef", &CScriptGameObject::GetActorRunBackCoef)
  		.def("set_actor_runback_coef", &CScriptGameObject::SetActorRunBackCoef)
  		//end AVO
 +
-+		// Additional exports
++		// demonized: Additional exports
 +		.def("get_actor_walk_accel", &CScriptGameObject::GetActorWalkAccel)
 +		.def("set_actor_walk_accel", &CScriptGameObject::SetActorWalkAccel)
 +		.def("get_actor_walk_back_coef", &CScriptGameObject::GetActorWalkBackCoef)
@@ -8372,9 +8540,29 @@ index aeeaf8f..0a1e46c 100644
 +		// demonized: Adjust Lookout factor
 +		.def("get_actor_lookout_coef", &CScriptGameObject::GetActorLookoutCoef)
 +		.def("set_actor_lookout_coef", &CScriptGameObject::SetActorLookoutCoef)
++
++		// demonized: add getters and setters for pathfinding for npcs around anomalies and damage for npcs
++		.def("get_enable_anomalies_pathfinding", &CScriptGameObject::get_enable_anomalies_pathfinding)
++		.def("set_enable_anomalies_pathfinding", &CScriptGameObject::set_enable_anomalies_pathfinding)
++		.def("get_enable_anomalies_damage", &CScriptGameObject::get_enable_anomalies_damage)
++		.def("set_enable_anomalies_damage", &CScriptGameObject::set_enable_anomalies_damage)
  #endif
  
  		.def("set_can_be_harmed", &CScriptGameObject::SetCanBeHarmed)
+diff --git a/src/xrGame/space_restrictor.cpp b/src/xrGame/space_restrictor.cpp
+index 6448d01..3b50ea4 100644
+--- a/src/xrGame/space_restrictor.cpp
++++ b/src/xrGame/space_restrictor.cpp
+@@ -79,7 +79,8 @@ BOOL CSpaceRestrictor::net_Spawn(CSE_Abstract* data)
+ 
+ 	//Alundaio: zone visible for ai if g_ai_die_in_anomaly = 1 unless it's Radioactive Zone or Campfire
+ 	CCustomZone* zone = smart_cast<CCustomZone*>(this);
+-	if (g_ai_die_in_anomaly == 0 || !zone || smart_cast<CRadioactiveZone*>(zone) || smart_cast<CZoneCampfire*>(zone))
++	//if (g_ai_die_in_anomaly == 0 || !zone || smart_cast<CRadioactiveZone*>(zone) || smart_cast<CZoneCampfire*>(zone))
++	if (!zone || smart_cast<CRadioactiveZone*>(zone) || smart_cast<CZoneCampfire*>(zone))
+ 		spatial.type &= ~STYPE_VISIBLEFORAI;
+ 
+ 	setEnabled(FALSE);
 diff --git a/src/xrGame/string_table.cpp b/src/xrGame/string_table.cpp
 index bc29288..300c635 100644
 --- a/src/xrGame/string_table.cpp
