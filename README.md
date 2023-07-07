@@ -145,6 +145,10 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.07.07**
+* Added `bullet_on_update` callback, please refer to callbacks_gameobject.script file for available info about new callback
+* Added `life_time` field to bullet table
+
 **2023.07.04**
 * `ai_die_in_anomalies` command now works in real time
 * Revised the code that described behaviour of NPCs and monsters when they are near anomalies
