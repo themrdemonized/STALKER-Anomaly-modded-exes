@@ -47,7 +47,7 @@ index a2b6c3f..d5ac60e 100644
  	m_Partition = m_Motions[0].motions.partition();
  	m_Partition->load(this, N);
 diff --git a/src/Layers/xrRender/WallmarksEngine.cpp b/src/Layers/xrRender/WallmarksEngine.cpp
-index d0592f8..141f50c 100644
+index d0592f8..cb12f86 100644
 --- a/src/Layers/xrRender/WallmarksEngine.cpp
 +++ b/src/Layers/xrRender/WallmarksEngine.cpp
 @@ -34,7 +34,7 @@ namespace WallmarksEngine
@@ -59,6 +59,531 @@ index d0592f8..141f50c 100644
  
  IC bool operator ==(const CWallmarksEngine::wm_slot* slot, const ref_shader& shader) { return slot->shader == shader; }
  
+@@ -203,8 +203,9 @@ void CWallmarksEngine::BuildMatrix(Fmatrix& mView, float invsz, const Fvector& f
+ 	mView.mulA_43(mScale);
+ }
+ 
++// demonized: add user defined rotation to wallmark
+ void CWallmarksEngine::AddWallmark_internal(CDB::TRI* pTri, const Fvector* pVerts, const Fvector& contact_point,
+-                                            ref_shader hShader, float sz, float ttl, bool random_rotation)
++                                            ref_shader hShader, float sz, float ttl, float rotation)
+ {
+ 	// query for polygons in bounding box
+ 	// calculate adjacency
+@@ -240,7 +241,7 @@ void CWallmarksEngine::AddWallmark_internal(CDB::TRI* pTri, const Fvector* pVert
+ 	// build 3D ortho-frustum
+ 	Fmatrix mView, mRot;
+ 	BuildMatrix(mView, 1 / sz, contact_point);
+-	mRot.rotateZ(random_rotation ? ::Random.randF(deg2rad(-20.f), deg2rad(20.f)) : 0.f);
++	mRot.rotateZ(deg2rad(rotation));
+ 	mView.mulA_43(mRot);
+ 	sml_clipper.CreateFromMatrix(mView,FRUSTUM_P_LRTB);
+ 
+@@ -300,8 +301,20 @@ void CWallmarksEngine::AddWallmark_internal(CDB::TRI* pTri, const Fvector* pVert
+ 	//}
+ }
+ 
++void CWallmarksEngine::AddWallmark_internal(CDB::TRI* pTri, const Fvector* pVerts, const Fvector& contact_point,
++	ref_shader hShader, float sz, float ttl, bool random_rotation)
++{
++	AddWallmark_internal(pTri, pVerts, contact_point, hShader, sz, ttl, random_rotation ? ::Random.randF(-20.f, 20.f) : 0.f);
++}
++
+ void CWallmarksEngine::AddStaticWallmark(CDB::TRI* pTri, const Fvector* pVerts, const Fvector& contact_point,
+                                          ref_shader hShader, float sz, float ttl, bool ignore_opt, bool random_rotation)
++{
++	AddStaticWallmark(pTri, pVerts, contact_point, hShader, sz, ttl, ignore_opt, random_rotation ? ::Random.randF(-20.f, 20.f) : 0.f);
++}
++
++void CWallmarksEngine::AddStaticWallmark(CDB::TRI* pTri, const Fvector* pVerts, const Fvector& contact_point,
++	ref_shader hShader, float sz, float ttl, bool ignore_opt, float rotation)
+ {
+ 	// optimization cheat: don't allow wallmarks more than 100 m from viewer/actor
+ 	if (!ignore_opt && contact_point.distance_to_sqr(Device.vCameraPosition) > _sqr(100.f))
+@@ -309,7 +322,7 @@ void CWallmarksEngine::AddStaticWallmark(CDB::TRI* pTri, const Fvector* pVerts,
+ 
+ 	// Physics may add wallmarks in parallel with rendering
+ 	lock.Enter();
+-	AddWallmark_internal(pTri, pVerts, contact_point, hShader, sz, ttl, random_rotation);
++	AddWallmark_internal(pTri, pVerts, contact_point, hShader, sz, ttl, rotation);
+ 	lock.Leave();
+ }
+ 
+diff --git a/src/Layers/xrRender/WallmarksEngine.h b/src/Layers/xrRender/WallmarksEngine.h
+index 9ce1dde..2b30c50 100644
+--- a/src/Layers/xrRender/WallmarksEngine.h
++++ b/src/Layers/xrRender/WallmarksEngine.h
+@@ -52,8 +52,8 @@ private:
+ private:
+ 	void BuildMatrix(Fmatrix& dest, float invsz, const Fvector& from);
+ 	void RecurseTri(u32 T, Fmatrix& mView, static_wallmark& W);
+-	void AddWallmark_internal(CDB::TRI* pTri, const Fvector* pVerts, const Fvector& contact_point, ref_shader hTexture,
+-	                          float sz, float ttl = 0.f, bool random_rotation = true);
++	void AddWallmark_internal(CDB::TRI* pTri, const Fvector* pVerts, const Fvector& contact_point, ref_shader hTexture, float sz, float ttl = 0.f, bool random_rotation = true);
++	void AddWallmark_internal(CDB::TRI* pTri, const Fvector* pVerts, const Fvector& contact_point, ref_shader hTexture, float sz, float ttl, float rotation);
+ 
+ 	static_wallmark* static_wm_allocate();
+ 	void static_wm_render(static_wallmark* W, FVF::LIT* & V);
+@@ -64,8 +64,11 @@ public:
+ 	CWallmarksEngine();
+ 	~CWallmarksEngine();
+ 	// edit wallmarks
+-	void AddStaticWallmark(CDB::TRI* pTri, const Fvector* pVerts, const Fvector& contact_point, ref_shader hTexture,
+-	                       float sz, float ttl = 0.f, bool ignore_opt = false, bool random_rotation = true);
++	void AddStaticWallmark(CDB::TRI* pTri, const Fvector* pVerts, const Fvector& contact_point, ref_shader hTexture, float sz, float ttl = 0.f, bool ignore_opt = false, bool random_rotation = true);
++
++	// demonized: add user defined rotation to wallmark
++	void AddStaticWallmark(CDB::TRI* pTri, const Fvector* pVerts, const Fvector& contact_point, ref_shader hTexture, float sz, float ttl, bool ignore_opt, float rotation);
++
+ 	void AddSkeletonWallmark(intrusive_ptr<CSkeletonWallmark> wm);
+ 	void AddSkeletonWallmark(const Fmatrix* xf, CKinematics* obj, ref_shader& sh, const Fvector& start,
+ 	                         const Fvector& dir, float size, float ttl = 0.f, bool ignore_opt = false);
+diff --git a/src/Layers/xrRender/r__dsgraph_render.cpp b/src/Layers/xrRender/r__dsgraph_render.cpp
+index 9ef142d..4d0ae5c 100644
+--- a/src/Layers/xrRender/r__dsgraph_render.cpp
++++ b/src/Layers/xrRender/r__dsgraph_render.cpp
+@@ -521,11 +521,6 @@ void R_dsgraph_structure::r_dsgraph_render_hud()
+ 	mapHUD.traverseLR(sorted_L1);
+ 	mapHUD.clear();
+ 
+-#if	RENDER==R_R1
+-	if (g_hud && g_hud->RenderActiveItemUIQuery())
+-		r_dsgraph_render_hud_ui(); // hud ui
+-#endif
+-
+ 	rmNormal();
+ 
+ 	// Restore projection
+@@ -537,8 +532,6 @@ void R_dsgraph_structure::r_dsgraph_render_hud()
+ 
+ void R_dsgraph_structure::r_dsgraph_render_hud_ui()
+ {
+-	VERIFY(g_hud && g_hud->RenderActiveItemUIQuery());
+-
+ 	// Change projection
+ 	Fmatrix Pold = Device.mProject;
+ 	Fmatrix FTold = Device.mFullTransform;
+@@ -550,36 +543,6 @@ void R_dsgraph_structure::r_dsgraph_render_hud_ui()
+ 	Device.mFullTransform.mul(Device.mProject, Device.mView);
+ 	RCache.set_xform_project(Device.mProject);
+ 
+-#if	RENDER!=R_R1
+-	// Targets, use accumulator for temporary storage
+-	const ref_rt rt_null;
+-	RCache.set_RT(0, 1);
+-	RCache.set_RT(0, 2);
+-#if	(RENDER==R_R3) || (RENDER==R_R4)
+-	if (!RImplementation.o.dx10_msaa)
+-	{
+-		if (RImplementation.o.albedo_wo)
+-			RImplementation.Target->u_setrt(RImplementation.Target->rt_Accumulator,
+-			                                rt_null, rt_null, HW.pBaseZB);
+-		else RImplementation.Target->u_setrt(RImplementation.Target->rt_Color, rt_null, rt_null, HW.pBaseZB);
+-	}
+-	else
+-	{
+-		if (RImplementation.o.albedo_wo)
+-			RImplementation.Target->u_setrt(RImplementation.Target->rt_Accumulator,
+-			                                rt_null, rt_null,
+-			                                RImplementation.Target->rt_MSAADepth->pZRT);
+-		else
+-			RImplementation.Target->u_setrt(RImplementation.Target->rt_Color, rt_null, rt_null,
+-			                                RImplementation.Target->rt_MSAADepth->pZRT);
+-	}
+-#else // (RENDER==R_R3) || (RENDER==R_R4)
+-	if (RImplementation.o.albedo_wo) RImplementation.Target->u_setrt(RImplementation.Target->rt_Accumulator, rt_null,
+-	                                                                 rt_null, HW.pBaseZB);
+-	else RImplementation.Target->u_setrt(RImplementation.Target->rt_Color, rt_null, rt_null, HW.pBaseZB);
+-#endif // (RENDER==R_R3) || (RENDER==R_R4)
+-#endif // RENDER!=R_R1
+-
+ 	rmNear();
+ 	g_hud->RenderActiveItemUI();
+ 	rmNormal();
+diff --git a/src/Layers/xrRenderPC_R1/FStaticRender.cpp b/src/Layers/xrRenderPC_R1/FStaticRender.cpp
+index 85ed6d3..16bfac1 100644
+--- a/src/Layers/xrRenderPC_R1/FStaticRender.cpp
++++ b/src/Layers/xrRenderPC_R1/FStaticRender.cpp
+@@ -304,24 +304,35 @@ void CRender::add_Visual(IRenderVisual* V)
+ 
+ void CRender::add_Geometry(IRenderVisual* V) { add_Static((dxRender_Visual*)V, View->getMask()); }
+ 
++// demonized: add user defined rotation to wallmark
+ void CRender::add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* verts, float ttl, bool ignore_opt, bool random_rotation)
++{
++	add_StaticWallmark(S, P, s, T, verts, ttl, ignore_opt, random_rotation ? ::Random.randF(-20.f, 20.f) : 0.f);
++}
++
++void CRender::add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* verts, float ttl, bool ignore_opt, float rotation)
+ {
+ 	if (T->suppress_wm) return;
+-	VERIFY2(_valid(P) && _valid(s) && T && verts && (s>EPS_L), "Invalid static wallmark params");
+-	Wallmarks->AddStaticWallmark(T, verts, P, &*S, s, ttl, ignore_opt, random_rotation);
++	VERIFY2(_valid(P) && _valid(s) && T && verts && (s > EPS_L), "Invalid static wallmark params");
++	Wallmarks->AddStaticWallmark(T, verts, P, &*S, s, ttl, ignore_opt, rotation);
+ }
+ 
+ void CRender::add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, bool random_rotation)
+ {
+-	dxWallMarkArray* pWMA = (dxWallMarkArray *)pArray;
++	add_StaticWallmark(pArray, P, s, T, V, ttl, ignore_opt, random_rotation ? ::Random.randF(-20.f, 20.f) : 0.f);
++}
++
++void CRender::add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, float rotation)
++{
++	dxWallMarkArray* pWMA = (dxWallMarkArray*)pArray;
+ 	ref_shader* pShader = pWMA->dxGenerateWallmark();
+-	if (pShader) add_StaticWallmark(*pShader, P, s, T, V, ttl, ignore_opt, random_rotation);
++	if (pShader) add_StaticWallmark(*pShader, P, s, T, V, ttl, ignore_opt, rotation);
+ }
+ 
+ void CRender::add_StaticWallmark(const wm_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V)
+ {
+ 	dxUIShader* pShader = (dxUIShader*)&*S;
+-	add_StaticWallmark(pShader->hShader, P, s, T, V);
++	add_StaticWallmark(pShader->hShader, P, s, T, V, 0.0f, false, true);
+ }
+ 
+ void CRender::clear_static_wallmarks()
+@@ -711,6 +722,9 @@ void CRender::Render()
+ 	L_Dynamic->render(0); // addititional light sources
+ 	if (Wallmarks)Wallmarks->Render(); // wallmarks has priority as normal geometry
+ 
++	if (g_hud && g_hud->RenderActiveItemUIQuery())
++		r_dsgraph_render_hud_ui();
++
+ 	HOM.Enable();
+ 	o.vis_intersect = FALSE;
+ 	phase = PHASE_NORMAL;
+diff --git a/src/Layers/xrRenderPC_R1/FStaticRender.h b/src/Layers/xrRenderPC_R1/FStaticRender.h
+index 44ed99f..d97bd14 100644
+--- a/src/Layers/xrRenderPC_R1/FStaticRender.h
++++ b/src/Layers/xrRenderPC_R1/FStaticRender.h
+@@ -163,8 +163,12 @@ public:
+ 	virtual void add_Geometry(IRenderVisual* V); // add visual(s)	(all culling performed)
+ 
+ 	// wallmarks
++	// demonized: add user defined rotation to wallmark
+ 	virtual void add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl = 0.f, bool ignore_opt = false, bool random_rotation = true);
++	virtual void add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, float rotation);
+ 	virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl = 0.f, bool ignore_opt = false, bool random_rotation = true);
++	virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, float rotation);
++
+ 	virtual void add_StaticWallmark(const wm_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V);
+ 	virtual void clear_static_wallmarks();
+ 	virtual void add_SkeletonWallmark(intrusive_ptr<CSkeletonWallmark> wm);
+diff --git a/src/Layers/xrRenderPC_R2/r2.cpp b/src/Layers/xrRenderPC_R2/r2.cpp
+index ac81c93..74dbc29 100644
+--- a/src/Layers/xrRenderPC_R2/r2.cpp
++++ b/src/Layers/xrRenderPC_R2/r2.cpp
+@@ -615,24 +615,35 @@ BOOL CRender::occ_visible(Fbox& P) { return HOM.visible(P); }
+ void CRender::add_Visual(IRenderVisual* V) { add_leafs_Dynamic((dxRender_Visual*)V, V->_ignore_optimization); }
+ void CRender::add_Geometry(IRenderVisual* V) { add_Static((dxRender_Visual*)V, View->getMask()); }
+ 
++// demonized: add user defined rotation to wallmark
+ void CRender::add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* verts, float ttl, bool ignore_opt, bool random_rotation)
++{
++	add_StaticWallmark(S, P, s, T, verts, ttl, ignore_opt, random_rotation ? ::Random.randF(-20.f, 20.f) : 0.f);
++}
++
++void CRender::add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* verts, float ttl, bool ignore_opt, float rotation)
+ {
+ 	if (T->suppress_wm) return;
+-	VERIFY2(_valid(P) && _valid(s) && T && verts && (s>EPS_L), "Invalid static wallmark params");
+-	Wallmarks->AddStaticWallmark(T, verts, P, &*S, s, ttl, ignore_opt, random_rotation);
++	VERIFY2(_valid(P) && _valid(s) && T && verts && (s > EPS_L), "Invalid static wallmark params");
++	Wallmarks->AddStaticWallmark(T, verts, P, &*S, s, ttl, ignore_opt, rotation);
+ }
+ 
+ void CRender::add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, bool random_rotation)
+ {
+-	dxWallMarkArray* pWMA = (dxWallMarkArray *)pArray;
++	add_StaticWallmark(pArray, P, s, T, V, ttl, ignore_opt, random_rotation ? ::Random.randF(-20.f, 20.f) : 0.f);
++}
++
++void CRender::add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, float rotation)
++{
++	dxWallMarkArray* pWMA = (dxWallMarkArray*)pArray;
+ 	ref_shader* pShader = pWMA->dxGenerateWallmark();
+-	if (pShader) add_StaticWallmark(*pShader, P, s, T, V, ttl, ignore_opt, random_rotation);
++	if (pShader) add_StaticWallmark(*pShader, P, s, T, V, ttl, ignore_opt, rotation);
+ }
+ 
+ void CRender::add_StaticWallmark(const wm_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V)
+ {
+ 	dxUIShader* pShader = (dxUIShader*)&*S;
+-	add_StaticWallmark(pShader->hShader, P, s, T, V);
++	add_StaticWallmark(pShader->hShader, P, s, T, V, 0.0f, false, true);
+ }
+ 
+ void CRender::clear_static_wallmarks()
+diff --git a/src/Layers/xrRenderPC_R2/r2.h b/src/Layers/xrRenderPC_R2/r2.h
+index a3ff957..dadda48 100644
+--- a/src/Layers/xrRenderPC_R2/r2.h
++++ b/src/Layers/xrRenderPC_R2/r2.h
+@@ -264,8 +264,12 @@ public:
+ 	virtual void add_Geometry(IRenderVisual* V); // add visual(s)	(all culling performed)
+ 
+ 	// wallmarks
++	// demonized: add user defined rotation to wallmark
+ 	virtual void add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl = 0.f, bool ignore_opt = false, bool random_rotation = true);
++	virtual void add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, float rotation);
+ 	virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl = 0.f, bool ignore_opt = false, bool random_rotation = true);
++	virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, float rotation);
++
+ 	virtual void add_StaticWallmark(const wm_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V);
+ 	virtual void clear_static_wallmarks();
+ 	virtual void add_SkeletonWallmark(intrusive_ptr<CSkeletonWallmark> wm);
+diff --git a/src/Layers/xrRenderPC_R2/r2_R_render.cpp b/src/Layers/xrRenderPC_R2/r2_R_render.cpp
+index 4df2bc0..528bbad 100644
+--- a/src/Layers/xrRenderPC_R2/r2_R_render.cpp
++++ b/src/Layers/xrRenderPC_R2/r2_R_render.cpp
+@@ -142,12 +142,22 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
+ 				break; // exit loop on frustums
+ 			}
+ 		}
+-		if (g_pGameLevel && (phase == PHASE_NORMAL)) g_hud->Render_Last(); // HUD
++		if (g_pGameLevel && (phase == PHASE_NORMAL))
++		{
++			g_hud->Render_Last(); // HUD
++			if (g_hud->RenderActiveItemUIQuery())
++				r_dsgraph_render_hud_ui();
++		}
+ 	}
+ 	else
+ 	{
+ 		set_Object(0);
+-		if (g_pGameLevel && (phase == PHASE_NORMAL)) g_hud->Render_Last(); // HUD
++		if (g_pGameLevel && (phase == PHASE_NORMAL))
++		{
++			g_hud->Render_Last(); // HUD
++			if (g_hud->RenderActiveItemUIQuery())
++				r_dsgraph_render_hud_ui();
++		}
+ 	}
+ }
+ 
+@@ -405,12 +415,6 @@ void CRender::Render()
+ 		Target->phase_scene_end();
+ 	}
+ 
+-	if (g_hud && g_hud->RenderActiveItemUIQuery())
+-	{
+-		Target->phase_wallmarks();
+-		r_dsgraph_render_hud_ui();
+-	}
+-
+ 	// Wall marks
+ 	if (Wallmarks)
+ 	{
+diff --git a/src/Layers/xrRenderPC_R3/r3.cpp b/src/Layers/xrRenderPC_R3/r3.cpp
+index 1824690..708bdf4 100644
+--- a/src/Layers/xrRenderPC_R3/r3.cpp
++++ b/src/Layers/xrRenderPC_R3/r3.cpp
+@@ -757,24 +757,35 @@ BOOL CRender::occ_visible(Fbox& P) { return HOM.visible(P); }
+ void CRender::add_Visual(IRenderVisual* V) { add_leafs_Dynamic((dxRender_Visual*)V, V->_ignore_optimization); }
+ void CRender::add_Geometry(IRenderVisual* V) { add_Static((dxRender_Visual*)V, View->getMask()); }
+ 
++// demonized: add user defined rotation to wallmark
+ void CRender::add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* verts, float ttl, bool ignore_opt, bool random_rotation)
++{
++	add_StaticWallmark(S, P, s, T, verts, ttl, ignore_opt, random_rotation ? ::Random.randF(-20.f, 20.f) : 0.f);
++}
++
++void CRender::add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* verts, float ttl, bool ignore_opt, float rotation)
+ {
+ 	if (T->suppress_wm) return;
+-	VERIFY2(_valid(P) && _valid(s) && T && verts && (s>EPS_L), "Invalid static wallmark params");
+-	Wallmarks->AddStaticWallmark(T, verts, P, &*S, s, ttl, ignore_opt, random_rotation);
++	VERIFY2(_valid(P) && _valid(s) && T && verts && (s > EPS_L), "Invalid static wallmark params");
++	Wallmarks->AddStaticWallmark(T, verts, P, &*S, s, ttl, ignore_opt, rotation);
+ }
+ 
+ void CRender::add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, bool random_rotation)
+ {
+-	dxWallMarkArray* pWMA = (dxWallMarkArray *)pArray;
++	add_StaticWallmark(pArray, P, s, T, V, ttl, ignore_opt, random_rotation ? ::Random.randF(-20.f, 20.f) : 0.f);
++}
++
++void CRender::add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, float rotation)
++{
++	dxWallMarkArray* pWMA = (dxWallMarkArray*)pArray;
+ 	ref_shader* pShader = pWMA->dxGenerateWallmark();
+-	if (pShader) add_StaticWallmark(*pShader, P, s, T, V, ttl, ignore_opt, random_rotation);
++	if (pShader) add_StaticWallmark(*pShader, P, s, T, V, ttl, ignore_opt, rotation);
+ }
+ 
+ void CRender::add_StaticWallmark(const wm_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V)
+ {
+ 	dxUIShader* pShader = (dxUIShader*)&*S;
+-	add_StaticWallmark(pShader->hShader, P, s, T, V);
++	add_StaticWallmark(pShader->hShader, P, s, T, V, 0.0f, false, true);
+ }
+ 
+ void CRender::clear_static_wallmarks()
+diff --git a/src/Layers/xrRenderPC_R3/r3.h b/src/Layers/xrRenderPC_R3/r3.h
+index 3f8201b..d079773 100644
+--- a/src/Layers/xrRenderPC_R3/r3.h
++++ b/src/Layers/xrRenderPC_R3/r3.h
+@@ -299,8 +299,12 @@ public:
+ 	virtual void add_Geometry(IRenderVisual* V); // add visual(s)	(all culling performed)
+ 
+ 	// wallmarks
++	// demonized: add user defined rotation to wallmark
+ 	virtual void add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl = 0.f, bool ignore_opt = false, bool random_rotation = true);
++	virtual void add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, float rotation);
+ 	virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl = 0.f, bool ignore_opt = false, bool random_rotation = true);
++	virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, float rotation);
++
+ 	virtual void add_StaticWallmark(const wm_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V);
+ 	virtual void clear_static_wallmarks();
+ 	virtual void add_SkeletonWallmark(intrusive_ptr<CSkeletonWallmark> wm);
+diff --git a/src/Layers/xrRenderPC_R3/r3_R_render.cpp b/src/Layers/xrRenderPC_R3/r3_R_render.cpp
+index 2421e35..39c0de8 100644
+--- a/src/Layers/xrRenderPC_R3/r3_R_render.cpp
++++ b/src/Layers/xrRenderPC_R3/r3_R_render.cpp
+@@ -145,12 +145,22 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
+ 				break; // exit loop on frustums
+ 			}
+ 		}
+-		if (g_pGameLevel && (phase == PHASE_NORMAL)) g_hud->Render_Last(); // HUD
++		if (g_pGameLevel && (phase == PHASE_NORMAL))
++		{
++			g_hud->Render_Last(); // HUD
++			if (g_hud->RenderActiveItemUIQuery())
++				r_dsgraph_render_hud_ui();
++		}
+ 	}
+ 	else
+ 	{
+ 		set_Object(0);
+-		if (g_pGameLevel && (phase == PHASE_NORMAL)) g_hud->Render_Last(); // HUD
++		if (g_pGameLevel && (phase == PHASE_NORMAL))
++		{
++			g_hud->Render_Last(); // HUD
++			if (g_hud->RenderActiveItemUIQuery())
++				r_dsgraph_render_hud_ui();
++		}
+ 	}
+ }
+ 
+@@ -435,12 +445,6 @@ void CRender::Render()
+ 		Target->phase_scene_end();
+ 	}
+ 
+-	if (g_hud && g_hud->RenderActiveItemUIQuery())
+-	{
+-		Target->phase_wallmarks();
+-		r_dsgraph_render_hud_ui();
+-	}
+-
+ 	// Wall marks
+ 	if (Wallmarks)
+ 	{
+diff --git a/src/Layers/xrRenderPC_R4/r4.cpp b/src/Layers/xrRenderPC_R4/r4.cpp
+index 77fb925..ef3a094 100644
+--- a/src/Layers/xrRenderPC_R4/r4.cpp
++++ b/src/Layers/xrRenderPC_R4/r4.cpp
+@@ -777,24 +777,35 @@ BOOL CRender::occ_visible(Fbox& P) { return HOM.visible(P); }
+ void CRender::add_Visual(IRenderVisual* V) { add_leafs_Dynamic((dxRender_Visual*)V, V->_ignore_optimization); }
+ void CRender::add_Geometry(IRenderVisual* V) { add_Static((dxRender_Visual*)V, View->getMask()); }
+ 
++// demonized: add user defined rotation to wallmark
+ void CRender::add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* verts, float ttl, bool ignore_opt, bool random_rotation)
++{
++	add_StaticWallmark(S, P, s, T, verts, ttl, ignore_opt, random_rotation ? ::Random.randF(-20.f, 20.f) : 0.f);
++}
++
++void CRender::add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* verts, float ttl, bool ignore_opt, float rotation)
+ {
+ 	if (T->suppress_wm) return;
+-	VERIFY2(_valid(P) && _valid(s) && T && verts && (s>EPS_L), "Invalid static wallmark params");
+-	Wallmarks->AddStaticWallmark(T, verts, P, &*S, s, ttl, ignore_opt, random_rotation);
++	VERIFY2(_valid(P) && _valid(s) && T && verts && (s > EPS_L), "Invalid static wallmark params");
++	Wallmarks->AddStaticWallmark(T, verts, P, &*S, s, ttl, ignore_opt, rotation);
+ }
+ 
+ void CRender::add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, bool random_rotation)
+ {
+-	dxWallMarkArray* pWMA = (dxWallMarkArray *)pArray;
++	add_StaticWallmark(pArray, P, s, T, V, ttl, ignore_opt, random_rotation ? ::Random.randF(-20.f, 20.f) : 0.f);
++}
++
++void CRender::add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, float rotation)
++{
++	dxWallMarkArray* pWMA = (dxWallMarkArray*)pArray;
+ 	ref_shader* pShader = pWMA->dxGenerateWallmark();
+-	if (pShader) add_StaticWallmark(*pShader, P, s, T, V, ttl, ignore_opt, random_rotation);
++	if (pShader) add_StaticWallmark(*pShader, P, s, T, V, ttl, ignore_opt, rotation);
+ }
+ 
+ void CRender::add_StaticWallmark(const wm_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V)
+ {
+ 	dxUIShader* pShader = (dxUIShader*)&*S;
+-	add_StaticWallmark(pShader->hShader, P, s, T, V);
++	add_StaticWallmark(pShader->hShader, P, s, T, V, 0.0f, false, true);
+ }
+ 
+ void CRender::clear_static_wallmarks()
+diff --git a/src/Layers/xrRenderPC_R4/r4.h b/src/Layers/xrRenderPC_R4/r4.h
+index 9ae8b61..1646faa 100644
+--- a/src/Layers/xrRenderPC_R4/r4.h
++++ b/src/Layers/xrRenderPC_R4/r4.h
+@@ -300,8 +300,12 @@ public:
+ 	virtual void add_Geometry(IRenderVisual* V); // add visual(s)	(all culling performed)
+ 
+ 	// wallmarks
++	// demonized: add user defined rotation to wallmark
+ 	virtual void add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl = 0.f, bool ignore_opt = false, bool random_rotation = true);
++	virtual void add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, float rotation);
+ 	virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl = 0.f, bool ignore_opt = false, bool random_rotation = true);
++	virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, float rotation);
++
+ 	virtual void add_StaticWallmark(const wm_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V);
+ 	virtual void clear_static_wallmarks();
+ 	virtual void add_SkeletonWallmark(intrusive_ptr<CSkeletonWallmark> wm);
+diff --git a/src/Layers/xrRenderPC_R4/r4_R_render.cpp b/src/Layers/xrRenderPC_R4/r4_R_render.cpp
+index 46e1c03..b1f432d 100644
+--- a/src/Layers/xrRenderPC_R4/r4_R_render.cpp
++++ b/src/Layers/xrRenderPC_R4/r4_R_render.cpp
+@@ -145,12 +145,22 @@ void CRender::render_main(Fmatrix& m_ViewProjection, bool _fportals)
+ 				break; // exit loop on frustums
+ 			}
+ 		}
+-		if (g_pGameLevel && (phase == PHASE_NORMAL)) g_hud->Render_Last(); // HUD
++		if (g_pGameLevel && (phase == PHASE_NORMAL))
++		{
++			g_hud->Render_Last(); // HUD
++			if (g_hud->RenderActiveItemUIQuery())
++				r_dsgraph_render_hud_ui();
++		}
+ 	}
+ 	else
+ 	{
+ 		set_Object(0);
+-		if (g_pGameLevel && (phase == PHASE_NORMAL)) g_hud->Render_Last(); // HUD
++		if (g_pGameLevel && (phase == PHASE_NORMAL))
++		{
++			g_hud->Render_Last(); // HUD
++			if (g_hud->RenderActiveItemUIQuery())
++				r_dsgraph_render_hud_ui();
++		}
+ 	}
+ }
+ 
+@@ -435,12 +445,6 @@ void CRender::Render()
+ 		Target->phase_scene_end();
+ 	}
+ 
+-	if (g_hud && g_hud->RenderActiveItemUIQuery())
+-	{
+-		Target->phase_wallmarks();
+-		r_dsgraph_render_hud_ui();
+-	}
+-
+ 	// Wall marks
+ 	if (Wallmarks)
+ 	{
 diff --git a/src/build_config_defines.h b/src/build_config_defines.h
 index 3f15b2c..8158b52 100644
 --- a/src/build_config_defines.h
@@ -1439,6 +1964,20 @@ index 2e8de06..5890079 100644
  	BOOL m_b_redirect_input_to_level;
  	virtual void OnRender();
  };
+diff --git a/src/xrEngine/Render.h b/src/xrEngine/Render.h
+index df52521..29b8b22 100644
+--- a/src/xrEngine/Render.h
++++ b/src/xrEngine/Render.h
+@@ -283,6 +283,9 @@ public:
+ 	virtual void add_StaticWallmark(const wm_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V) = 0;
+ 	// Prefer this function when possible
+ 	virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl = 0.f, bool ignore_opt = false, bool random_rotation = true) = 0;
++
++	// demonized: add user defined rotation to wallmark
++	virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl, bool ignore_opt, float rotation) = 0;
+ 	virtual void clear_static_wallmarks() = 0;
+ 	//virtual void add_SkeletonWallmark (intrusive_ptr<CSkeletonWallmark> wm) = 0;
+ 	//virtual void add_SkeletonWallmark (const Fmatrix* xf, CKinematics* obj, ref_shader& sh, const Fvector& start, const Fvector& dir, float size)=0;
 diff --git a/src/xrEngine/xr_ioc_cmd.cpp b/src/xrEngine/xr_ioc_cmd.cpp
 index a1ec515..b206c4e 100644
 --- a/src/xrEngine/xr_ioc_cmd.cpp
@@ -1908,6 +2447,32 @@ index 451d458..500db02 100644
  	void Reset();
  
  	IC bool IsActive() { return m_actived; }
+diff --git a/src/xrGame/EliteDetector.cpp b/src/xrGame/EliteDetector.cpp
+index add236a..d5b0641 100644
+--- a/src/xrGame/EliteDetector.cpp
++++ b/src/xrGame/EliteDetector.cpp
+@@ -146,12 +146,7 @@ void CUIArtefactDetectorElite::Draw()
+ 	Fmatrix LM;
+ 	GetUILocatorMatrix(LM);
+ 
+-	IUIRender::ePointType bk = UI().m_currentPointType;
+-
+-	UI().m_currentPointType = IUIRender::pttLIT;
+-
+ 	UIRender->CacheSetXformWorld(LM);
+-	UIRender->CacheSetCullMode(IUIRender::cmNONE);
+ 
+ 	CUIWindow::Draw();
+ 
+@@ -193,7 +188,7 @@ void CUIArtefactDetectorElite::Draw()
+ 		}
+ 	}
+ 
+-	UI().m_currentPointType = bk;
++	UI().ScreenFrustumLIT().Clear();
+ }
+ 
+ void CUIArtefactDetectorElite::GetUILocatorMatrix(Fmatrix& _m)
 diff --git a/src/xrGame/GameObject.cpp b/src/xrGame/GameObject.cpp
 index 1516f8d..1ce2261 100644
 --- a/src/xrGame/GameObject.cpp
@@ -1972,6 +2537,37 @@ index 7087c3a..a45da94 100644
  }
  
  void CGamePersistent::start_game_intro()
+diff --git a/src/xrGame/HudItem.cpp b/src/xrGame/HudItem.cpp
+index 85bf746..01c90a3 100644
+--- a/src/xrGame/HudItem.cpp
++++ b/src/xrGame/HudItem.cpp
+@@ -596,7 +596,7 @@ void CHudItem::on_a_hud_attach()
+ 
+ void CHudItem::render_item_3d_ui()
+ {
+-	if (render_item_3d_ui_query() && script_ui)
++	if (script_ui)
+ 	{
+ 		Fmatrix LM;
+ 		Fmatrix trans = HudItemData()->m_item_transform;
+@@ -618,17 +618,9 @@ void CHudItem::render_item_3d_ui()
+ 		else
+ 			LM.mulB_43(script_ui_matrix);
+ 
+-		IUIRender::ePointType bk = UI().m_currentPointType;
+-		UI().m_currentPointType = IUIRender::pttLIT;
+ 		UIRender->CacheSetXformWorld(LM);
+-		UIRender->CacheSetCullMode(IUIRender::cmNONE);
+-		UI().ScreenFrustumLIT().Clear();
+ 		script_ui->Draw();
+-		UI().m_currentPointType = bk;
+ 	}
+-
+-	//	Restore cull mode
+-	UIRender->CacheSetCullMode(IUIRender::cmCCW);
+ }
+ 
+ extern float g_end_modif;
 diff --git a/src/xrGame/Level.cpp b/src/xrGame/Level.cpp
 index 2f93a35..b1e4c6a 100644
 --- a/src/xrGame/Level.cpp
@@ -2344,6 +2940,31 @@ index 3c89e6d..6e490ca 100644
  void CScriptXmlInit::ParseFile(LPCSTR xml_file)
  {
  	m_xml.Load(CONFIG_PATH, UI_PATH, xml_file);
+diff --git a/src/xrGame/UIDosimeter.cpp b/src/xrGame/UIDosimeter.cpp
+index 4bc899a..9088514 100644
+--- a/src/xrGame/UIDosimeter.cpp
++++ b/src/xrGame/UIDosimeter.cpp
+@@ -105,19 +105,9 @@ void CUIDosimeter::Draw()
+ {
+ 	Fmatrix LM;
+ 	GetUILocatorMatrix(LM);
+-
+-	IUIRender::ePointType bk = UI().m_currentPointType;
+-
+-	UI().m_currentPointType = IUIRender::pttLIT;
+-
+ 	UIRender->CacheSetXformWorld(LM);
+-	UIRender->CacheSetCullMode(IUIRender::cmNONE);
+-
+-	UI().ScreenFrustumLIT().Clear();
+-
+ 	CUIWindow::Draw();
+-
+-	UI().m_currentPointType = bk;
++	UI().ScreenFrustumLIT().Clear();
+ }
+ 
+ void CUIDosimeter::GetUILocatorMatrix(Fmatrix& _m)
 diff --git a/src/xrGame/Weapon.cpp b/src/xrGame/Weapon.cpp
 index 080f84d..a95c37f 100644
 --- a/src/xrGame/Weapon.cpp
@@ -2840,14 +3461,14 @@ index 0409ea5..8b4965f 100644
  	CAI_Stalker();
  	virtual ~CAI_Stalker();
 diff --git a/src/xrGame/ai/stalker/ai_stalker_events.cpp b/src/xrGame/ai/stalker/ai_stalker_events.cpp
-index f38ad85..c578a68 100644
+index f38ad85..0c63483 100644
 --- a/src/xrGame/ai/stalker/ai_stalker_events.cpp
 +++ b/src/xrGame/ai/stalker/ai_stalker_events.cpp
 @@ -15,6 +15,7 @@
  #include "../../level.h"
  #include "../../ai_monster_space.h"
  #include "../../characterphysicssupport.h"
-+#include "space_restrictor.h"
++#include "CustomZone.h"
  
  using namespace StalkerSpace;
  using namespace MonsterSpace;
@@ -2865,7 +3486,7 @@ index f38ad85..c578a68 100644
  
 +	// demonized: add g_ai_die_in_anomaly == 0 check
 +	if (!(g_ai_die_in_anomaly || m_enable_anomalies_pathfinding)) {
-+		CSpaceRestrictor* sr = smart_cast<CSpaceRestrictor*>(O);
++		CCustomZone* sr = smart_cast<CCustomZone*>(O);
 +		if (sr) {
 +			return;
 +		}
@@ -2875,14 +3496,14 @@ index f38ad85..c578a68 100644
  	CInventoryItem* I = smart_cast<CInventoryItem*>(O);
  
 diff --git a/src/xrGame/ai/stalker/ai_stalker_feel.cpp b/src/xrGame/ai/stalker/ai_stalker_feel.cpp
-index c0d54c9..1abc2f7 100644
+index c0d54c9..cd81af1 100644
 --- a/src/xrGame/ai/stalker/ai_stalker_feel.cpp
 +++ b/src/xrGame/ai/stalker/ai_stalker_feel.cpp
 @@ -14,6 +14,7 @@
  #include "../../sight_manager.h"
  #include "../../stalker_movement_manager_smart_cover.h"
  #include "../../stalker_animation_manager.h"
-+#include "space_restrictor.h"
++#include "CustomZone.h"
  
  #ifdef DEBUG
  #	include "../../ai_debug.h"
@@ -2901,7 +3522,7 @@ index c0d54c9..1abc2f7 100644
 +	// demonized: add g_ai_die_in_anomaly == 0 and m_enable_anomalies_pathfinding check
 +	// when 0 - disable pathfinding around anomaly
 +	if (!(g_ai_die_in_anomaly || m_enable_anomalies_pathfinding)) {
-+		CSpaceRestrictor* sr = smart_cast<CSpaceRestrictor*>(O);
++		CCustomZone* sr = smart_cast<CCustomZone*>(O);
 +		if (sr && (sr->spatial.type & STYPE_VISIBLEFORAI)) {
 +			return false;
 +		}
@@ -2917,7 +3538,7 @@ index c0d54c9..1abc2f7 100644
 +	// demonized: add g_ai_die_in_anomaly == 0 and m_enable_anomalies_damage check
 +	// when 0 - prevent any damage from anomalies
 +	if (!(g_ai_die_in_anomaly || m_enable_anomalies_damage)) {
-+		CSpaceRestrictor* sr = smart_cast<CSpaceRestrictor*>(O);
++		CCustomZone* sr = smart_cast<CCustomZone*>(O);
 +		if (sr) {
 +			return false;
 +		}
@@ -3611,7 +4232,7 @@ index a49b14a..56eb0ee 100644
  	void RemoveMapLocationByObjectID(u16 id); //call on destroy object
  	void RemoveMapLocation(CMapLocation* ml);
 diff --git a/src/xrGame/player_hud.cpp b/src/xrGame/player_hud.cpp
-index 96fae36..46f77f2 100644
+index 96fae36..a1d85e0 100644
 --- a/src/xrGame/player_hud.cpp
 +++ b/src/xrGame/player_hud.cpp
 @@ -401,7 +401,7 @@ void attachable_hud_item::load(const shared_str& sect_name)
@@ -3632,7 +4253,26 @@ index 96fae36..46f77f2 100644
  
  		u16 root_id = m_model->LL_GetBoneRoot();
  		CBoneInstance& root_binst = m_model->LL_GetBoneInstance(root_id);
-@@ -1263,7 +1263,7 @@ player_hud_motion_container* player_hud::get_hand_motions(LPCSTR section)
+@@ -705,11 +705,18 @@ bool player_hud::render_item_ui_query()
+ 
+ void player_hud::render_item_ui()
+ {
++	IUIRender::ePointType bk = UI().m_currentPointType;
++	UI().m_currentPointType = IUIRender::pttLIT;
++	UIRender->CacheSetCullMode(IUIRender::cmNONE);
++
+ 	if (m_attached_items[0])
+ 		m_attached_items[0]->render_item_ui();
+ 
+ 	if (m_attached_items[1])
+ 		m_attached_items[1]->render_item_ui();
++
++	UIRender->CacheSetCullMode(IUIRender::cmCCW);
++	UI().m_currentPointType = bk;
+ }
+ 
+ void player_hud::render_hud()
+@@ -1263,7 +1270,7 @@ player_hud_motion_container* player_hud::get_hand_motions(LPCSTR section)
  		if (phm->section == section)
  			return &phm->pm;
  	}
@@ -3641,7 +4281,7 @@ index 96fae36..46f77f2 100644
  	hand_motions* res = xr_new<hand_motions>();
  	res->section = section;
  	res->pm.load(m_model, section);
-@@ -1442,8 +1442,10 @@ void player_hud::remove_from_model_pool(LPCSTR sect)
+@@ -1442,8 +1449,10 @@ void player_hud::remove_from_model_pool(LPCSTR sect)
  	}
  }
  
@@ -4035,6 +4675,66 @@ index aeeaf8f..477e99f 100644
  #endif
  
  		.def("set_can_be_harmed", &CScriptGameObject::SetCanBeHarmed)
+diff --git a/src/xrGame/script_wallmarks_manager.cpp b/src/xrGame/script_wallmarks_manager.cpp
+index 640a9c8..fdc67d5 100644
+--- a/src/xrGame/script_wallmarks_manager.cpp
++++ b/src/xrGame/script_wallmarks_manager.cpp
+@@ -52,9 +52,17 @@ void ScriptWallmarksManager::PlaceWallmark(Fvector dir, Fvector start_pos,
+ 	PlaceWallmark(dir, start_pos, trace_dist, wallmark_size, section, ignore_obj, ttl, true);
+ }
+ 
++// demonized: add user defined rotation to wallmark
+ void ScriptWallmarksManager::PlaceWallmark(Fvector dir, Fvector start_pos,
+ 	float trace_dist, float wallmark_size, LPCSTR section,
+ 	CScriptGameObject* ignore_obj, float ttl, bool random_rotation)
++{
++	PlaceWallmark(dir, start_pos, trace_dist, wallmark_size, section, ignore_obj, ttl, random_rotation ? ::Random.randF(-20.f, 20.f) : 0.f);
++}
++
++void ScriptWallmarksManager::PlaceWallmark(Fvector dir, Fvector start_pos,
++	float trace_dist, float wallmark_size, LPCSTR section,
++	CScriptGameObject* ignore_obj, float ttl, float rotation)
+ {
+ 	collide::rq_result result;
+ 	BOOL reach_wall =
+@@ -81,7 +89,7 @@ void ScriptWallmarksManager::PlaceWallmark(Fvector dir, Fvector start_pos,
+ 			end_point.set(0, 0, 0);
+ 			end_point.mad(start_pos, dir, result.range);
+ 
+-			::Render->add_StaticWallmark(FindSection(section), end_point, wallmark_size, pTri, pVerts, ttl, true, random_rotation);
++			::Render->add_StaticWallmark(FindSection(section), end_point, wallmark_size, pTri, pVerts, ttl, true, rotation);
+ 		}
+ 	}
+ }
+diff --git a/src/xrGame/script_wallmarks_manager.h b/src/xrGame/script_wallmarks_manager.h
+index 54158cf..cb45b7e 100644
+--- a/src/xrGame/script_wallmarks_manager.h
++++ b/src/xrGame/script_wallmarks_manager.h
+@@ -26,6 +26,9 @@ public:
+ 	void PlaceWallmark(Fvector dir, Fvector start_pos,
+ 		float trace_dist, float wallmark_size, LPCSTR section,
+ 		CScriptGameObject* ignore_obj, float ttl, bool random_rotation = true);
++	void PlaceWallmark(Fvector dir, Fvector start_pos,
++		float trace_dist, float wallmark_size, LPCSTR section,
++		CScriptGameObject* ignore_obj, float ttl, float rotation);
+ 	void PlaceSkeletonWallmark(CScriptGameObject* obj, LPCSTR section, Fvector start,
+ 		Fvector dir, float size, float ttl);
+ };
+diff --git a/src/xrGame/script_wallmarks_script.cpp b/src/xrGame/script_wallmarks_script.cpp
+index 85b8bbc..bd8925e 100644
+--- a/src/xrGame/script_wallmarks_script.cpp
++++ b/src/xrGame/script_wallmarks_script.cpp
+@@ -17,6 +17,10 @@ void CScriptWallmarksManager::script_register(lua_State *L)
+ 		.def(constructor<>())
+ 		.def("place", (void (ScriptWallmarksManager::*)(Fvector, Fvector, float, float, LPCSTR, CScriptGameObject*, float))(&ScriptWallmarksManager::PlaceWallmark))
+ 		.def("place", (void (ScriptWallmarksManager::*)(Fvector, Fvector, float, float, LPCSTR, CScriptGameObject*, float, bool))(&ScriptWallmarksManager::PlaceWallmark))
++
++		// demonized: add user defined rotation to wallmark
++		.def("place", (void (ScriptWallmarksManager::*)(Fvector, Fvector, float, float, LPCSTR, CScriptGameObject*, float, float))(&ScriptWallmarksManager::PlaceWallmark))
++
+ 		.def("place_skeleton", &ScriptWallmarksManager::PlaceSkeletonWallmark),
+ 
+ 		def("wallmarks_manager", &GetManager)
 diff --git a/src/xrGame/space_restrictor.cpp b/src/xrGame/space_restrictor.cpp
 index 6448d01..3b50ea4 100644
 --- a/src/xrGame/space_restrictor.cpp
