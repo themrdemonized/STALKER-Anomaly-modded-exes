@@ -145,6 +145,11 @@ How to compile exes:
 7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.07.21**
+* Added `level.get_target_pos()` and `level.get_target_result()` functions, refer to lua_help_ex.script
+* Added `actor_on_changed_slot` callback, refer to `callbacks_gameobject.script`
+* Hotfix of possible mouse unfocus from game window by Lucy
+
 **2023.07.09**
 * Added `anomaly_on_before_activate` event for NPCs in callbacks_gameobject.script to make them less vurnerable to anomalies if pathfinding is enabled
 * Added possibility to set custom rotation angle of the wallmark, please refer to lua_help_ex.script in wallmarks_manager class

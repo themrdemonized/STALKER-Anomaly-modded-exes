@@ -2568,6 +2568,27 @@ index 85bf746..01c90a3 100644
  }
  
  extern float g_end_modif;
+diff --git a/src/xrGame/Inventory.cpp b/src/xrGame/Inventory.cpp
+index 38b7669..8be08cd 100644
+--- a/src/xrGame/Inventory.cpp
++++ b/src/xrGame/Inventory.cpp
+@@ -863,7 +863,16 @@ void CInventory::Update()
+ 				}
+ 			}
+ 
++			// demonized: add on changed slot callback
++			luabind::functor<void> funct;
++			auto prev_obj = ActiveItem() ? ActiveItem()->object().lua_game_object() : NULL;
++			auto prev_slot = m_iActiveSlot;
+ 			m_iActiveSlot = GetNextActiveSlot();
++			auto obj = ActiveItem() ? ActiveItem()->object().lua_game_object() : NULL;
++			if (ai().script_engine().functor("_G.CActor_OnChangedSlot", funct))
++			{
++				funct(m_iActiveSlot, obj, prev_slot, prev_obj);
++			}
+ 		}
+ 		else if ((GetNextActiveSlot() != NO_ACTIVE_SLOT) && ActiveItem() && ActiveItem()->cast_hud_item()->IsHidden())
+ 					ActiveItem()->ActivateItem();
 diff --git a/src/xrGame/Level.cpp b/src/xrGame/Level.cpp
 index 2f93a35..b1e4c6a 100644
 --- a/src/xrGame/Level.cpp
@@ -2883,7 +2904,7 @@ index 80938ef..5fb4aab 100644
  	float fly_dist; //дистанция которую пуля пролетела
  	Fvector tracer_start_position;
 diff --git a/src/xrGame/Level_input.cpp b/src/xrGame/Level_input.cpp
-index 3d06b55..a410863 100644
+index 3d06b55..4b86cb4 100644
 --- a/src/xrGame/Level_input.cpp
 +++ b/src/xrGame/Level_input.cpp
 @@ -56,7 +56,18 @@ void CLevel::IR_OnMouseWheel(int direction)
@@ -2906,6 +2927,19 @@ index 3d06b55..a410863 100644
  #endif
  	/* avo: end */
  
+@@ -114,6 +125,12 @@ void CLevel::IR_OnMouseMove(int dx, int dy)
+ 		IInputReceiver* IR = smart_cast<IInputReceiver*>(smart_cast<CGameObject*>(CURRENT_ENTITY()));
+ 		if (IR) IR->IR_OnMouseMove(dx, dy);
+ 	}
++
++    POINT p;
++    p.x = Device.dwWidth / 2;
++    p.y = Device.dwHeight / 2;
++    ClientToScreen(Device.m_hWnd, &p);
++    SetCursorPos(p.x, p.y);
+ }
+ 
+ // Обработка нажатия клавиш
 diff --git a/src/xrGame/ScriptXMLInit.cpp b/src/xrGame/ScriptXMLInit.cpp
 index 3c89e6d..6e490ca 100644
 --- a/src/xrGame/ScriptXMLInit.cpp
@@ -3854,7 +3888,7 @@ index 0d3548b..e55621e 100644
  }; //class first_bullet_controller
  
 diff --git a/src/xrGame/level_script.cpp b/src/xrGame/level_script.cpp
-index c16d21c..14b450b 100644
+index c16d21c..fafacb5 100644
 --- a/src/xrGame/level_script.cpp
 +++ b/src/xrGame/level_script.cpp
 @@ -50,6 +50,7 @@
@@ -4021,7 +4055,50 @@ index c16d21c..14b450b 100644
  const float get_env_rads()
  {
  	if (!CurrentGameUI())
-@@ -1675,6 +1804,9 @@ void CLevel::script_register(lua_State* L)
+@@ -1427,6 +1556,28 @@ u32 g_get_target_element()
+ 	return (0);
+ }
+ 
++// demonized: get world position under crosshair
++Fvector g_get_target_pos()
++{
++	collide::rq_result& RQ = HUD().GetCurrentRayQuery();
++	if (RQ.range)
++	{
++		return Fvector().mad(Device.vCameraPosition, Device.vCameraDirection, RQ.range);
++	}
++	return Fvector().set(0, 0, 0);
++}
++
++// demonized: get result of crosshair ray query
++script_rq_result g_get_target_result()
++{
++	collide::rq_result& RQ = HUD().GetCurrentRayQuery();
++	auto script_rq = script_rq_result();
++	if (RQ.range) {
++		script_rq.set(RQ);
++	}
++	return script_rq;
++}
++
+ u8 get_active_cam()
+ {
+ 	CActor* actor = smart_cast<CActor*>(Level().CurrentViewEntity());
+@@ -1620,6 +1771,13 @@ void CLevel::script_register(lua_State* L)
+ 			def("get_target_obj", &g_get_target_obj), //intentionally named to what is in xray extensions
+ 			def("get_target_dist", &g_get_target_dist),
+ 			def("get_target_element", &g_get_target_element), //Can get bone cursor is targetting
++			
++			// demonized: get world position under crosshair
++			def("get_target_pos", &g_get_target_pos),
++
++			// demonized: get result of crosshair ray query
++			def("get_target_result", &g_get_target_result),
++
+ 			def("spawn_item", &spawn_section),
+ 			def("get_active_cam", &get_active_cam),
+ 			def("set_active_cam", &set_active_cam),
+@@ -1675,6 +1833,9 @@ void CLevel::script_register(lua_State* L)
  			def("map_has_object_spot", map_has_object_spot),
  			def("map_change_spot_hint", map_change_spot_hint),
  
@@ -4031,7 +4108,7 @@ index c16d21c..14b450b 100644
  			def("add_dialog_to_render", add_dialog_to_render),
  			def("remove_dialog_to_render", remove_dialog_to_render),
  			def("hide_indicators", hide_indicators),
-@@ -1705,10 +1837,18 @@ void CLevel::script_register(lua_State* L)
+@@ -1705,10 +1866,18 @@ void CLevel::script_register(lua_State* L)
  			def("get_snd_volume", &get_snd_volume),
  			def("get_rain_volume", &get_rain_volume),
  			def("set_snd_volume", &set_snd_volume),
@@ -4050,7 +4127,7 @@ index c16d21c..14b450b 100644
  			def("remove_cam_effector", &remove_cam_effector),
  			def("set_cam_effector_factor", &set_cam_effector_factor),
  			def("get_cam_effector_factor", &get_cam_effector_factor),
-@@ -1762,6 +1902,21 @@ void CLevel::script_register(lua_State* L)
+@@ -1762,6 +1931,21 @@ void CLevel::script_register(lua_State* L)
  		.def_readonly("object", &script_rq_result::O)
  		.def_readonly("range", &script_rq_result::range)
  		.def_readonly("element", &script_rq_result::element)
@@ -4072,7 +4149,7 @@ index c16d21c..14b450b 100644
  		.def(constructor<>()),
  		class_<enum_exporter<collide::rq_target>>("rq_target")
  		.enum_("targets")
-@@ -1887,6 +2042,8 @@ void CLevel::script_register(lua_State* L)
+@@ -1887,6 +2071,8 @@ void CLevel::script_register(lua_State* L)
  		def("prefetch_texture", prefetch_texture),
  		def("prefetch_model", prefetch_model),
  		def("get_visual_userdata", GetVisualUserdata),
@@ -4292,54 +4369,19 @@ index 96fae36..a1d85e0 100644
  	xr_vector<attachable_hud_item*>::iterator it = m_pool.begin();
  	xr_vector<attachable_hud_item*>::iterator it_e = m_pool.end();
  	for (; it != it_e; ++it)
-diff --git a/src/xrGame/raypick.cpp b/src/xrGame/raypick.cpp
-index 8fd463b..a07bb0c 100644
---- a/src/xrGame/raypick.cpp
-+++ b/src/xrGame/raypick.cpp
-@@ -1,6 +1,7 @@
- #include "stdafx.h"
- #include "raypick.h"
- #include "level.h"
-+#include "material_manager.h"
- 
- CRayPick::CRayPick()
- {
-@@ -28,6 +29,30 @@ bool CRayPick::query()
- 	if (Level().ObjectSpace.RayPick(start_position, direction, range, flags, R, ignore))
- 	{
- 		result.set(R);
-+		if (!R.O) {
-+			//Msg("no object, check material");
-+			auto pTri = Level().ObjectSpace.GetStaticTris() + R.element;
-+			auto pMaterial = GMLib.GetMaterialByIdx(pTri->material);
-+			auto pMaterialFlags = pMaterial->Flags;
-+			//result.pTri = pTri;
-+			//result.pMaterial = pMaterial;
-+			result.pMaterialFlags = pMaterialFlags.flags;
-+			result.pMaterialName = pMaterial->m_Name.c_str();
-+
-+			result.fPHFriction = pMaterial->fPHFriction;
-+			result.fPHDamping = pMaterial->fPHDamping;
-+			result.fPHSpring = pMaterial->fPHSpring;
-+			result.fPHBounceStartVelocity = pMaterial->fPHBounceStartVelocity;
-+			result.fPHBouncing = pMaterial->fPHBouncing;
-+			result.fFlotationFactor = pMaterial->fFlotationFactor;
-+			result.fShootFactor = pMaterial->fShootFactor;
-+			result.fShootFactorMP = pMaterial->fShootFactorMP;
-+			result.fBounceDamageFactor = pMaterial->fBounceDamageFactor;
-+			result.fInjuriousSpeed = pMaterial->fInjuriousSpeed;
-+			result.fVisTransparencyFactor = pMaterial->fVisTransparencyFactor;
-+			result.fSndOcclusionFactor = pMaterial->fSndOcclusionFactor;
-+			result.fDensityFactor = pMaterial->fDensityFactor;
-+		}
- 		return true;
- 	}
- 	else
 diff --git a/src/xrGame/raypick.h b/src/xrGame/raypick.h
-index 81e990e..ff36f04 100644
+index 81e990e..de53eef 100644
 --- a/src/xrGame/raypick.h
 +++ b/src/xrGame/raypick.h
-@@ -9,6 +9,26 @@ struct script_rq_result
+@@ -2,6 +2,7 @@
+ #include "gameobject.h"
+ #include "script_game_object.h"
+ #include "../xrcdb/xr_collide_defs.h"
++#include "material_manager.h"
+ 
+ struct script_rq_result
+ {
+@@ -9,6 +10,26 @@ struct script_rq_result
  	float range;
  	int element;
  
@@ -4366,6 +4408,37 @@ index 81e990e..ff36f04 100644
  	script_rq_result()
  	{
  		O = 0;
+@@ -26,6 +47,30 @@ struct script_rq_result
+ 		}
+ 		range = R.range;
+ 		element = R.element;
++
++		// demonized: set material params of ray pick result
++		//Msg("no object, check material");
++		auto pTri = Level().ObjectSpace.GetStaticTris() + R.element;
++		auto pMaterial = GMLib.GetMaterialByIdx(pTri->material);
++		auto pMaterialFlagsRQ = pMaterial->Flags;
++		//pTri = pTri;
++		//pMaterial = pMaterial;
++		pMaterialFlags = pMaterialFlagsRQ.flags;
++		pMaterialName = pMaterial->m_Name.c_str();
++
++		fPHFriction = pMaterial->fPHFriction;
++		fPHDamping = pMaterial->fPHDamping;
++		fPHSpring = pMaterial->fPHSpring;
++		fPHBounceStartVelocity = pMaterial->fPHBounceStartVelocity;
++		fPHBouncing = pMaterial->fPHBouncing;
++		fFlotationFactor = pMaterial->fFlotationFactor;
++		fShootFactor = pMaterial->fShootFactor;
++		fShootFactorMP = pMaterial->fShootFactorMP;
++		fBounceDamageFactor = pMaterial->fBounceDamageFactor;
++		fInjuriousSpeed = pMaterial->fInjuriousSpeed;
++		fVisTransparencyFactor = pMaterial->fVisTransparencyFactor;
++		fSndOcclusionFactor = pMaterial->fSndOcclusionFactor;
++		fDensityFactor = pMaterial->fDensityFactor;
+ 	};
+ };
+ 
 diff --git a/src/xrGame/script_game_object.cpp b/src/xrGame/script_game_object.cpp
 index 5489997..9a1a917 100644
 --- a/src/xrGame/script_game_object.cpp
