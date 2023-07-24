@@ -12078,12 +12078,238 @@ index 0000000..e15446a
 +  </ItemGroup>
 +</Project>
 \ No newline at end of file
+diff --git a/src/ReShadeCompat/ReShadeCompat.vcxproj b/src/ReShadeCompat/ReShadeCompat.vcxproj
+new file mode 100644
+index 0000000..9714e0b
+--- /dev/null
++++ b/src/ReShadeCompat/ReShadeCompat.vcxproj
+@@ -0,0 +1,219 @@
++<?xml version="1.0" encoding="utf-8"?>
++<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
++  <ItemGroup Label="ProjectConfigurations">
++    <ProjectConfiguration Include="Release-AVX|x64">
++      <Configuration>Release-AVX</Configuration>
++      <Platform>x64</Platform>
++    </ProjectConfiguration>
++    <ProjectConfiguration Include="Release|x64">
++      <Configuration>Release</Configuration>
++      <Platform>x64</Platform>
++    </ProjectConfiguration>
++    <ProjectConfiguration Include="Verified|x64">
++      <Configuration>Verified</Configuration>
++      <Platform>x64</Platform>
++    </ProjectConfiguration>
++  </ItemGroup>
++  <PropertyGroup Label="Globals">
++    <Keyword>Win32Proj</Keyword>
++    <ProjectGuid>{9646dbf8-1a5e-41f0-9328-f65910706666}</ProjectGuid>
++    <RootNamespace>ReShadeCompat</RootNamespace>
++    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
++  </PropertyGroup>
++  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
++  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
++    <ConfigurationType>StaticLibrary</ConfigurationType>
++    <PlatformToolset>v143</PlatformToolset>
++    <CharacterSet>MultiByte</CharacterSet>
++    <WholeProgramOptimization>false</WholeProgramOptimization>
++  </PropertyGroup>
++  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Verified|x64'" Label="Configuration">
++    <ConfigurationType>StaticLibrary</ConfigurationType>
++    <PlatformToolset>v143</PlatformToolset>
++    <CharacterSet>MultiByte</CharacterSet>
++    <WholeProgramOptimization>false</WholeProgramOptimization>
++  </PropertyGroup>
++  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-AVX|x64'" Label="Configuration">
++    <ConfigurationType>StaticLibrary</ConfigurationType>
++    <PlatformToolset>v143</PlatformToolset>
++    <CharacterSet>MultiByte</CharacterSet>
++    <WholeProgramOptimization>false</WholeProgramOptimization>
++  </PropertyGroup>
++  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
++  <ImportGroup Label="ExtensionSettings">
++  </ImportGroup>
++  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
++    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
++    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
++    <Import Project="$(SolutionDir)Common.props" />
++  </ImportGroup>
++  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Verified|x64'" Label="PropertySheets">
++    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
++    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
++    <Import Project="$(SolutionDir)Common.props" />
++  </ImportGroup>
++  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-AVX|x64'" Label="PropertySheets">
++    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
++    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
++    <Import Project="$(SolutionDir)Common.props" />
++  </ImportGroup>
++  <PropertyGroup Label="UserMacros" />
++  <PropertyGroup>
++    <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
++  </PropertyGroup>
++  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
++    <LinkIncremental>false</LinkIncremental>
++    <OutDir>$(xrGameDir)bin_dbg\$(Platform)\$(Configuration)\</OutDir>
++    <IntDir>$(xrIntDir)$(ProjectName)\</IntDir>
++  </PropertyGroup>
++  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Verified|x64'">
++    <LinkIncremental>false</LinkIncremental>
++    <OutDir>$(xrGameDir)bin_dbg\$(Platform)\$(Configuration)\</OutDir>
++    <IntDir>$(xrIntDir)$(ProjectName)\</IntDir>
++  </PropertyGroup>
++  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-AVX|x64'">
++    <LinkIncremental>false</LinkIncremental>
++    <OutDir>$(xrGameDir)bin_dbg\$(Platform)\$(Configuration)\</OutDir>
++    <IntDir>$(xrIntDir)$(ProjectName)\</IntDir>
++  </PropertyGroup>
++  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
++    <ClCompile>
++      <AdditionalIncludeDirectories>.;$(DXSDK_DIR)Include;$(XRAY_16X_LIBS);$(xrSdkDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
++      <PreprocessorDefinitions>PURE_ALLOC;WIN32;NDEBUG;_WINDOWS;_USRDLL;XRCORE_EXPORTS;_SECURE_SCL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <StringPooling>true</StringPooling>
++      <ExceptionHandling>false</ExceptionHandling>
++      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
++      <BufferSecurityCheck>false</BufferSecurityCheck>
++      <FunctionLevelLinking>true</FunctionLevelLinking>
++      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
++      <FloatingPointModel>Precise</FloatingPointModel>
++      <RuntimeTypeInfo>true</RuntimeTypeInfo>
++      <PrecompiledHeader>Use</PrecompiledHeader>
++      <BrowseInformation>
++      </BrowseInformation>
++      <WarningLevel>Level4</WarningLevel>
++      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
++      <LanguageStandard>stdcpp17</LanguageStandard>
++      <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <Optimization>MaxSpeed</Optimization>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
++      <WholeProgramOptimization>false</WholeProgramOptimization>
++    </ClCompile>
++    <Link>
++      <AdditionalLibraryDirectories>$(xrSdkDir)libraries;$(DXSDK_DIR)Lib\x86;$(XRAY_16X_LIBS)BugTrap\Bin;$(xrLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
++      <SubSystem>NotSet</SubSystem>
++      <LargeAddressAware>true</LargeAddressAware>
++      <OptimizeReferences>true</OptimizeReferences>
++      <EnableCOMDATFolding>true</EnableCOMDATFolding>
++      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
++      <RandomizedBaseAddress>false</RandomizedBaseAddress>
++      <DataExecutionPrevention>
++      </DataExecutionPrevention>
++      <ImportLibrary>$(xrLibDir)$(TargetName).lib</ImportLibrary>
++      <GenerateDebugInformation>true</GenerateDebugInformation>
++    </Link>
++    <Lib>
++      <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
++    </Lib>
++  </ItemDefinitionGroup>
++  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Verified|x64'">
++    <ClCompile>
++      <Optimization>Disabled</Optimization>
++      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
++      <IntrinsicFunctions>false</IntrinsicFunctions>
++      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
++      <OmitFramePointers>false</OmitFramePointers>
++      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
++      <WholeProgramOptimization>false</WholeProgramOptimization>
++      <AdditionalIncludeDirectories>.;$(DXSDK_DIR)Include;$(XRAY_16X_LIBS);$(xrSdkDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
++      <PreprocessorDefinitions>USE_VERIFY_IN_RELEASE;PURE_ALLOC;WIN32;NDEBUG;_WINDOWS;_USRDLL;XRCORE_EXPORTS;_SECURE_SCL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <ExceptionHandling>false</ExceptionHandling>
++      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
++      <BufferSecurityCheck>true</BufferSecurityCheck>
++      <FunctionLevelLinking>true</FunctionLevelLinking>
++      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
++      <FloatingPointModel>Precise</FloatingPointModel>
++      <RuntimeTypeInfo>true</RuntimeTypeInfo>
++      <PrecompiledHeader>Use</PrecompiledHeader>
++      <BrowseInformation>
++      </BrowseInformation>
++      <WarningLevel>Level4</WarningLevel>
++      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
++      <RemoveUnreferencedCodeData>false</RemoveUnreferencedCodeData>
++      <StringPooling>false</StringPooling>
++      <LanguageStandard>stdcpp17</LanguageStandard>
++    </ClCompile>
++    <Link>
++      <AdditionalLibraryDirectories>$(xrSdkDir)libraries;$(DXSDK_DIR)Lib\x86;$(XRAY_16X_LIBS)BugTrap\Bin;$(xrLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
++      <SubSystem>NotSet</SubSystem>
++      <LargeAddressAware>true</LargeAddressAware>
++      <OptimizeReferences>true</OptimizeReferences>
++      <EnableCOMDATFolding>true</EnableCOMDATFolding>
++      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
++      <RandomizedBaseAddress>false</RandomizedBaseAddress>
++      <DataExecutionPrevention>
++      </DataExecutionPrevention>
++      <ImportLibrary>$(xrLibDir)$(TargetName).lib</ImportLibrary>
++      <GenerateDebugInformation>true</GenerateDebugInformation>
++    </Link>
++  </ItemDefinitionGroup>
++  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-AVX|x64'">
++    <ClCompile>
++      <Optimization>MaxSpeed</Optimization>
++      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
++      <WholeProgramOptimization>false</WholeProgramOptimization>
++      <AdditionalIncludeDirectories>.;$(DXSDK_DIR)Include;$(XRAY_16X_LIBS);$(xrSdkDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
++      <PreprocessorDefinitions>PURE_ALLOC;WIN32;NDEBUG;_WINDOWS;_USRDLL;XRCORE_EXPORTS;_SECURE_SCL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <StringPooling>true</StringPooling>
++      <ExceptionHandling>false</ExceptionHandling>
++      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
++      <BufferSecurityCheck>false</BufferSecurityCheck>
++      <FunctionLevelLinking>true</FunctionLevelLinking>
++      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
++      <FloatingPointModel>Precise</FloatingPointModel>
++      <RuntimeTypeInfo>true</RuntimeTypeInfo>
++      <PrecompiledHeader>Use</PrecompiledHeader>
++      <BrowseInformation>
++      </BrowseInformation>
++      <WarningLevel>Level4</WarningLevel>
++      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
++      <LanguageStandard>stdcpp17</LanguageStandard>
++    </ClCompile>
++    <Link>
++      <AdditionalLibraryDirectories>$(xrSdkDir)libraries;$(DXSDK_DIR)Lib\x86;$(XRAY_16X_LIBS)BugTrap\Bin;$(xrLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
++      <SubSystem>NotSet</SubSystem>
++      <LargeAddressAware>true</LargeAddressAware>
++      <OptimizeReferences>true</OptimizeReferences>
++      <EnableCOMDATFolding>true</EnableCOMDATFolding>
++      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
++      <RandomizedBaseAddress>false</RandomizedBaseAddress>
++      <DataExecutionPrevention>
++      </DataExecutionPrevention>
++      <ImportLibrary>$(xrLibDir)$(TargetName).lib</ImportLibrary>
++      <GenerateDebugInformation>true</GenerateDebugInformation>
++    </Link>
++    <Lib>
++      <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
++    </Lib>
++  </ItemDefinitionGroup>
++  <ItemGroup>
++    <ClCompile Include="addon.cpp" />
++    <ClCompile Include="stdafx.cpp">
++      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Verified|x64'">Create</PrecompiledHeader>
++      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release-AVX|x64'">Create</PrecompiledHeader>
++      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
++    </ClCompile>
++  </ItemGroup>
++  <ItemGroup>
++    <ClInclude Include="stdafx.h" />
++  </ItemGroup>
++  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
++  <ImportGroup Label="ExtensionTargets">
++  </ImportGroup>
++</Project>
+\ No newline at end of file
 diff --git a/src/engine-vs2022.sln b/src/engine-vs2022.sln
 new file mode 100644
-index 0000000..00a8fa7
+index 0000000..0e0819e
 --- /dev/null
 +++ b/src/engine-vs2022.sln
-@@ -0,0 +1,787 @@
+@@ -0,0 +1,812 @@
 +Microsoft Visual Studio Solution File, Format Version 12.00
 +# Visual Studio Version 17
 +VisualStudioVersion = 17.4.33205.214
@@ -12182,6 +12408,8 @@ index 0000000..00a8fa7
 +Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DXERR", "3rd party\DXERR\vs2022\DXERR.vcxproj", "{772FE450-F4F3-4687-A2A7-5624825089D7}"
 +EndProject
 +Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NVTT", "3rd party\NVTT\vs2022\NVTT.vcxproj", "{0EB257DC-5CFC-44B0-82C9-CE6B158BE473}"
++EndProject
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ReShadeCompat", "ReShadeCompat\ReShadeCompat.vcxproj", "{9646DBF8-1A5E-41F0-9328-F65910706666}"
 +EndProject
 +Global
 +	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12844,6 +13072,28 @@ index 0000000..00a8fa7
 +		{0EB257DC-5CFC-44B0-82C9-CE6B158BE473}.Release-AVX|x64.Build.0 = Release-AVX|x64
 +		{0EB257DC-5CFC-44B0-82C9-CE6B158BE473}.VerifiedDX11|x64.ActiveCfg = VerifiedDX11|x64
 +		{0EB257DC-5CFC-44B0-82C9-CE6B158BE473}.VerifiedDX11|x64.Build.0 = VerifiedDX11|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX10|x64.ActiveCfg = Release|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX10|x64.Build.0 = Release|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX10-AVX|x64.ActiveCfg = Release-AVX|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX10-AVX|x64.Build.0 = Release-AVX|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX11|x64.ActiveCfg = Release|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX11|x64.Build.0 = Release|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX11-AVX|x64.ActiveCfg = Release-AVX|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX11-AVX|x64.Build.0 = Release-AVX|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX8|x64.ActiveCfg = Release|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX8|x64.Build.0 = Release|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX8-AVX|x64.ActiveCfg = Release-AVX|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX8-AVX|x64.Build.0 = Release-AVX|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX9|x64.ActiveCfg = Release|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX9|x64.Build.0 = Release|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX9-AVX|x64.ActiveCfg = Release-AVX|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.DX9-AVX|x64.Build.0 = Release-AVX|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.Release|x64.ActiveCfg = Release|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.Release|x64.Build.0 = Release|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.Release-AVX|x64.ActiveCfg = Release-AVX|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.Release-AVX|x64.Build.0 = Release-AVX|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.VerifiedDX11|x64.ActiveCfg = VerifiedDX11|x64
++		{9646DBF8-1A5E-41F0-9328-F65910706666}.VerifiedDX11|x64.Build.0 = VerifiedDX11|x64
 +	EndGlobalSection
 +	GlobalSection(SolutionProperties) = preSolution
 +		HideSolutionNode = FALSE
@@ -12863,6 +13113,7 @@ index 0000000..00a8fa7
 +		{632AEEB6-DC06-4E15-9551-B2B09A4B73C5} = {2BFC806B-CE92-4EA4-8FE8-5F2EA54BA348}
 +		{772FE450-F4F3-4687-A2A7-5624825089D7} = {2BFC806B-CE92-4EA4-8FE8-5F2EA54BA348}
 +		{0EB257DC-5CFC-44B0-82C9-CE6B158BE473} = {2BFC806B-CE92-4EA4-8FE8-5F2EA54BA348}
++		{9646DBF8-1A5E-41F0-9328-F65910706666} = {2BFC806B-CE92-4EA4-8FE8-5F2EA54BA348}
 +	EndGlobalSection
 +	GlobalSection(ExtensibilityGlobals) = postSolution
 +		SolutionGuid = {76CF157A-A169-443B-AE3A-F17AD29325C6}
@@ -16647,10 +16898,10 @@ index f130914..a92d17e 100644
  
 diff --git a/src/xrGame/vs2022/xrGame.vcxproj b/src/xrGame/vs2022/xrGame.vcxproj
 new file mode 100644
-index 0000000..9115396
+index 0000000..17da34a
 --- /dev/null
 +++ b/src/xrGame/vs2022/xrGame.vcxproj
-@@ -0,0 +1,4191 @@
+@@ -0,0 +1,4193 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -17762,6 +18013,7 @@ index 0000000..9115396
 +    <ClInclude Include="..\kills_store.h" />
 +    <ClInclude Include="..\kills_store_inline.h" />
 +    <ClInclude Include="..\Level.h" />
++    <ClInclude Include="..\LevelDebugScript.h" />
 +    <ClInclude Include="..\Level_Bullet_Manager.h" />
 +    <ClInclude Include="..\level_changer.h" />
 +    <ClInclude Include="..\level_debug.h" />
@@ -19557,6 +19809,7 @@ index 0000000..9115396
 +      <PrecompiledHeaderFile>pch_script.h</PrecompiledHeaderFile>
 +      <PrecompiledHeaderOutputFile>$(IntDir)$(ProjectName)_script.pch</PrecompiledHeaderOutputFile>
 +    </ClCompile>
++    <ClCompile Include="..\LevelDebugScript.cpp" />
 +    <ClCompile Include="..\Level_Bullet_Manager.cpp" />
 +    <ClCompile Include="..\Level_bullet_manager_firetrace.cpp" />
 +    <ClCompile Include="..\level_changer.cpp" />
@@ -20845,10 +21098,10 @@ index 0000000..9115396
 \ No newline at end of file
 diff --git a/src/xrGame/vs2022/xrGame.vcxproj.filters b/src/xrGame/vs2022/xrGame.vcxproj.filters
 new file mode 100644
-index 0000000..8616bee
+index 0000000..4f95a5b
 --- /dev/null
 +++ b/src/xrGame/vs2022/xrGame.vcxproj.filters
-@@ -0,0 +1,5360 @@
+@@ -0,0 +1,5362 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup>
@@ -24973,6 +25226,7 @@ index 0000000..8616bee
 +    <ClInclude Include="..\ZudaArtifact.h" />
 +    <ClInclude Include="..\new_sds.h" />
 +    <ClInclude Include="..\NewZoomFlag.h" />
++    <ClInclude Include="..\LevelDebugScript.h" />
 +  </ItemGroup>
 +  <ItemGroup>
 +    <ClCompile Include="..\..\xrServerEntities\alife_human_brain.cpp" />
@@ -26200,6 +26454,7 @@ index 0000000..8616bee
 +    <ClCompile Include="..\zone_effector.cpp" />
 +    <ClCompile Include="..\ZudaArtifact.cpp" />
 +    <ClCompile Include="..\WeaponMagazineExtended.cpp" />
++    <ClCompile Include="..\LevelDebugScript.cpp" />
 +  </ItemGroup>
 +  <ItemGroup>
 +    <CustomBuild Include="..\ai\monsters\chimera\chimera_attack_state.h" />

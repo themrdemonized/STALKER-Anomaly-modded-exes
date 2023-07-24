@@ -81,6 +81,8 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
 
 * Additional callbacks described in `callbacks_gameobject.script`
 
+* Moved solution to Visual Studio 2022, In case you have problems, make sure you installed the latest Visual C++ 2022 Redistributables. You can find them here: https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170
+
 * Additional edits and bugfixes by demonized
   * Restored "Fatal Error" MessageBox popup in case of encountering fatal engine errors like it was on Windows 7 or lower
   * In case of typical first person model/animation errors, the game will print the section that has defined model
@@ -90,6 +92,28 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Added getting material of ray_pick() result with all of its properties
   * Potential fix for stuck monsters from OGSR Engine repo in `control_animation_base_accel.cpp`
   * Removed maximum engine limit of 5 artefacts on belt
+
+* Fixes and features by Lucy
+  * Reshade shaders won't affect UI, full addon support version of Reshade is required
+  * fix for hands exported from blender (you no longer have to reassign the motion references)
+  * fix for silent error / script freeze when getting player accuracy in scripts
+  * animation fixes (shotgun shell didn't sync with add cartridge and close anims)
+  * game no longer crashes on missing item section when loading a save (should be possible to uninstall most mods mid-game now)
+  * fix for mutants stuck running in place (many thanks to Arszi for finding it)
+  * fix for two handed detector/device animations (swaying is now applied to both arms instead of only the left one)
+  * it's now possible to play script particle effects in hud_mode with :play(true) / :play_at_pos(pos, true)
+  * the game will now display a crash message when crashing due to empty translation string
+  * Scripted Debug Render functions
+  * Debug renderer works on DX10/11
+    * Many thanks to OpenXRay and OGSR authors:
+    * https://github.com/OpenXRay/xray-16/commit/752cfddc09989b1f6545f420a5c76a3baf3004d7
+    * https://github.com/OpenXRay/xray-16/commit/a1e581285c21f2d5fd59ffe8afb089fb7b2da154
+    * https://github.com/OpenXRay/xray-16/commit/c17a38abf6318f1a8b8c09e9e68c188fe7b821c1
+    * https://github.com/OGSR/OGSR-Engine/commit/d359bde2f1e5548a053faf0c5361520a55b0552c
+  * Exported a few more vector and matrix functions to lua
+  * Optional third argument for world2ui to return position even if it's off screen instead of -9999
+  * Unified bone lua functions and made them safer
+  * It's now possible to get player first person hands bone data in lua
 
 * Fixes and features by DPurple
   * Fix of using `%c[color]` tag with multibyte font causing unexpected line ending by DPurple
@@ -126,10 +150,6 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
 
 * Heatvision by vegeta1k95 (https://www.moddb.com/mods/stalker-anomaly/addons/heatvision-v02-extension-for-beefs-nvg-dx11engine-mod/)
 
-## Optional patches (not used in exes)
-
-* vs2022.diff: Visual Studio 2022 solution and repo edits for building with VS2022 by mrnuku/xray-monolith and edited by demonized (the exes in this repo's archive are still build with VS2015)
-
 ## How to make my own modded exe?
 
 Patches folder contains diffs used to create new exes, they are used to compile your own exes if you need that
@@ -142,9 +162,34 @@ How to compile exes:
 4. From newly created branch make additional branches for each .diff file in "patches" folder of this repo that you want to apply
 5. Apply patches in those branches via `git apply <path_to_patch>` command
 6. Merge those branches back into your branch created in p.3
-7. To compile the engine open the solution in VS2015, select all projects and configurations in Batch build and start a build.
+7. To compile the engine open the solution in VS2022, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.07.24**
+* Exes now are built with Visual Studio 2022. In case you have problems, make sure you installed the latest Visual C++ 2022 Redistributables. You can find them here: https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170
+* Fixes and features by Lucy
+  * Reshade shaders won't affect UI, full addon support version of Reshade is required
+  * fix for hands exported from blender (you no longer have to reassign the motion references)
+  * fix for silent error / script freeze when getting player accuracy in scripts
+  * animation fixes (shotgun shell didn't sync with add cartridge and close anims)
+  * game no longer crashes on missing item section when loading a save (should be possible to uninstall most mods mid-game now)
+  * fix for mutants stuck running in place (many thanks to Arszi for finding it)
+  * fix for two handed detector/device animations (swaying is now applied to both arms instead of only the left one)
+  * it's now possible to play script particle effects in hud_mode with :play(true) / :play_at_pos(pos, true)
+  * the game will now display a crash message when crashing due to empty translation string
+  * Scripted Debug Render functions
+  * Debug renderer works on DX10/11
+    * Many thanks to OpenXRay and OGSR authors:
+    * https://github.com/OpenXRay/xray-16/commit/752cfddc09989b1f6545f420a5c76a3baf3004d7
+    * https://github.com/OpenXRay/xray-16/commit/a1e581285c21f2d5fd59ffe8afb089fb7b2da154
+    * https://github.com/OpenXRay/xray-16/commit/c17a38abf6318f1a8b8c09e9e68c188fe7b821c1
+    * https://github.com/OGSR/OGSR-Engine/commit/d359bde2f1e5548a053faf0c5361520a55b0552c
+  * Exported a few more vector and matrix functions to lua
+  * Optional third argument for world2ui to return position even if it's off screen instead of -9999
+  * Unified bone lua functions and made them safer
+  * It's now possible to get player first person hands bone data in lua
+* All new functions are added in `lua_help_ex.script`
+
 **2023.07.21**
 * Added `level.get_target_pos()` and `level.get_target_result()` functions, refer to lua_help_ex.script
 * Added `actor_on_changed_slot` callback, refer to `callbacks_gameobject.script`
