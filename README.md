@@ -177,7 +177,7 @@ How to compile exes:
   * fix for two handed detector/device animations (swaying is now applied to both arms instead of only the left one)
   * it's now possible to play script particle effects in hud_mode with :play(true) / :play_at_pos(pos, true)
   * the game will now display a crash message when crashing due to empty translation string
-  * Scripted Debug Render functions
+  * Scripted Debug Render functions, drawing debug boxes, spheres and lines 
   * Debug renderer works on DX10/11
     * Many thanks to OpenXRay and OGSR authors:
     * https://github.com/OpenXRay/xray-16/commit/752cfddc09989b1f6545f420a5c76a3baf3004d7
