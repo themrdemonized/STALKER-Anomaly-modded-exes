@@ -81,7 +81,7 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
 
 * Additional callbacks described in `callbacks_gameobject.script`
 
-* Moved solution to Visual Studio 2022, In case you have problems, make sure you installed the latest Visual C++ 2022 Redistributables. You can find them here: https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170
+* Moved solution to Visual Studio 2022, In case you have problems, make sure you installed the latest Visual C++ Redistributables. You can find them here: https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/
 
 * Additional edits and bugfixes by demonized
   * Restored "Fatal Error" MessageBox popup in case of encountering fatal engine errors like it was on Windows 7 or lower
@@ -166,7 +166,7 @@ How to compile exes:
 
 ## Changelog
 **2023.07.24**
-* Exes now are built with Visual Studio 2022. In case you have problems, make sure you installed the latest Visual C++ 2022 Redistributables. You can find them here: https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170
+* Exes now are built with Visual Studio 2022. In case you have problems, make sure you installed the latest Visual C++ Redistributables. You can find them here: https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/
 * Fixes and features by Lucy
   * Reshade shaders won't affect UI, full addon support version of Reshade is required
   * fix for hands exported from blender (you no longer have to reassign the motion references)
