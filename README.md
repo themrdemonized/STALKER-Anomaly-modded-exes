@@ -5,10 +5,10 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
 # Read the instructions PLEASE!!!
 ![image](https://github.com/themrdemonized/STALKER-Anomaly-modded-exes/assets/46323442/f945491e-0de7-4bdc-9449-77344e807c3f)
 
-Install the latest Visual C++ Redistributables: https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/
-Download STALKER-Anomaly-modded-exes.zip archive.
-Unpack all directories directly into your Anomaly game folder, overwrite files if requested.
-Delete shader cache in launcher before first launch of the game with new exes. You only have to do it once.
+* Install the latest Visual C++ Redistributables: https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/
+* Download STALKER-Anomaly-modded-exes.zip archive.
+* Unpack all directories directly into your Anomaly game folder, overwrite files if requested.
+* Delete shader cache in launcher before first launch of the game with new exes. You only have to do it once.
 
 # List of patches
 
