@@ -13067,6 +13067,28 @@ index df52521..29b8b22 100644
  	virtual void clear_static_wallmarks() = 0;
  	//virtual void add_SkeletonWallmark (intrusive_ptr<CSkeletonWallmark> wm) = 0;
  	//virtual void add_SkeletonWallmark (const Fmatrix* xf, CKinematics* obj, ref_shader& sh, const Fvector& start, const Fvector& dir, float size)=0;
+diff --git a/src/xrEngine/edit_actions.cpp b/src/xrEngine/edit_actions.cpp
+index 5c96844..a219f11 100644
+--- a/src/xrEngine/edit_actions.cpp
++++ b/src/xrEngine/edit_actions.cpp
+@@ -10,6 +10,7 @@
+ #include "line_edit_control.h"
+ #include "xr_input.h"
+ #include <locale.h>
++#include <locale>
+ 
+ namespace text_editor
+ {
+@@ -100,7 +101,8 @@ namespace text_editor
+ 
+ 			if (pInput->get_dik_name(m_dik, buff, sizeof(buff)))
+ 			{
+-				if (_isalpha_l(buff[0], current_locale) || buff[0] == char(-1)) // "ÿ" = -1
++				// demonized: add extra check for russian letters
++				if (std::isalpha(buff[0], std::locale("")) || _isalpha_l(buff[0], current_locale) || buff[0] == char(-1)) // "ÿ" = -1
+ 				{
+ 					_strlwr_l(buff, current_locale);
+ 					c = buff[0];
 diff --git a/src/xrEngine/x_ray.cpp b/src/xrEngine/x_ray.cpp
 index 15a57b9..a087aec 100644
 --- a/src/xrEngine/x_ray.cpp

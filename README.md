@@ -94,7 +94,7 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
   * Removed maximum engine limit of 5 artefacts on belt
 
 * Fixes and features by Lucy
-  * Reshade shaders won't affect UI, full addon support version of Reshade is required
+  * Reshade shaders won't affect UI, full addon support version of Reshade is required (see TROUBLESHOOTING for details)
   * fix for hands exported from blender (you no longer have to reassign the motion references)
   * fix for silent error / script freeze when getting player accuracy in scripts
   * animation fixes (shotgun shell didn't sync with add cartridge and close anims)
@@ -142,6 +142,10 @@ Delete shader cache in launcher before first launch of the game with new exes. Y
 * All settings can be edited from the game options in "Modded Exes" tab
 ![image](http://puu.sh/JC40Y/9315119150.jpg)
 
+## TROUBLESHOOTING
+* Q: The game crashes when using reshade and trying to switch resolution/change graphics settings/init `vid_restart` command
+* A: This is due to Reshade versions shenanigans. The latest tested version that doesn't crash while doing stuff in question is 5.7.0, you can download it here: https://reshade.me/downloads/ReShade_Setup_5.7.0_Addon.exe. If you wish to use later versions, try not to change graphics settings with them.
+
 ## Below are the edits that are supplemental to the mods, the mods themselves **are not included**, download the mods by the links. If mods in the links provide their own exes, you can ignore them, all necessary edits are already included on this page. 
 
 * BaS engine edits by Mortan (https://www.moddb.com/mods/stalker-anomaly/addons/boomsticks-and-sharpsticks)
@@ -165,6 +169,15 @@ How to compile exes:
 7. To compile the engine open the solution in VS2022, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.07.28**
+* Features by LVutner:
+  * Added support for Shader Scopes on DX9
+  * Added support for Heatvision on DX10
+* New file `aaaa_script_fixes_mp.script` that will contain monkeypatches for fixing some vanilla scripts
+  * Fixed incorrect behaviour of `actor_on_item_before_pickup` callback
+* Fixed unable to switch to russian language when typing text
+* Added Troubleshooting section in readme file
+
 **2023.07.24**
 * Exes now are built with Visual Studio 2022. In case you have problems, make sure you installed the latest Visual C++ Redistributables. You can find them here: https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/
 * Fixes and features by Lucy

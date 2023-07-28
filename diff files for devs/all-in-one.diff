@@ -16646,10 +16646,10 @@ index 9ef142d..4d0ae5c 100644
  	g_hud->RenderActiveItemUI();
  	rmNormal();
 diff --git a/src/Layers/xrRender/rendertarget_phase_nightvision.cpp b/src/Layers/xrRender/rendertarget_phase_nightvision.cpp
-index 248d1c4..64da747 100644
+index 248d1c4..066b762 100644
 --- a/src/Layers/xrRender/rendertarget_phase_nightvision.cpp
 +++ b/src/Layers/xrRender/rendertarget_phase_nightvision.cpp
-@@ -51,3 +51,111 @@ void CRenderTarget::phase_nightvision()
+@@ -51,3 +51,149 @@ void CRenderTarget::phase_nightvision()
  	HW.pContext->CopyResource(rt_Generic_0->pTexture->surface_get(), dest_rt->pTexture->surface_get());
  #endif
  };
@@ -16681,9 +16681,6 @@ index 248d1c4..64da747 100644
 +#if defined(USE_DX10) || defined(USE_DX11)
 +	ref_rt& dest_rt = RImplementation.o.dx10_msaa ? rt_Generic : rt_Color;
 +	u_setrt(dest_rt, nullptr, nullptr, nullptr);
-+#else
-+	u_setrt(rt_Generic_0, nullptr, nullptr, nullptr);
-+#endif		
 +
 +	RCache.set_CullMode(CULL_NONE);
 +	RCache.set_Stencil(FALSE);
@@ -16703,8 +16700,49 @@ index 248d1c4..64da747 100644
 +	RCache.set_Geometry(g_combine);
 +	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 +
-+#if defined(USE_DX10) || defined(USE_DX11)
 +	HW.pContext->CopyResource(rt_Generic_0->pTexture->surface_get(), dest_rt->pTexture->surface_get());
++#else
++	//Main pass (we avoid write-read from the same buffer)
++	u_setrt(rt_Generic_PingPong, nullptr, nullptr, nullptr);
++
++	RCache.set_CullMode(CULL_NONE);
++	RCache.set_Stencil(FALSE);
++
++	//Fill vertex buffer
++	FVF::TL* pv = (FVF::TL*)RCache.Vertex.Lock(4, g_combine->vb_stride, Offset);
++	pv->set(0, float(h), d_Z, d_W, C, p0.x, p1.y); pv++;
++	pv->set(0, 0, d_Z, d_W, C, p0.x, p0.y); pv++;
++	pv->set(float(w), float(h), d_Z, d_W, C, p1.x, p1.y); pv++;
++	pv->set(float(w), 0, d_Z, d_W, C, p1.x, p0.y); pv++;
++	RCache.Vertex.Unlock(4, g_combine->vb_stride);
++
++	//Set pass
++	RCache.set_Element(s_fakescope->E[0]);
++
++	//Set geometry
++	RCache.set_Geometry(g_combine);
++	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
++
++	//Draw to rt_Generic_0
++	u_setrt(rt_Generic_0, nullptr, nullptr, nullptr);
++
++	RCache.set_CullMode(CULL_NONE);
++	RCache.set_Stencil(FALSE);
++
++	//Fill vertex buffer
++	pv = (FVF::TL*)RCache.Vertex.Lock(4, g_combine->vb_stride, Offset);
++	pv->set(0, float(h), d_Z, d_W, C, p0.x, p1.y); pv++;
++	pv->set(0, 0, d_Z, d_W, C, p0.x, p0.y); pv++;
++	pv->set(float(w), float(h), d_Z, d_W, C, p1.x, p1.y); pv++;
++	pv->set(float(w), 0, d_Z, d_W, C, p1.x, p0.y); pv++;
++	RCache.Vertex.Unlock(4, g_combine->vb_stride);
++
++	//Set pass
++	RCache.set_Element(s_fakescope->E[1]);
++
++	//Set geometry
++	RCache.set_Geometry(g_combine);
++	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 +#endif
 +};
 +
@@ -18199,7 +18237,7 @@ index 97721a6..9398a05 100644
  		break;
  	case DLL_THREAD_ATTACH:
 diff --git a/src/Layers/xrRenderPC_R2/blender_nightvision.cpp b/src/Layers/xrRenderPC_R2/blender_nightvision.cpp
-index b44403b..042b2c4 100644
+index b44403b..29d2a42 100644
 --- a/src/Layers/xrRenderPC_R2/blender_nightvision.cpp
 +++ b/src/Layers/xrRenderPC_R2/blender_nightvision.cpp
 @@ -3,11 +3,21 @@
@@ -18224,7 +18262,7 @@ index b44403b..042b2c4 100644
  void CBlender_nightvision::Compile(CBlender_Compile& C)
  {
  	IBlender::Compile(C);
-@@ -38,3 +48,23 @@ void CBlender_nightvision::Compile(CBlender_Compile& C)
+@@ -38,3 +48,37 @@ void CBlender_nightvision::Compile(CBlender_Compile& C)
  		break;	
  	}
  }
@@ -18232,10 +18270,24 @@ index b44403b..042b2c4 100644
 +void CBlender_fakescope::Compile(CBlender_Compile& C) //crookr
 +{
 +	IBlender::Compile(C);
-+	C.r_Pass("null", "fakescope", FALSE, FALSE, FALSE);
-+	C.r_Sampler_rtf("s_position", r2_RT_P);
-+	C.r_Sampler_clf("s_image", r2_RT_generic0);
-+	C.r_End();
++	switch (C.iElement)
++	{
++	case 0: //Main pass
++		C.r_Pass("null", "fakescope", FALSE, FALSE, FALSE);
++		C.r_Sampler_rtf("s_position", r2_RT_P);
++		C.r_Sampler_clf("s_image", r2_RT_generic0);
++		C.r_Sampler_clf("s_blur_2", r2_RT_blur_2);
++		C.r_Sampler_clf("s_blur_4", r2_RT_blur_4);
++		C.r_Sampler_clf("s_blur_8", r2_RT_blur_8);
++		C.r_Sampler_clf("s_scope", r2_RT_scopert);
++		C.r_End();
++		break;
++	case 1: //Copy to rt_Generic_2
++		C.r_Pass("null", "copy", FALSE, FALSE, FALSE);	
++		C.r_Sampler_clf("s_base", "$user$generic_pingpong");	
++		C.r_End();
++		break;
++	}
 +}
 +
 +//--DSR-- HeatVision_start
@@ -18403,7 +18455,7 @@ index e87753c..a1c8be8 100644
  			b_portal P;
  			fs->r(&P, sizeof(P));
 diff --git a/src/Layers/xrRenderPC_R2/r2_rendertarget.cpp b/src/Layers/xrRenderPC_R2/r2_rendertarget.cpp
-index f55c506..7f17163 100644
+index f55c506..39615de 100644
 --- a/src/Layers/xrRenderPC_R2/r2_rendertarget.cpp
 +++ b/src/Layers/xrRenderPC_R2/r2_rendertarget.cpp
 @@ -247,6 +247,8 @@ CRenderTarget::CRenderTarget()
@@ -18427,7 +18479,16 @@ index f55c506..7f17163 100644
  
  		// RT Blur
  		rt_blur_h_2.create(r2_RT_blur_h_2, u32(w/2), u32(h/2), D3DFMT_A8R8G8B8);
-@@ -323,6 +330,8 @@ CRenderTarget::CRenderTarget()
+@@ -312,6 +319,8 @@ CRenderTarget::CRenderTarget()
+ 		//	temp: for higher quality blends
+ 		if (RImplementation.o.advancedpp)
+ 			rt_Generic_2.create(r2_RT_generic2, w, h, D3DFMT_A16B16G16R16F);
++
++		rt_Generic_PingPong.create("$user$generic_pingpong", w, h, D3DFMT_A8R8G8B8);
+ 	}
+ 
+ 	s_sunshafts.create(b_sunshafts, "r2\\sunshafts");
+@@ -323,6 +332,8 @@ CRenderTarget::CRenderTarget()
  	s_gasmask_drops.create(b_gasmask_drops, "r2\\gasmask_drops");
  	s_gasmask_dudv.create(b_gasmask_dudv, "r2\\gasmask_dudv");
  	s_nightvision.create(b_nightvision, "r2\\nightvision");
@@ -18436,7 +18497,7 @@ index f55c506..7f17163 100644
  	s_lut.create(b_lut, "r2\\lut");	
  	// OCCLUSION
  	s_occq.create(b_occq, "r2\\occq");
-@@ -758,6 +767,8 @@ CRenderTarget::~CRenderTarget()
+@@ -758,6 +769,8 @@ CRenderTarget::~CRenderTarget()
  	xr_delete(b_gasmask_drops);
  	xr_delete(b_gasmask_dudv);
  	xr_delete(b_nightvision);
@@ -18446,7 +18507,7 @@ index f55c506..7f17163 100644
  	xr_delete(b_smaa);
  
 diff --git a/src/Layers/xrRenderPC_R2/r2_rendertarget.h b/src/Layers/xrRenderPC_R2/r2_rendertarget.h
-index 727029d..3b9e2be 100644
+index 727029d..a4a3b86 100644
 --- a/src/Layers/xrRenderPC_R2/r2_rendertarget.h
 +++ b/src/Layers/xrRenderPC_R2/r2_rendertarget.h
 @@ -39,6 +39,8 @@ public:
@@ -18458,18 +18519,19 @@ index 727029d..3b9e2be 100644
  	IBlender* b_lut;
  	
  	IBlender* b_smaa;	
-@@ -68,7 +70,10 @@ public:
+@@ -68,7 +70,11 @@ public:
  	ref_rt rt_secondVP;		// 32bit		(r,g,b,a) --//#SM+#-- +SecondVP+
  	ref_rt rt_ui_pda;
  
 +	ref_rt rt_fakescope; //crookr
++	ref_rt rt_Generic_PingPong;
 +
  	ref_rt rt_dof;
 +	ref_rt rt_Heat; //--DSR-- HeatVision
  	
  	ref_rt rt_blur_h_2;
  	ref_rt rt_blur_2;
-@@ -122,6 +127,8 @@ private:
+@@ -122,6 +128,8 @@ private:
  	ref_shader s_gasmask_drops;
  	ref_shader s_gasmask_dudv;
  	ref_shader s_nightvision;
@@ -18478,7 +18540,7 @@ index 727029d..3b9e2be 100644
  
  	ref_shader s_blur;	
  	ref_shader s_dof;
-@@ -260,6 +267,8 @@ public:
+@@ -260,6 +268,8 @@ public:
  	void phase_gasmask_drops();
  	void phase_gasmask_dudv();
  	void phase_nightvision();
@@ -20504,10 +20566,32 @@ index 1824690..708bdf4 100644
  
  void CRender::clear_static_wallmarks()
 diff --git a/src/Layers/xrRenderPC_R3/r3.h b/src/Layers/xrRenderPC_R3/r3.h
-index 3f8201b..d079773 100644
+index 3f8201b..9a27417 100644
 --- a/src/Layers/xrRenderPC_R3/r3.h
 +++ b/src/Layers/xrRenderPC_R3/r3.h
-@@ -299,8 +299,12 @@ public:
+@@ -232,6 +232,11 @@ public:
+ 		o_hemi = 0.75f * LT.get_hemi();
+ 		//o_hemi						= 0.5f*LT.get_hemi			()	;
+ 		o_sun = 0.75f * LT.get_sun();
++
++		//--DSR-- Heatvision start
++		RCache.hemi.set_hotness(O->GetHotness(), O->GetTransparency(), 0.f, 0.f);
++		//--DSR-- Heatvision end
++
+ 		CopyMemory(o_hemi_cube, LT.get_hemi_cube(), CROS_impl::NUM_FACES*sizeof(float));
+ 	}
+ 
+@@ -247,6 +252,9 @@ public:
+ #ifdef	DEBUG
+         if (ps_r2_ls_flags.test(R2FLAG_GLOBALMATERIAL))	mtl=ps_r2_gmaterial;
+ #endif
++		if (!(T && T->m_is_hot))
++			RCache.hemi.set_hotness(0.f, 0.f, 0.f, 0.f);
++
+ 		RCache.hemi.set_material(o_hemi, o_sun, 0, (mtl < 5 ? (mtl + .5f) / 4.f : mtl));
+ 		RCache.hemi.set_pos_faces(o_hemi_cube[CROS_impl::CUBE_FACE_POS_X],
+ 		                          o_hemi_cube[CROS_impl::CUBE_FACE_POS_Y],
+@@ -299,8 +307,12 @@ public:
  	virtual void add_Geometry(IRenderVisual* V); // add visual(s)	(all culling performed)
  
  	// wallmarks
@@ -20688,13 +20772,35 @@ index 0e3462b..ead9202 100644
  	// W[0]=0, W[7]=-7
  	w0.set(W[1], W[2], W[3], W[4]); // -1, -2, -3, -4
 diff --git a/src/Layers/xrRenderPC_R3/r3_rendertarget_phase_combine.cpp b/src/Layers/xrRenderPC_R3/r3_rendertarget_phase_combine.cpp
-index fe27772..f7576be 100644
+index fe27772..face4ea 100644
 --- a/src/Layers/xrRenderPC_R3/r3_rendertarget_phase_combine.cpp
 +++ b/src/Layers/xrRenderPC_R3/r3_rendertarget_phase_combine.cpp
-@@ -396,6 +396,11 @@ void CRenderTarget::phase_combine()
+@@ -291,10 +291,14 @@ void CRenderTarget::phase_combine()
+ 	// Forward rendering
+ 	{
+ 		PIX_EVENT(Forward_rendering);
++
++		//--DSR-- HeatVision_start
+ 		if (!RImplementation.o.dx10_msaa)
+-			u_setrt(rt_Generic_0, 0, 0, HW.pBaseZB); // LDR RT
++			u_setrt(rt_Generic_0, rt_Heat, 0, HW.pBaseZB); // LDR RT
+ 		else
+-			u_setrt(rt_Generic_0_r, 0, 0, RImplementation.Target->rt_MSAADepth->pZRT); // LDR RT
++			u_setrt(rt_Generic_0_r, rt_Heat, 0, RImplementation.Target->rt_MSAADepth->pZRT); // LDR RT
++		//--DSR-- HeatVision_end
++
+ 		RCache.set_CullMode(CULL_CCW);
+ 		RCache.set_Stencil(FALSE);
+ 		RCache.set_ColorWriteEnable();
+@@ -396,6 +400,16 @@ void CRenderTarget::phase_combine()
  	
  	if(ps_r2_nightvision > 0)
  		phase_nightvision();
++
++	//--DSR-- HeatVision_start
++	if (ps_r2_heatvision > 0)
++		phase_heatvision();
++	//--DSR-- HeatVision_end
 +
 +	if (scope_fake_enabled)
 +	{
@@ -20703,6 +20809,34 @@ index fe27772..f7576be 100644
  	
      //SMAA
  	if (ps_smaa_quality)
+diff --git a/src/Layers/xrRenderPC_R3/r3_rendertarget_phase_scene.cpp b/src/Layers/xrRenderPC_R3/r3_rendertarget_phase_scene.cpp
+index a6dfbf8..86d27d8 100644
+--- a/src/Layers/xrRenderPC_R3/r3_rendertarget_phase_scene.cpp
++++ b/src/Layers/xrRenderPC_R3/r3_rendertarget_phase_scene.cpp
+@@ -14,6 +14,10 @@ void CRenderTarget::phase_scene_prepare()
+ 		FLOAT ColorRGBA[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+ 		HW.pDevice->ClearRenderTargetView(rt_Position->pRT, ColorRGBA);
+ 
++		//--DSR-- HeatVision_start
++		HW.pDevice->ClearRenderTargetView(rt_Heat->pRT, ColorRGBA);
++		//--DSR-- HeatVision_end
++
+ 		if (!RImplementation.o.dx10_msaa)
+ 			HW.pDevice->ClearDepthStencilView(HW.pBaseZB, D3D10_CLEAR_DEPTH | D3D10_CLEAR_STENCIL, 1.0f, 0);
+ 		else
+@@ -39,8 +43,10 @@ void CRenderTarget::phase_scene_begin()
+ 
+ 	// Targets, use accumulator for temporary storage
+ 	{
+-		if (RImplementation.o.albedo_wo) u_setrt(rt_Position, rt_Accumulator, pZB);
+-		else u_setrt(rt_Position, rt_Color, pZB);
++		//--DSR-- HeatVision_start
++		if (RImplementation.o.albedo_wo) u_setrt(rt_Position, rt_Accumulator, rt_Heat, pZB);
++		else u_setrt(rt_Position, rt_Color, rt_Heat, pZB);
++		//--DSR-- HeatVision_end
+ 	}
+ 
+ 
 diff --git a/src/Layers/xrRenderPC_R3/vs2022/xrRender_R3.vcxproj b/src/Layers/xrRenderPC_R3/vs2022/xrRender_R3.vcxproj
 new file mode 100644
 index 0000000..51b9c39
@@ -23098,7 +23232,7 @@ index 77fb925..9ef4c87 100644
  	//Be carefull!!!!! this should be at the end to correctly generate
  	//compiled shader name;
 diff --git a/src/Layers/xrRenderPC_R4/r4.h b/src/Layers/xrRenderPC_R4/r4.h
-index 9ae8b61..ebd3821 100644
+index 9ae8b61..7568e78 100644
 --- a/src/Layers/xrRenderPC_R4/r4.h
 +++ b/src/Layers/xrRenderPC_R4/r4.h
 @@ -233,6 +233,9 @@ public:
@@ -23111,16 +23245,17 @@ index 9ae8b61..ebd3821 100644
  		CopyMemory(o_hemi_cube, LT.get_hemi_cube(), CROS_impl::NUM_FACES*sizeof(float));
  	}
  
-@@ -248,6 +251,8 @@ public:
+@@ -248,6 +251,9 @@ public:
  #ifdef	DEBUG
          if (ps_r2_ls_flags.test(R2FLAG_GLOBALMATERIAL))	mtl=ps_r2_gmaterial;
  #endif
-+		if (!T || T && !T->m_is_hot)
++		if (!(T && T->m_is_hot))
 +			RCache.hemi.set_hotness(0.f, 0.f, 0.f, 0.f);
++
  		RCache.hemi.set_material(o_hemi, o_sun, 0, (mtl < 5 ? (mtl + .5f) / 4.f : mtl));
  		RCache.hemi.set_pos_faces(o_hemi_cube[CROS_impl::CUBE_FACE_POS_X],
  		                          o_hemi_cube[CROS_impl::CUBE_FACE_POS_Y],
-@@ -300,8 +305,12 @@ public:
+@@ -300,8 +306,12 @@ public:
  	virtual void add_Geometry(IRenderVisual* V); // add visual(s)	(all culling performed)
  
  	// wallmarks
@@ -23331,13 +23466,14 @@ index dcc140d..09aebe6 100644
  	// W[0]=0, W[7]=-7
  	w0.set(W[1], W[2], W[3], W[4]); // -1, -2, -3, -4
 diff --git a/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_combine.cpp b/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_combine.cpp
-index 875ae48..3124093 100644
+index 875ae48..9a58b03 100644
 --- a/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_combine.cpp
 +++ b/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_combine.cpp
-@@ -290,10 +290,12 @@ void CRenderTarget::phase_combine()
+@@ -290,10 +290,14 @@ void CRenderTarget::phase_combine()
  	// Forward rendering
  	{
  		PIX_EVENT(Forward_rendering);
++
 +		//--DSR-- HeatVision_start
  		if (!RImplementation.o.dx10_msaa)
 -			u_setrt(rt_Generic_0, 0, 0, HW.pBaseZB); // LDR RT
@@ -23346,10 +23482,11 @@ index 875ae48..3124093 100644
 -			u_setrt(rt_Generic_0_r, 0, 0, RImplementation.Target->rt_MSAADepth->pZRT); // LDR RT
 +			u_setrt(rt_Generic_0_r, rt_Heat, 0, RImplementation.Target->rt_MSAADepth->pZRT); // LDR RT
 +		//--DSR-- HeatVision_end
++
  		RCache.set_CullMode(CULL_CCW);
  		RCache.set_Stencil(FALSE);
  		RCache.set_ColorWriteEnable();
-@@ -396,6 +398,16 @@ void CRenderTarget::phase_combine()
+@@ -396,6 +400,16 @@ void CRenderTarget::phase_combine()
  	if(ps_r2_nightvision > 0)
  		phase_nightvision();
  	
@@ -23367,20 +23504,21 @@ index 875ae48..3124093 100644
  	if (ps_smaa_quality)
  	{
 diff --git a/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_scene.cpp b/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_scene.cpp
-index 0b59b29..2d6adab 100644
+index 0b59b29..071894b 100644
 --- a/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_scene.cpp
 +++ b/src/Layers/xrRenderPC_R4/r4_rendertarget_phase_scene.cpp
-@@ -13,6 +13,9 @@ void CRenderTarget::phase_scene_prepare()
- 
+@@ -14,6 +14,10 @@ void CRenderTarget::phase_scene_prepare()
  		FLOAT ColorRGBA[4] = {0.0f, 0.0f, 0.0f, 0.0f};
  		HW.pContext->ClearRenderTargetView(rt_Position->pRT, ColorRGBA);
+ 
 +		//--DSR-- HeatVision_start
 +		HW.pContext->ClearRenderTargetView(rt_Heat->pRT, ColorRGBA);
 +		//--DSR-- HeatVision_end
- 
++
  		if (!RImplementation.o.dx10_msaa)
  			HW.pContext->ClearDepthStencilView(HW.pBaseZB, D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0);
-@@ -39,8 +42,10 @@ void CRenderTarget::phase_scene_begin()
+ 		else
+@@ -39,8 +43,10 @@ void CRenderTarget::phase_scene_begin()
  
  	// Targets, use accumulator for temporary storage
  	{
@@ -30521,6 +30659,28 @@ index 8910059..9ae6500 100644
  			if (KBState[i])
  				cbStack.back()->IR_OnKeyboardHold(i);
  	}
+diff --git a/src/xrEngine/edit_actions.cpp b/src/xrEngine/edit_actions.cpp
+index 5c96844..a219f11 100644
+--- a/src/xrEngine/edit_actions.cpp
++++ b/src/xrEngine/edit_actions.cpp
+@@ -10,6 +10,7 @@
+ #include "line_edit_control.h"
+ #include "xr_input.h"
+ #include <locale.h>
++#include <locale>
+ 
+ namespace text_editor
+ {
+@@ -100,7 +101,8 @@ namespace text_editor
+ 
+ 			if (pInput->get_dik_name(m_dik, buff, sizeof(buff)))
+ 			{
+-				if (_isalpha_l(buff[0], current_locale) || buff[0] == char(-1)) // "ÿ" = -1
++				// demonized: add extra check for russian letters
++				if (std::isalpha(buff[0], std::locale("")) || _isalpha_l(buff[0], current_locale) || buff[0] == char(-1)) // "ÿ" = -1
+ 				{
+ 					_strlwr_l(buff, current_locale);
+ 					c = buff[0];
 diff --git a/src/xrEngine/vs2022/xrEngine.vcxproj b/src/xrEngine/vs2022/xrEngine.vcxproj
 new file mode 100644
 index 0000000..3263f9e
