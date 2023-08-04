@@ -1,9 +1,9 @@
 diff --git a/sdk/include/jpeg/vs2022/libjpeg.vcxproj b/sdk/include/jpeg/vs2022/libjpeg.vcxproj
 new file mode 100644
-index 0000000..a6b8977
+index 0000000..60cae82
 --- /dev/null
 +++ b/sdk/include/jpeg/vs2022/libjpeg.vcxproj
-@@ -0,0 +1,210 @@
+@@ -0,0 +1,218 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -79,6 +79,10 @@ index 0000000..a6b8977
 +      <AdditionalIncludeDirectories>..\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 +      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -115,6 +119,10 @@ index 0000000..a6b8977
 +      <AdditionalIncludeDirectories>..\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 +      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -345,10 +353,10 @@ index 0000000..ea87a21
 \ No newline at end of file
 diff --git a/sdk/include/ogg/vs2022/libogg_static.vcxproj b/sdk/include/ogg/vs2022/libogg_static.vcxproj
 new file mode 100644
-index 0000000..4586163
+index 0000000..d92c7b5
 --- /dev/null
 +++ b/sdk/include/ogg/vs2022/libogg_static.vcxproj
-@@ -0,0 +1,162 @@
+@@ -0,0 +1,170 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -454,6 +462,10 @@ index 0000000..4586163
 +      <PrecompiledHeader />
 +      <DisableSpecificWarnings>4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib />
 +  </ItemDefinitionGroup>
@@ -493,6 +505,10 @@ index 0000000..4586163
 +      </PrecompiledHeader>
 +      <DisableSpecificWarnings>4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib />
 +  </ItemDefinitionGroup>
@@ -555,10 +571,10 @@ index 0000000..496eac9
 \ No newline at end of file
 diff --git a/sdk/include/theora/vs2022/libtheora_static.vcxproj b/sdk/include/theora/vs2022/libtheora_static.vcxproj
 new file mode 100644
-index 0000000..4c43c20
+index 0000000..85d8a0d
 --- /dev/null
 +++ b/sdk/include/theora/vs2022/libtheora_static.vcxproj
-@@ -0,0 +1,213 @@
+@@ -0,0 +1,221 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -643,6 +659,10 @@ index 0000000..4c43c20
 +      <DisableSpecificWarnings>4244;4267;4057;4100;4245;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib />
 +  </ItemDefinitionGroup>
@@ -682,6 +702,10 @@ index 0000000..4c43c20
 +      <DisableSpecificWarnings>4244;4267;4057;4100;4245;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib />
 +  </ItemDefinitionGroup>
@@ -866,10 +890,10 @@ index 0000000..04df1fc
 \ No newline at end of file
 diff --git a/sdk/include/vorbis/vs2022/libvorbis_static.vcxproj b/sdk/include/vorbis/vs2022/libvorbis_static.vcxproj
 new file mode 100644
-index 0000000..0981420
+index 0000000..2976dab
 --- /dev/null
 +++ b/sdk/include/vorbis/vs2022/libvorbis_static.vcxproj
-@@ -0,0 +1,197 @@
+@@ -0,0 +1,205 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -951,6 +975,10 @@ index 0000000..0981420
 +      <PrecompiledHeader />
 +      <DisableSpecificWarnings>4244;4100;4267;4189;4305;4127;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib />
 +  </ItemDefinitionGroup>
@@ -990,6 +1018,10 @@ index 0000000..0981420
 +      </PrecompiledHeader>
 +      <DisableSpecificWarnings>4244;4100;4267;4189;4305;4127;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib />
 +  </ItemDefinitionGroup>
@@ -1288,10 +1320,10 @@ index 0000000..2a46b31
 \ No newline at end of file
 diff --git a/sdk/include/vorbis/vs2022/libvorbisfile_static.vcxproj b/sdk/include/vorbis/vs2022/libvorbisfile_static.vcxproj
 new file mode 100644
-index 0000000..2e84455
+index 0000000..41f9b8e
 --- /dev/null
 +++ b/sdk/include/vorbis/vs2022/libvorbisfile_static.vcxproj
-@@ -0,0 +1,137 @@
+@@ -0,0 +1,145 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -1371,6 +1403,10 @@ index 0000000..2e84455
 +      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
 +      <PrecompiledHeader />
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib>
 +      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
@@ -1409,6 +1445,10 @@ index 0000000..2e84455
 +      <PrecompiledHeader>
 +      </PrecompiledHeader>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib>
 +      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
@@ -1448,10 +1488,10 @@ index 0000000..809de37
 \ No newline at end of file
 diff --git a/src/3rd party/DXERR/vs2022/DXERR.vcxproj b/src/3rd party/DXERR/vs2022/DXERR.vcxproj
 new file mode 100644
-index 0000000..0b2c764
+index 0000000..d05f194
 --- /dev/null
 +++ b/src/3rd party/DXERR/vs2022/DXERR.vcxproj	
-@@ -0,0 +1,123 @@
+@@ -0,0 +1,131 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -1523,6 +1563,10 @@ index 0000000..0b2c764
 +    <ClCompile>
 +      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -1557,6 +1601,10 @@ index 0000000..0b2c764
 +    <ClCompile>
 +      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -1578,7 +1626,7 @@ index 0000000..0b2c764
 \ No newline at end of file
 diff --git a/src/3rd party/DXERR/vs2022/DXERR.vcxproj.filters b/src/3rd party/DXERR/vs2022/DXERR.vcxproj.filters
 new file mode 100644
-index 0000000..375e544
+index 0000000..e1f3d6d
 --- /dev/null
 +++ b/src/3rd party/DXERR/vs2022/DXERR.vcxproj.filters	
 @@ -0,0 +1,27 @@
@@ -1599,12 +1647,12 @@ index 0000000..375e544
 +    </Filter>
 +  </ItemGroup>
 +  <ItemGroup>
-+    <ClCompile Include="dxerr.cpp">
++    <ClCompile Include="..\dxerr.cpp">
 +      <Filter>Source Files</Filter>
 +    </ClCompile>
 +  </ItemGroup>
 +  <ItemGroup>
-+    <ClInclude Include="dxerr.h">
++    <ClInclude Include="..\dxerr.h">
 +      <Filter>Header Files</Filter>
 +    </ClInclude>
 +  </ItemGroup>
@@ -1612,10 +1660,10 @@ index 0000000..375e544
 \ No newline at end of file
 diff --git a/src/3rd party/NVTT/vs2022/NVTT.vcxproj b/src/3rd party/NVTT/vs2022/NVTT.vcxproj
 new file mode 100644
-index 0000000..def8be5
+index 0000000..cbb5516
 --- /dev/null
 +++ b/src/3rd party/NVTT/vs2022/NVTT.vcxproj	
-@@ -0,0 +1,274 @@
+@@ -0,0 +1,282 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -1837,6 +1885,10 @@ index 0000000..def8be5
 +      <DisableSpecificWarnings>4005</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
 +      <WholeProgramOptimization>true</WholeProgramOptimization>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -1878,6 +1930,10 @@ index 0000000..def8be5
 +      <DisableSpecificWarnings>4005</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
 +      <WholeProgramOptimization>true</WholeProgramOptimization>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -2053,10 +2109,10 @@ index 0000000..2ec1cc0
 \ No newline at end of file
 diff --git a/src/3rd party/crypto/vs2022/crypto.vcxproj b/src/3rd party/crypto/vs2022/crypto.vcxproj
 new file mode 100644
-index 0000000..3f8d578
+index 0000000..daf5b73
 --- /dev/null
 +++ b/src/3rd party/crypto/vs2022/crypto.vcxproj	
-@@ -0,0 +1,312 @@
+@@ -0,0 +1,320 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -2136,6 +2192,10 @@ index 0000000..3f8d578
 +      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
 +      <DisableSpecificWarnings>4005;4996</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <ImportLibrary>$(xrLibDir)$(TargetName).lib</ImportLibrary>
@@ -2172,6 +2232,10 @@ index 0000000..3f8d578
 +      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
 +      <DisableSpecificWarnings>4005;4996</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <ImportLibrary>$(xrLibDir)$(TargetName).lib</ImportLibrary>
@@ -2933,10 +2997,10 @@ index 0000000..b53bf89
 \ No newline at end of file
 diff --git a/src/3rd party/cximage/vs2022/cximage.vcxproj b/src/3rd party/cximage/vs2022/cximage.vcxproj
 new file mode 100644
-index 0000000..e808c49
+index 0000000..f6e6c33
 --- /dev/null
 +++ b/src/3rd party/cximage/vs2022/cximage.vcxproj	
-@@ -0,0 +1,206 @@
+@@ -0,0 +1,214 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -3025,6 +3089,10 @@ index 0000000..e808c49
 +      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
 +      <DisableSpecificWarnings>4995;4100;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <ResourceCompile>
 +      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -3089,6 +3157,10 @@ index 0000000..e808c49
 +      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
 +      <DisableSpecificWarnings>4995;4100;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <ResourceCompile>
 +      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -3320,10 +3392,10 @@ index 0000000..9bbba7d
 \ No newline at end of file
 diff --git a/src/3rd party/lua-extensions/vs2022/lua_extensions.vcxproj b/src/3rd party/lua-extensions/vs2022/lua_extensions.vcxproj
 new file mode 100644
-index 0000000..1220f07
+index 0000000..2f41dd9
 --- /dev/null
 +++ b/src/3rd party/lua-extensions/vs2022/lua_extensions.vcxproj	
-@@ -0,0 +1,161 @@
+@@ -0,0 +1,169 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -3410,6 +3482,10 @@ index 0000000..1220f07
 +      <DisableSpecificWarnings>4996;4244;4018</DisableSpecificWarnings>
 +      <UndefinePreprocessorDefinitions>USE_LUAJIT_ONE</UndefinePreprocessorDefinitions>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -3458,6 +3534,10 @@ index 0000000..1220f07
 +      <DisableSpecificWarnings>4996;4244;4018</DisableSpecificWarnings>
 +      <UndefinePreprocessorDefinitions>USE_LUAJIT_ONE</UndefinePreprocessorDefinitions>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -3488,31 +3568,31 @@ index 0000000..1220f07
 \ No newline at end of file
 diff --git a/src/3rd party/lua-extensions/vs2022/lua_extensions.vcxproj.filters b/src/3rd party/lua-extensions/vs2022/lua_extensions.vcxproj.filters
 new file mode 100644
-index 0000000..8a32c6d
+index 0000000..378548d
 --- /dev/null
 +++ b/src/3rd party/lua-extensions/vs2022/lua_extensions.vcxproj.filters	
 @@ -0,0 +1,14 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup>
-+    <ClCompile Include="base.cpp" />
-+    <ClCompile Include="lfs.c" />
-+    <ClCompile Include="lmarshal.c" />
-+    <ClCompile Include="script_additional_libs.cpp" />
++    <ClCompile Include="..\base.cpp" />
++    <ClCompile Include="..\lfs.c" />
++    <ClCompile Include="..\lmarshal.c" />
++    <ClCompile Include="..\script_additional_libs.cpp" />
 +  </ItemGroup>
 +  <ItemGroup>
-+    <ClInclude Include="lfs.h" />
-+    <ClInclude Include="lmarshal.h" />
-+    <ClInclude Include="script_additional_libs.h" />
++    <ClInclude Include="..\lfs.h" />
++    <ClInclude Include="..\lmarshal.h" />
++    <ClInclude Include="..\script_additional_libs.h" />
 +  </ItemGroup>
 +</Project>
 \ No newline at end of file
 diff --git a/src/3rd party/luabind/vs2022/luabind.beta7-devel.rc4.vcxproj b/src/3rd party/luabind/vs2022/luabind.beta7-devel.rc4.vcxproj
 new file mode 100644
-index 0000000..4e2c971
+index 0000000..4717727
 --- /dev/null
 +++ b/src/3rd party/luabind/vs2022/luabind.beta7-devel.rc4.vcxproj	
-@@ -0,0 +1,276 @@
+@@ -0,0 +1,284 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -3593,6 +3673,10 @@ index 0000000..4e2c971
 +      <DisableSpecificWarnings>4530;4100;4714;4127;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <UndefinePreprocessorDefinitions>USE_LUAJIT_ONE</UndefinePreprocessorDefinitions>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <AdditionalLibraryDirectories>$(ProjectDir)..\luajit-2\src\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -3657,6 +3741,10 @@ index 0000000..4e2c971
 +      <DisableSpecificWarnings>4530;4100;4714;4127;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <UndefinePreprocessorDefinitions>USE_LUAJIT_ONE</UndefinePreprocessorDefinitions>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <AdditionalLibraryDirectories>$(ProjectDir)..\luajit-2\src\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -3916,10 +4004,10 @@ index 0000000..3b4f0b5
 \ No newline at end of file
 diff --git a/src/3rd party/ode/contrib/msvc7/ode_default/vs2022/default.vcxproj b/src/3rd party/ode/contrib/msvc7/ode_default/vs2022/default.vcxproj
 new file mode 100644
-index 0000000..ffad871
+index 0000000..db622ff
 --- /dev/null
 +++ b/src/3rd party/ode/contrib/msvc7/ode_default/vs2022/default.vcxproj	
-@@ -0,0 +1,314 @@
+@@ -0,0 +1,322 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -4020,6 +4108,10 @@ index 0000000..ffad871
 +      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
 +      <DisableSpecificWarnings>4100;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <ResourceCompile>
 +      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -4108,6 +4200,10 @@ index 0000000..ffad871
 +      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
 +      <DisableSpecificWarnings>4100;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <ResourceCompile>
 +      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -4503,10 +4599,10 @@ index 0000000..f0b17f9
 \ No newline at end of file
 diff --git a/src/3rd party/openal/OpenAL-Windows/Router/vs2022/Router.vcxproj b/src/3rd party/openal/OpenAL-Windows/Router/vs2022/Router.vcxproj
 new file mode 100644
-index 0000000..c8480d4
+index 0000000..4ddc1cd
 --- /dev/null
 +++ b/src/3rd party/openal/OpenAL-Windows/Router/vs2022/Router.vcxproj	
-@@ -0,0 +1,257 @@
+@@ -0,0 +1,265 @@
 +﻿<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -4599,6 +4695,10 @@ index 0000000..c8480d4
 +      <BrowseInformation>
 +      </BrowseInformation>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <ResourceCompile>
 +      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -4679,6 +4779,10 @@ index 0000000..c8480d4
 +      <BrowseInformation>
 +      </BrowseInformation>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <ResourceCompile>
 +      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -4767,7 +4871,7 @@ index 0000000..c8480d4
 \ No newline at end of file
 diff --git a/src/3rd party/openal/OpenAL-Windows/Router/vs2022/Router.vcxproj.filters b/src/3rd party/openal/OpenAL-Windows/Router/vs2022/Router.vcxproj.filters
 new file mode 100644
-index 0000000..19c899d
+index 0000000..bce5458
 --- /dev/null
 +++ b/src/3rd party/openal/OpenAL-Windows/Router/vs2022/Router.vcxproj.filters	
 @@ -0,0 +1,47 @@
@@ -4788,32 +4892,32 @@ index 0000000..19c899d
 +    </Filter>
 +  </ItemGroup>
 +  <ItemGroup>
-+    <ClCompile Include="al.cpp">
++    <ClCompile Include="..\al.cpp">
 +      <Filter>Source Files</Filter>
 +    </ClCompile>
-+    <ClCompile Include="alc.cpp">
++    <ClCompile Include="..\alc.cpp">
 +      <Filter>Source Files</Filter>
 +    </ClCompile>
-+    <ClCompile Include="alList.cpp">
++    <ClCompile Include="..\alList.cpp">
 +      <Filter>Source Files</Filter>
 +    </ClCompile>
-+    <ClCompile Include="OpenAL32.cpp">
++    <ClCompile Include="..\OpenAL32.cpp">
 +      <Filter>Source Files</Filter>
 +    </ClCompile>
 +  </ItemGroup>
 +  <ItemGroup>
-+    <ResourceCompile Include="OpenAL32.rc">
++    <ResourceCompile Include="..\OpenAL32.rc">
 +      <Filter>Source Files</Filter>
 +    </ResourceCompile>
 +  </ItemGroup>
 +  <ItemGroup>
-+    <ClInclude Include="alList.h">
++    <ClInclude Include="..\alList.h">
 +      <Filter>Header Files</Filter>
 +    </ClInclude>
-+    <ClInclude Include="OpenAL32.h">
++    <ClInclude Include="..\OpenAL32.h">
 +      <Filter>Header Files</Filter>
 +    </ClInclude>
-+    <ClInclude Include="resource.h">
++    <ClInclude Include="..\resource.h">
 +      <Filter>Header Files</Filter>
 +    </ClInclude>
 +  </ItemGroup>

@@ -170,6 +170,15 @@ How to compile exes:
 7. To compile the engine open the solution in VS2022, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.08.05**
+* Fixed possible malfunction of shader scopes by enforcing `r__fakescope 1` on first update
+* New callback `on_before_hit_after_calcs` that will fire just before applying hit to an entity, refer to `callbacks_gameobject.script`
+* Possibility to keep hud drawed and affected when using `level.set_cam_custom_position_direction` function, refer to `lua_help_ex.script`
+* Features and fixes by Lucy:
+  * Device/Detector animations can now use the lead_gun bone if their hud section has lh_lead_gun = true (script animations can also use this config toggle in their section)
+  * Device/Detector animations will now play even if there's something in your right hand
+  * Cleaned up player_hud animation code
+
 **2023.07.28**
 * Features by LVutner:
   * Added support for Shader Scopes on DX9

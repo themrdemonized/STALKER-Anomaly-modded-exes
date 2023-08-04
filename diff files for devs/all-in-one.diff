@@ -1,9 +1,9 @@
 diff --git a/sdk/include/jpeg/vs2022/libjpeg.vcxproj b/sdk/include/jpeg/vs2022/libjpeg.vcxproj
 new file mode 100644
-index 0000000..a6b8977
+index 0000000..60cae82
 --- /dev/null
 +++ b/sdk/include/jpeg/vs2022/libjpeg.vcxproj
-@@ -0,0 +1,210 @@
+@@ -0,0 +1,218 @@
 +п»ї<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -79,6 +79,10 @@ index 0000000..a6b8977
 +      <AdditionalIncludeDirectories>..\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 +      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -115,6 +119,10 @@ index 0000000..a6b8977
 +      <AdditionalIncludeDirectories>..\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 +      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -345,10 +353,10 @@ index 0000000..ea87a21
 \ No newline at end of file
 diff --git a/sdk/include/ogg/vs2022/libogg_static.vcxproj b/sdk/include/ogg/vs2022/libogg_static.vcxproj
 new file mode 100644
-index 0000000..4586163
+index 0000000..d92c7b5
 --- /dev/null
 +++ b/sdk/include/ogg/vs2022/libogg_static.vcxproj
-@@ -0,0 +1,162 @@
+@@ -0,0 +1,170 @@
 +п»ї<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -454,6 +462,10 @@ index 0000000..4586163
 +      <PrecompiledHeader />
 +      <DisableSpecificWarnings>4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib />
 +  </ItemDefinitionGroup>
@@ -493,6 +505,10 @@ index 0000000..4586163
 +      </PrecompiledHeader>
 +      <DisableSpecificWarnings>4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib />
 +  </ItemDefinitionGroup>
@@ -555,10 +571,10 @@ index 0000000..496eac9
 \ No newline at end of file
 diff --git a/sdk/include/theora/vs2022/libtheora_static.vcxproj b/sdk/include/theora/vs2022/libtheora_static.vcxproj
 new file mode 100644
-index 0000000..4c43c20
+index 0000000..85d8a0d
 --- /dev/null
 +++ b/sdk/include/theora/vs2022/libtheora_static.vcxproj
-@@ -0,0 +1,213 @@
+@@ -0,0 +1,221 @@
 +п»ї<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -643,6 +659,10 @@ index 0000000..4c43c20
 +      <DisableSpecificWarnings>4244;4267;4057;4100;4245;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib />
 +  </ItemDefinitionGroup>
@@ -682,6 +702,10 @@ index 0000000..4c43c20
 +      <DisableSpecificWarnings>4244;4267;4057;4100;4245;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib />
 +  </ItemDefinitionGroup>
@@ -866,10 +890,10 @@ index 0000000..04df1fc
 \ No newline at end of file
 diff --git a/sdk/include/vorbis/vs2022/libvorbis_static.vcxproj b/sdk/include/vorbis/vs2022/libvorbis_static.vcxproj
 new file mode 100644
-index 0000000..0981420
+index 0000000..2976dab
 --- /dev/null
 +++ b/sdk/include/vorbis/vs2022/libvorbis_static.vcxproj
-@@ -0,0 +1,197 @@
+@@ -0,0 +1,205 @@
 +п»ї<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -951,6 +975,10 @@ index 0000000..0981420
 +      <PrecompiledHeader />
 +      <DisableSpecificWarnings>4244;4100;4267;4189;4305;4127;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib />
 +  </ItemDefinitionGroup>
@@ -990,6 +1018,10 @@ index 0000000..0981420
 +      </PrecompiledHeader>
 +      <DisableSpecificWarnings>4244;4100;4267;4189;4305;4127;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib />
 +  </ItemDefinitionGroup>
@@ -1288,10 +1320,10 @@ index 0000000..2a46b31
 \ No newline at end of file
 diff --git a/sdk/include/vorbis/vs2022/libvorbisfile_static.vcxproj b/sdk/include/vorbis/vs2022/libvorbisfile_static.vcxproj
 new file mode 100644
-index 0000000..2e84455
+index 0000000..41f9b8e
 --- /dev/null
 +++ b/sdk/include/vorbis/vs2022/libvorbisfile_static.vcxproj
-@@ -0,0 +1,137 @@
+@@ -0,0 +1,145 @@
 +п»ї<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -1371,6 +1403,10 @@ index 0000000..2e84455
 +      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
 +      <PrecompiledHeader />
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib>
 +      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
@@ -1409,6 +1445,10 @@ index 0000000..2e84455
 +      <PrecompiledHeader>
 +      </PrecompiledHeader>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Lib>
 +      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
@@ -1448,10 +1488,10 @@ index 0000000..809de37
 \ No newline at end of file
 diff --git a/src/3rd party/DXERR/vs2022/DXERR.vcxproj b/src/3rd party/DXERR/vs2022/DXERR.vcxproj
 new file mode 100644
-index 0000000..0b2c764
+index 0000000..d05f194
 --- /dev/null
 +++ b/src/3rd party/DXERR/vs2022/DXERR.vcxproj	
-@@ -0,0 +1,123 @@
+@@ -0,0 +1,131 @@
 +п»ї<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -1523,6 +1563,10 @@ index 0000000..0b2c764
 +    <ClCompile>
 +      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -1557,6 +1601,10 @@ index 0000000..0b2c764
 +    <ClCompile>
 +      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -1578,7 +1626,7 @@ index 0000000..0b2c764
 \ No newline at end of file
 diff --git a/src/3rd party/DXERR/vs2022/DXERR.vcxproj.filters b/src/3rd party/DXERR/vs2022/DXERR.vcxproj.filters
 new file mode 100644
-index 0000000..375e544
+index 0000000..e1f3d6d
 --- /dev/null
 +++ b/src/3rd party/DXERR/vs2022/DXERR.vcxproj.filters	
 @@ -0,0 +1,27 @@
@@ -1599,12 +1647,12 @@ index 0000000..375e544
 +    </Filter>
 +  </ItemGroup>
 +  <ItemGroup>
-+    <ClCompile Include="dxerr.cpp">
++    <ClCompile Include="..\dxerr.cpp">
 +      <Filter>Source Files</Filter>
 +    </ClCompile>
 +  </ItemGroup>
 +  <ItemGroup>
-+    <ClInclude Include="dxerr.h">
++    <ClInclude Include="..\dxerr.h">
 +      <Filter>Header Files</Filter>
 +    </ClInclude>
 +  </ItemGroup>
@@ -1612,10 +1660,10 @@ index 0000000..375e544
 \ No newline at end of file
 diff --git a/src/3rd party/NVTT/vs2022/NVTT.vcxproj b/src/3rd party/NVTT/vs2022/NVTT.vcxproj
 new file mode 100644
-index 0000000..def8be5
+index 0000000..cbb5516
 --- /dev/null
 +++ b/src/3rd party/NVTT/vs2022/NVTT.vcxproj	
-@@ -0,0 +1,274 @@
+@@ -0,0 +1,282 @@
 +п»ї<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -1837,6 +1885,10 @@ index 0000000..def8be5
 +      <DisableSpecificWarnings>4005</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
 +      <WholeProgramOptimization>true</WholeProgramOptimization>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -1878,6 +1930,10 @@ index 0000000..def8be5
 +      <DisableSpecificWarnings>4005</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
 +      <WholeProgramOptimization>true</WholeProgramOptimization>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -2053,10 +2109,10 @@ index 0000000..2ec1cc0
 \ No newline at end of file
 diff --git a/src/3rd party/crypto/vs2022/crypto.vcxproj b/src/3rd party/crypto/vs2022/crypto.vcxproj
 new file mode 100644
-index 0000000..3f8d578
+index 0000000..daf5b73
 --- /dev/null
 +++ b/src/3rd party/crypto/vs2022/crypto.vcxproj	
-@@ -0,0 +1,312 @@
+@@ -0,0 +1,320 @@
 +п»ї<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -2136,6 +2192,10 @@ index 0000000..3f8d578
 +      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
 +      <DisableSpecificWarnings>4005;4996</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <ImportLibrary>$(xrLibDir)$(TargetName).lib</ImportLibrary>
@@ -2172,6 +2232,10 @@ index 0000000..3f8d578
 +      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
 +      <DisableSpecificWarnings>4005;4996</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <ImportLibrary>$(xrLibDir)$(TargetName).lib</ImportLibrary>
@@ -2933,10 +2997,10 @@ index 0000000..b53bf89
 \ No newline at end of file
 diff --git a/src/3rd party/cximage/vs2022/cximage.vcxproj b/src/3rd party/cximage/vs2022/cximage.vcxproj
 new file mode 100644
-index 0000000..e808c49
+index 0000000..f6e6c33
 --- /dev/null
 +++ b/src/3rd party/cximage/vs2022/cximage.vcxproj	
-@@ -0,0 +1,206 @@
+@@ -0,0 +1,214 @@
 +п»ї<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -3025,6 +3089,10 @@ index 0000000..e808c49
 +      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
 +      <DisableSpecificWarnings>4995;4100;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <ResourceCompile>
 +      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -3089,6 +3157,10 @@ index 0000000..e808c49
 +      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
 +      <DisableSpecificWarnings>4995;4100;4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <ResourceCompile>
 +      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -6499,10 +6571,10 @@ index 0000000..9bbba7d
 \ No newline at end of file
 diff --git a/src/3rd party/lua-extensions/vs2022/lua_extensions.vcxproj b/src/3rd party/lua-extensions/vs2022/lua_extensions.vcxproj
 new file mode 100644
-index 0000000..1220f07
+index 0000000..2f41dd9
 --- /dev/null
 +++ b/src/3rd party/lua-extensions/vs2022/lua_extensions.vcxproj	
-@@ -0,0 +1,161 @@
+@@ -0,0 +1,169 @@
 +п»ї<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -6589,6 +6661,10 @@ index 0000000..1220f07
 +      <DisableSpecificWarnings>4996;4244;4018</DisableSpecificWarnings>
 +      <UndefinePreprocessorDefinitions>USE_LUAJIT_ONE</UndefinePreprocessorDefinitions>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -6637,6 +6713,10 @@ index 0000000..1220f07
 +      <DisableSpecificWarnings>4996;4244;4018</DisableSpecificWarnings>
 +      <UndefinePreprocessorDefinitions>USE_LUAJIT_ONE</UndefinePreprocessorDefinitions>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -6667,31 +6747,31 @@ index 0000000..1220f07
 \ No newline at end of file
 diff --git a/src/3rd party/lua-extensions/vs2022/lua_extensions.vcxproj.filters b/src/3rd party/lua-extensions/vs2022/lua_extensions.vcxproj.filters
 new file mode 100644
-index 0000000..8a32c6d
+index 0000000..378548d
 --- /dev/null
 +++ b/src/3rd party/lua-extensions/vs2022/lua_extensions.vcxproj.filters	
 @@ -0,0 +1,14 @@
 +п»ї<?xml version="1.0" encoding="utf-8"?>
 +<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup>
-+    <ClCompile Include="base.cpp" />
-+    <ClCompile Include="lfs.c" />
-+    <ClCompile Include="lmarshal.c" />
-+    <ClCompile Include="script_additional_libs.cpp" />
++    <ClCompile Include="..\base.cpp" />
++    <ClCompile Include="..\lfs.c" />
++    <ClCompile Include="..\lmarshal.c" />
++    <ClCompile Include="..\script_additional_libs.cpp" />
 +  </ItemGroup>
 +  <ItemGroup>
-+    <ClInclude Include="lfs.h" />
-+    <ClInclude Include="lmarshal.h" />
-+    <ClInclude Include="script_additional_libs.h" />
++    <ClInclude Include="..\lfs.h" />
++    <ClInclude Include="..\lmarshal.h" />
++    <ClInclude Include="..\script_additional_libs.h" />
 +  </ItemGroup>
 +</Project>
 \ No newline at end of file
 diff --git a/src/3rd party/luabind/vs2022/luabind.beta7-devel.rc4.vcxproj b/src/3rd party/luabind/vs2022/luabind.beta7-devel.rc4.vcxproj
 new file mode 100644
-index 0000000..4e2c971
+index 0000000..4717727
 --- /dev/null
 +++ b/src/3rd party/luabind/vs2022/luabind.beta7-devel.rc4.vcxproj	
-@@ -0,0 +1,276 @@
+@@ -0,0 +1,284 @@
 +п»ї<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -6772,6 +6852,10 @@ index 0000000..4e2c971
 +      <DisableSpecificWarnings>4530;4100;4714;4127;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <UndefinePreprocessorDefinitions>USE_LUAJIT_ONE</UndefinePreprocessorDefinitions>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <AdditionalLibraryDirectories>$(ProjectDir)..\luajit-2\src\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -6836,6 +6920,10 @@ index 0000000..4e2c971
 +      <DisableSpecificWarnings>4530;4100;4714;4127;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <UndefinePreprocessorDefinitions>USE_LUAJIT_ONE</UndefinePreprocessorDefinitions>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <Link>
 +      <AdditionalLibraryDirectories>$(ProjectDir)..\luajit-2\src\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -7095,10 +7183,10 @@ index 0000000..3b4f0b5
 \ No newline at end of file
 diff --git a/src/3rd party/ode/contrib/msvc7/ode_default/vs2022/default.vcxproj b/src/3rd party/ode/contrib/msvc7/ode_default/vs2022/default.vcxproj
 new file mode 100644
-index 0000000..ffad871
+index 0000000..db622ff
 --- /dev/null
 +++ b/src/3rd party/ode/contrib/msvc7/ode_default/vs2022/default.vcxproj	
-@@ -0,0 +1,314 @@
+@@ -0,0 +1,322 @@
 +п»ї<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -7199,6 +7287,10 @@ index 0000000..ffad871
 +      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
 +      <DisableSpecificWarnings>4100;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <ResourceCompile>
 +      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -7287,6 +7379,10 @@ index 0000000..ffad871
 +      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
 +      <DisableSpecificWarnings>4100;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <ResourceCompile>
 +      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -7682,10 +7778,10 @@ index 0000000..f0b17f9
 \ No newline at end of file
 diff --git a/src/3rd party/openal/OpenAL-Windows/Router/vs2022/Router.vcxproj b/src/3rd party/openal/OpenAL-Windows/Router/vs2022/Router.vcxproj
 new file mode 100644
-index 0000000..c8480d4
+index 0000000..4ddc1cd
 --- /dev/null
 +++ b/src/3rd party/openal/OpenAL-Windows/Router/vs2022/Router.vcxproj	
-@@ -0,0 +1,257 @@
+@@ -0,0 +1,265 @@
 +п»ї<?xml version="1.0" encoding="utf-8"?>
 +<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 +  <ItemGroup Label="ProjectConfigurations">
@@ -7778,6 +7874,10 @@ index 0000000..c8480d4
 +      <BrowseInformation>
 +      </BrowseInformation>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <ResourceCompile>
 +      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -7858,6 +7958,10 @@ index 0000000..c8480d4
 +      <BrowseInformation>
 +      </BrowseInformation>
 +      <ExceptionHandling>false</ExceptionHandling>
++      <Optimization>MaxSpeed</Optimization>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <OmitFramePointers>true</OmitFramePointers>
++      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
 +    </ClCompile>
 +    <ResourceCompile>
 +      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -7946,7 +8050,7 @@ index 0000000..c8480d4
 \ No newline at end of file
 diff --git a/src/3rd party/openal/OpenAL-Windows/Router/vs2022/Router.vcxproj.filters b/src/3rd party/openal/OpenAL-Windows/Router/vs2022/Router.vcxproj.filters
 new file mode 100644
-index 0000000..19c899d
+index 0000000..bce5458
 --- /dev/null
 +++ b/src/3rd party/openal/OpenAL-Windows/Router/vs2022/Router.vcxproj.filters	
 @@ -0,0 +1,47 @@
@@ -7967,32 +8071,32 @@ index 0000000..19c899d
 +    </Filter>
 +  </ItemGroup>
 +  <ItemGroup>
-+    <ClCompile Include="al.cpp">
++    <ClCompile Include="..\al.cpp">
 +      <Filter>Source Files</Filter>
 +    </ClCompile>
-+    <ClCompile Include="alc.cpp">
++    <ClCompile Include="..\alc.cpp">
 +      <Filter>Source Files</Filter>
 +    </ClCompile>
-+    <ClCompile Include="alList.cpp">
++    <ClCompile Include="..\alList.cpp">
 +      <Filter>Source Files</Filter>
 +    </ClCompile>
-+    <ClCompile Include="OpenAL32.cpp">
++    <ClCompile Include="..\OpenAL32.cpp">
 +      <Filter>Source Files</Filter>
 +    </ClCompile>
 +  </ItemGroup>
 +  <ItemGroup>
-+    <ResourceCompile Include="OpenAL32.rc">
++    <ResourceCompile Include="..\OpenAL32.rc">
 +      <Filter>Source Files</Filter>
 +    </ResourceCompile>
 +  </ItemGroup>
 +  <ItemGroup>
-+    <ClInclude Include="alList.h">
++    <ClInclude Include="..\alList.h">
 +      <Filter>Header Files</Filter>
 +    </ClInclude>
-+    <ClInclude Include="OpenAL32.h">
++    <ClInclude Include="..\OpenAL32.h">
 +      <Filter>Header Files</Filter>
 +    </ClInclude>
-+    <ClInclude Include="resource.h">
++    <ClInclude Include="..\resource.h">
 +      <Filter>Header Files</Filter>
 +    </ClInclude>
 +  </ItemGroup>
@@ -14418,6 +14522,19 @@ index 03644c6..afe64ed 100644
 -#endif // DEBUG
 -
 -#endif	//	DebugRender_included
+diff --git a/src/Include/xrRender/KinematicsAnimated.h b/src/Include/xrRender/KinematicsAnimated.h
+index 7cdbfc3..5297590 100644
+--- a/src/Include/xrRender/KinematicsAnimated.h
++++ b/src/Include/xrRender/KinematicsAnimated.h
+@@ -99,7 +99,7 @@ public:
+ 	virtual CBlend* PlayCycle(MotionID M, BOOL bMixIn = TRUE, PlayCallback Callback = 0, LPVOID CallbackParam = 0,
+ 	                          u8 channel = 0) = 0;
+ 	virtual CBlend* PlayCycle(u16 partition, MotionID M, BOOL bMixIn = TRUE, PlayCallback Callback = 0,
+-	                          LPVOID CallbackParam = 0, u8 channel = 0) = 0;
++	                          LPVOID CallbackParam = 0, u8 channel = 0, float speed = 0) = 0;
+ 	// fx'es
+ 	virtual MotionID ID_FX(LPCSTR N) = 0;
+ 	virtual MotionID ID_FX_Safe(LPCSTR N) = 0;
 diff --git a/src/Include/xrRender/RenderVisual.h b/src/Include/xrRender/RenderVisual.h
 index 94bc87e..a31273a 100644
 --- a/src/Include/xrRender/RenderVisual.h
@@ -15956,7 +16073,7 @@ index 62f91a6..cde2b8a 100644
  	{
  		u32 m_play_time; // sync theora time
 diff --git a/src/Layers/xrRender/SkeletonAnimated.cpp b/src/Layers/xrRender/SkeletonAnimated.cpp
-index a2b6c3f..fa47f86 100644
+index a2b6c3f..ff31e1d 100644
 --- a/src/Layers/xrRender/SkeletonAnimated.cpp
 +++ b/src/Layers/xrRender/SkeletonAnimated.cpp
 @@ -11,6 +11,7 @@
@@ -15967,6 +16084,23 @@ index a2b6c3f..fa47f86 100644
  using namespace animation;
  //////////////////////////////////////////////////////////////////////////
  // BoneInstance methods
+@@ -447,14 +448,14 @@ CBlend* CKinematicsAnimated::PlayCycle(MotionID motion_ID, BOOL bMixIn, PlayCall
+ }
+ 
+ CBlend* CKinematicsAnimated::PlayCycle(u16 partition, MotionID motion_ID, BOOL bMixIn, PlayCallback Callback,
+-                                       LPVOID CallbackParam, u8 channel /*= 0*/)
++                                       LPVOID CallbackParam, u8 channel, float speed)
+ {
+ 	VERIFY(motion_ID.valid());
+ 	CMotionDef* m_def = m_Motions[motion_ID.slot].motions.motion_def(motion_ID.idx);
+ 	VERIFY(m_def);
+ 	if (!m_def) return NULL;
+ 	return LL_PlayCycle(partition, motion_ID, bMixIn,
+-	                    m_def->Accrue(), m_def->Falloff(), m_def->Speed(), m_def->StopAtEnd(),
++	                    m_def->Accrue(), m_def->Falloff(), m_def->Speed() * speed, m_def->StopAtEnd(),
+ 	                    Callback, CallbackParam, channel);
+ }
+ 
 @@ -749,7 +750,7 @@ void CKinematicsAnimated::IBlend_Startup()
  #endif
  	}
@@ -16031,6 +16165,19 @@ index a2b6c3f..fa47f86 100644
  
  	m_Partition = m_Motions[0].motions.partition();
  	m_Partition->load(this, N);
+diff --git a/src/Layers/xrRender/SkeletonAnimated.h b/src/Layers/xrRender/SkeletonAnimated.h
+index 6f1e6e3..ded767a 100644
+--- a/src/Layers/xrRender/SkeletonAnimated.h
++++ b/src/Layers/xrRender/SkeletonAnimated.h
+@@ -170,7 +170,7 @@ public:
+ 	CBlend* PlayCycle(MotionID M, BOOL bMixIn = TRUE, PlayCallback Callback = 0, LPVOID CallbackParam = 0,
+ 	                  u8 channel = 0);
+ 	CBlend* PlayCycle(u16 partition, MotionID M, BOOL bMixIn = TRUE, PlayCallback Callback = 0,
+-	                  LPVOID CallbackParam = 0, u8 channel = 0);
++	                  LPVOID CallbackParam = 0, u8 channel = 0, float speed = 1.f);
+ 	// fx'es
+ 	MotionID ID_FX(LPCSTR N);
+ 	MotionID ID_FX_Safe(LPCSTR N);
 diff --git a/src/Layers/xrRender/SkeletonCustom.cpp b/src/Layers/xrRender/SkeletonCustom.cpp
 index b738622..9d2a4c9 100644
 --- a/src/Layers/xrRender/SkeletonCustom.cpp
@@ -32016,7 +32163,7 @@ index 30b0d46..07584e4 100644
  			if (phrase_goodwill == phrase_dialog->PhraseList()[phrase_num]->GoodwillLevel())
  				phrases.push_back(i);
 diff --git a/src/xrGame/Actor.cpp b/src/xrGame/Actor.cpp
-index 899a940..9bf276b 100644
+index 899a940..7966ee8 100644
 --- a/src/xrGame/Actor.cpp
 +++ b/src/xrGame/Actor.cpp
 @@ -246,6 +246,8 @@ CActor::CActor() : CEntityAlive(), current_ik_cam_shift(0)
@@ -32101,7 +32248,7 @@ index 899a940..9bf276b 100644
  	R_ASSERT(IsFocused());
 -	if (!((mstate_real & mcLookout) && !IsGameTypeSingle()))
 +	//demonized: disable hud when FPCam is on
-+	if (!((mstate_real & mcLookout) && !IsGameTypeSingle()) && !m_FPCam)
++	if (!((mstate_real & mcLookout) && !IsGameTypeSingle()) && (!m_FPCam || m_FPCam->hudEnabled))
  		g_player_hud->render_hud();
  
  
@@ -32608,10 +32755,10 @@ index 3baa654..eca8679 100644
  	//длиться (если 0, то мгновенно -1 - бесконечность, 
  	//-2 - вообще не должно вызываться)
 diff --git a/src/xrGame/EffectorBobbing.cpp b/src/xrGame/EffectorBobbing.cpp
-index ffd7c19..4ac05a2 100644
+index ffd7c19..116264b 100644
 --- a/src/xrGame/EffectorBobbing.cpp
 +++ b/src/xrGame/EffectorBobbing.cpp
-@@ -113,3 +113,56 @@ BOOL CEffectorBobbing::ProcessCam(SCamEffectorInfo& info)
+@@ -113,3 +113,57 @@ BOOL CEffectorBobbing::ProcessCam(SCamEffectorInfo& info)
  	//	}
  	return TRUE;
  }
@@ -32623,6 +32770,7 @@ index ffd7c19..4ac05a2 100644
 +	m_HPB.set(0, 0, 0);
 +	m_Position.set(0, 0, 0);
 +	m_customSmoothing = 0;
++	hudEnabled = false;
 +}
 +
 +// EMA smoothing for changing values, frame independent
@@ -32670,10 +32818,10 @@ index ffd7c19..4ac05a2 100644
 +}
 \ No newline at end of file
 diff --git a/src/xrGame/EffectorBobbing.h b/src/xrGame/EffectorBobbing.h
-index 854b7a7..e202596 100644
+index 854b7a7..3329ab2 100644
 --- a/src/xrGame/EffectorBobbing.h
 +++ b/src/xrGame/EffectorBobbing.h
-@@ -33,3 +33,19 @@ public:
+@@ -33,3 +33,20 @@ public:
  };
  
  #endif //_EFFECTOR_BOBBING_H
@@ -32685,6 +32833,7 @@ index 854b7a7..e202596 100644
 +	Fvector m_Position;
 +	Fvector m_HPB;
 +	Fmatrix m_Camera;
++	bool hudEnabled = false;
 +	unsigned int m_customSmoothing; // 0 - use FPDeath smoothing params, no custom smoothing
 +	virtual void ema(Fvector& current, Fvector& target, unsigned int steps);
 +	
@@ -32792,6 +32941,182 @@ index c5697ab..b21f2ec 100644
  	/*virtual*/
  	IC BOOL g_Alive() const { return GetfHealth() > 0; }
  	virtual BOOL g_State(SEntityState&) const { return FALSE; }
+diff --git a/src/xrGame/EntityCondition.cpp b/src/xrGame/EntityCondition.cpp
+index 1dae239..7ba36eb 100644
+--- a/src/xrGame/EntityCondition.cpp
++++ b/src/xrGame/EntityCondition.cpp
+@@ -13,6 +13,10 @@
+ #include "ActorHelmet.h"
+ #include "ActorBackpack.h"
+ 
++// demonized: add lua callback before hit but after calculations
++#include "script_hit.h"
++#include "script_game_object.h"
++
+ #define MAX_HEALTH 1.0f
+ #define MIN_HEALTH -0.01f
+ 
+@@ -419,6 +423,24 @@ CWound* CEntityCondition::AddWound(float hit_power, ALife::EHitType hit_type, u1
+ 	return pWound;
+ }
+ 
++// demonized: add lua callback before hit but after calculations
++// pHDS and hit_power will be changed after execution
++static inline void applyBeforeHitAfterCalcsCallback(CEntityAlive* target, const luabind::functor<void>& funct, SHit* pHDS, float& hit_power, const float hit_part = 1)
++{
++	CScriptHit tLuaHit(pHDS);
++	tLuaHit.m_fPower = hit_power;
++	if (hit_part > 0)
++		tLuaHit.m_fPower *= hit_part;
++
++	funct(&tLuaHit, target->lua_game_object());
++
++	if (hit_part > 0)
++		tLuaHit.m_fPower /= hit_part;
++
++	pHDS->ApplyScriptHit(&tLuaHit);
++	hit_power = tLuaHit.m_fPower;
++}
++
+ CWound* CEntityCondition::ConditionHit(SHit* pHDS)
+ {
+ 	//кто нанес последний хит
+@@ -433,6 +455,11 @@ CWound* CEntityCondition::ConditionHit(SHit* pHDS)
+ 	float hit_power = hit_power_org;
+ 	hit_power = HitOutfitEffect(hit_power_org, pHDS->hit_type, pHDS->boneID, pHDS->armor_piercing, bAddWound);
+ 
++	// demonized: add lua callback before hit but after calculations
++	// don't call if there is no target
++	luabind::functor<void> funct;
++	bool has_func = ai().script_engine().functor("_G.CBeforeHitAfterCalcs", funct);
++
+ 	switch (pHDS->hit_type)
+ 	{
+ 	case ALife::eHitTypeTelepatic:
+@@ -440,6 +467,13 @@ CWound* CEntityCondition::ConditionHit(SHit* pHDS)
+ 		if (hit_power < 0.f)
+ 			hit_power = 0.f;
+ 		hit_power *= GetHitImmunity(pHDS->hit_type) - m_fBoostTelepaticImmunity;
++
++		// demonized: add lua callback before hit but after calculations
++		if (has_func)
++		{
++			applyBeforeHitAfterCalcsCallback(m_object, funct, pHDS, hit_power, m_fHealthHitPart);
++		}
++
+ 		ChangePsyHealth(-hit_power);
+ 		m_fHealthLost = hit_power * m_fHealthHitPart;
+ 		m_fDeltaHealth -= CanBeHarmed() ? m_fHealthLost : 0;
+@@ -449,6 +483,13 @@ CWound* CEntityCondition::ConditionHit(SHit* pHDS)
+ 	case ALife::eHitTypeLightBurn:
+ 	case ALife::eHitTypeBurn:
+ 		hit_power *= GetHitImmunity(ALife::eHitTypeBurn) - m_fBoostBurnImmunity;
++
++		// demonized: add lua callback before hit but after calculations
++		if (has_func)
++		{
++			applyBeforeHitAfterCalcsCallback(m_object, funct, pHDS, hit_power, m_fHealthHitPart * m_fHitBoneScale);
++		}
++
+ 		m_fHealthLost = hit_power * m_fHealthHitPart * m_fHitBoneScale;
+ 		m_fDeltaHealth -= CanBeHarmed() ? m_fHealthLost : 0;
+ 		m_fDeltaPower -= hit_power * m_fPowerHitPart;
+@@ -460,6 +501,13 @@ CWound* CEntityCondition::ConditionHit(SHit* pHDS)
+ 		if (hit_power < 0.f)
+ 			hit_power = 0.f;
+ 		hit_power *= GetHitImmunity(pHDS->hit_type) - m_fBoostChemicalBurnImmunity;
++
++		// demonized: add lua callback before hit but after calculations
++		if (has_func)
++		{
++			applyBeforeHitAfterCalcsCallback(m_object, funct, pHDS, hit_power, m_fHealthHitPart);
++		}
++
+ 		m_fHealthLost = hit_power * m_fHealthHitPart;
+ 		m_fDeltaHealth -= CanBeHarmed() ? m_fHealthLost : 0;
+ 		m_fDeltaPower -= hit_power * m_fPowerHitPart;
+@@ -467,6 +515,13 @@ CWound* CEntityCondition::ConditionHit(SHit* pHDS)
+ 		break;
+ 	case ALife::eHitTypeShock:
+ 		hit_power *= GetHitImmunity(pHDS->hit_type) - m_fBoostShockImmunity;
++
++		// demonized: add lua callback before hit but after calculations
++		if (has_func)
++		{
++			applyBeforeHitAfterCalcsCallback(m_object, funct, pHDS, hit_power, m_fHealthHitPart);
++		}
++
+ 		m_fHealthLost = hit_power * m_fHealthHitPart;
+ 		m_fDeltaHealth -= CanBeHarmed() ? m_fHealthLost : 0;
+ 		m_fDeltaPower -= hit_power * m_fPowerHitPart;
+@@ -477,12 +532,26 @@ CWound* CEntityCondition::ConditionHit(SHit* pHDS)
+ 		if (hit_power < 0.f)
+ 			hit_power = 0.f;
+ 		hit_power *= GetHitImmunity(pHDS->hit_type) - m_fBoostRadiationImmunity;
++
++		// demonized: add lua callback before hit but after calculations
++		if (has_func)
++		{
++			applyBeforeHitAfterCalcsCallback(m_object, funct, pHDS, hit_power, 1);
++		}
++
+ 		m_fDeltaRadiation += hit_power;
+ 		bAddWound = false;
+ 		return NULL;
+ 		break;
+ 	case ALife::eHitTypeExplosion:
+ 		hit_power *= GetHitImmunity(pHDS->hit_type) - m_fBoostExplImmunity;
++
++		// demonized: add lua callback before hit but after calculations
++		if (has_func)
++		{
++			applyBeforeHitAfterCalcsCallback(m_object, funct, pHDS, hit_power, m_fHealthHitPart);
++		}
++
+ 		m_fHealthLost = hit_power * m_fHealthHitPart;
+ 		m_fDeltaHealth -= CanBeHarmed() ? m_fHealthLost : 0;
+ 		m_fDeltaPower -= hit_power * m_fPowerHitPart;
+@@ -490,6 +559,13 @@ CWound* CEntityCondition::ConditionHit(SHit* pHDS)
+ 	case ALife::eHitTypeStrike:
+ 		//	case ALife::eHitTypePhysicStrike:
+ 		hit_power *= GetHitImmunity(pHDS->hit_type) - m_fBoostStrikeImmunity;
++
++		// demonized: add lua callback before hit but after calculations
++		if (has_func)
++		{
++			applyBeforeHitAfterCalcsCallback(m_object, funct, pHDS, hit_power, m_fHealthHitPart);
++		}
++
+ 		m_fHealthLost = hit_power * m_fHealthHitPart;
+ 		m_fDeltaHealth -= CanBeHarmed() ? m_fHealthLost : 0;
+ 		m_fDeltaPower -= hit_power * m_fPowerHitPart;
+@@ -497,12 +573,26 @@ CWound* CEntityCondition::ConditionHit(SHit* pHDS)
+ 		break;
+ 	case ALife::eHitTypeFireWound:
+ 		hit_power *= GetHitImmunity(pHDS->hit_type) - m_fBoostFireWoundImmunity;
++
++		// demonized: add lua callback before hit but after calculations
++		if (has_func)
++		{
++			applyBeforeHitAfterCalcsCallback(m_object, funct, pHDS, hit_power, m_fHealthHitPart * m_fHitBoneScale);
++		}
++
+ 		m_fHealthLost = hit_power * m_fHealthHitPart * m_fHitBoneScale;
+ 		m_fDeltaHealth -= CanBeHarmed() ? m_fHealthLost : 0;
+ 		m_fDeltaPower -= hit_power * m_fPowerHitPart;
+ 		break;
+ 	case ALife::eHitTypeWound:
+ 		hit_power *= GetHitImmunity(pHDS->hit_type) - m_fBoostWoundImmunity;
++
++		// demonized: add lua callback before hit but after calculations
++		if (has_func)
++		{
++			applyBeforeHitAfterCalcsCallback(m_object, funct, pHDS, hit_power, m_fHealthHitPart * m_fHitBoneScale);
++		}
++
+ 		m_fHealthLost = hit_power * m_fHealthHitPart * m_fHitBoneScale;
+ 		m_fDeltaHealth -= CanBeHarmed() ? m_fHealthLost : 0;
+ 		m_fDeltaPower -= hit_power * m_fPowerHitPart;
 diff --git a/src/xrGame/Explosive.cpp b/src/xrGame/Explosive.cpp
 index ef648e9..4154e12 100644
 --- a/src/xrGame/Explosive.cpp
@@ -36520,7 +36845,7 @@ index 271a67a..a81d297 100644
  		if (!xr_strcmp((*it).id, str_id))
  			break;
 diff --git a/src/xrGame/level_script.cpp b/src/xrGame/level_script.cpp
-index c16d21c..a541e9b 100644
+index c16d21c..d96d07a 100644
 --- a/src/xrGame/level_script.cpp
 +++ b/src/xrGame/level_script.cpp
 @@ -50,6 +50,8 @@
@@ -36545,23 +36870,35 @@ index c16d21c..a541e9b 100644
  u16 map_has_object_spot(u16 id, LPCSTR spot_type)
  {
  	return Level().MapManager().HasMapLocation(spot_type, id);
-@@ -626,6 +634,27 @@ float add_cam_effector(LPCSTR fn, int id, bool cyclic, LPCSTR cb_func, float cam
+@@ -626,6 +634,39 @@ float add_cam_effector(LPCSTR fn, int id, bool cyclic, LPCSTR cb_func, float cam
  	return e->GetAnimatorLength();
  }
  
 +// demonized: Set custom camera position and direction with movement smoothing (for cutscenes, etc)
-+void set_cam_position_direction(Fvector& position, Fvector& direction, unsigned int smoothing)
++void set_cam_position_direction(Fvector& position, Fvector& direction, unsigned int smoothing, bool hudEnabled, bool hudAffect)
 +{
 +	CActor* actor = Actor();
 +	actor->initFPCam();
 +	actor->m_FPCam->m_HPB.set(direction);
 +	actor->m_FPCam->m_Position.set(position);
 +	actor->m_FPCam->m_customSmoothing = smoothing;
++	actor->m_FPCam->hudEnabled = hudEnabled;
++	actor->m_FPCam->SetHudAffect(hudAffect);
 +}
 +
 +void set_cam_position_direction(Fvector& position, Fvector& direction)
 +{
-+	set_cam_position_direction(position, direction, 1);
++	set_cam_position_direction(position, direction, 1, false, false);
++}
++
++void set_cam_position_direction(Fvector& position, Fvector& direction, unsigned int smoothing)
++{
++	set_cam_position_direction(position, direction, smoothing, false, false);
++}
++
++void set_cam_position_direction(Fvector& position, Fvector& direction, unsigned int smoothing, bool hudEnabled)
++{
++	set_cam_position_direction(position, direction, smoothing, hudEnabled, false);
 +}
 +
 +void remove_cam_position_direction() 
@@ -36573,7 +36910,7 @@ index c16d21c..a541e9b 100644
  void remove_cam_effector(int id)
  {
  	Actor()->Cameras().RemoveCamEffector((ECamEffectorType)id);
-@@ -679,6 +708,15 @@ void set_snd_volume(float v)
+@@ -679,6 +720,15 @@ void set_snd_volume(float v)
  	clamp(psSoundVFactor, 0.0f, 1.0f);
  }
  
@@ -36589,7 +36926,7 @@ index c16d21c..a541e9b 100644
  #include "actor_statistic_mgr.h"
  
  void add_actor_points(LPCSTR sect, LPCSTR detail_key, int cnt, int pts)
-@@ -1331,7 +1369,7 @@ const u32 ActorMovingState()
+@@ -1331,7 +1381,7 @@ const u32 ActorMovingState()
  
  extern ENGINE_API float psHUD_FOV;
  
@@ -36598,7 +36935,7 @@ index c16d21c..a541e9b 100644
  {
  	Fmatrix world, res;
  	world.identity();
-@@ -1359,8 +1397,11 @@ const Fvector2 world2ui(Fvector pos, bool hud = false)
+@@ -1359,8 +1409,11 @@ const Fvector2 world2ui(Fvector pos, bool hud = false)
  	v_res.y = res._42 / v_res.w;
  	v_res.z = res._43 / v_res.w;
  
@@ -36612,7 +36949,7 @@ index c16d21c..a541e9b 100644
  
  	float x = (1.f + v_res.x) / 2.f * (Device.dwWidth);
  	float y = (1.f - v_res.y) / 2.f * (Device.dwHeight);
-@@ -1374,6 +1415,98 @@ const Fvector2 world2ui(Fvector pos, bool hud = false)
+@@ -1374,6 +1427,98 @@ const Fvector2 world2ui(Fvector pos, bool hud = false)
  	return { x,y };
  }
  
@@ -36711,7 +37048,7 @@ index c16d21c..a541e9b 100644
  const float get_env_rads()
  {
  	if (!CurrentGameUI())
-@@ -1427,6 +1560,28 @@ u32 g_get_target_element()
+@@ -1427,6 +1572,28 @@ u32 g_get_target_element()
  	return (0);
  }
  
@@ -36740,7 +37077,7 @@ index c16d21c..a541e9b 100644
  u8 get_active_cam()
  {
  	CActor* actor = smart_cast<CActor*>(Level().CurrentViewEntity());
-@@ -1602,15 +1757,108 @@ CScriptIniFile* GetVisualUserdata(LPCSTR visual)
+@@ -1602,15 +1769,108 @@ CScriptIniFile* GetVisualUserdata(LPCSTR visual)
  	return ini;
  }
  
@@ -36852,7 +37189,7 @@ index c16d21c..a541e9b 100644
  
  	module(L, "level")
  		[
-@@ -1620,6 +1868,13 @@ void CLevel::script_register(lua_State* L)
+@@ -1620,6 +1880,13 @@ void CLevel::script_register(lua_State* L)
  			def("get_target_obj", &g_get_target_obj), //intentionally named to what is in xray extensions
  			def("get_target_dist", &g_get_target_dist),
  			def("get_target_element", &g_get_target_element), //Can get bone cursor is targetting
@@ -36866,7 +37203,7 @@ index c16d21c..a541e9b 100644
  			def("spawn_item", &spawn_section),
  			def("get_active_cam", &get_active_cam),
  			def("set_active_cam", &set_active_cam),
-@@ -1675,6 +1930,9 @@ void CLevel::script_register(lua_State* L)
+@@ -1675,6 +1942,9 @@ void CLevel::script_register(lua_State* L)
  			def("map_has_object_spot", map_has_object_spot),
  			def("map_change_spot_hint", map_change_spot_hint),
  
@@ -36876,7 +37213,7 @@ index c16d21c..a541e9b 100644
  			def("add_dialog_to_render", add_dialog_to_render),
  			def("remove_dialog_to_render", remove_dialog_to_render),
  			def("hide_indicators", hide_indicators),
-@@ -1705,10 +1963,18 @@ void CLevel::script_register(lua_State* L)
+@@ -1705,10 +1975,20 @@ void CLevel::script_register(lua_State* L)
  			def("get_snd_volume", &get_snd_volume),
  			def("get_rain_volume", &get_rain_volume),
  			def("set_snd_volume", &set_snd_volume),
@@ -36888,6 +37225,8 @@ index c16d21c..a541e9b 100644
  			def("add_cam_effector", ((float (*)(LPCSTR, int, bool, LPCSTR, float, bool, float))&add_cam_effector)),
 +
 +			// demonized: Set custom camera position and direction with movement smoothing (for cutscenes, etc)
++			def("set_cam_custom_position_direction", ((void (*)(Fvector&, Fvector&, unsigned int, bool, bool))& set_cam_position_direction)),
++			def("set_cam_custom_position_direction", ((void (*)(Fvector&, Fvector&, unsigned int, bool))&set_cam_position_direction)),
 +			def("set_cam_custom_position_direction", ((void (*)(Fvector&, Fvector&, unsigned int))&set_cam_position_direction)),
 +			def("set_cam_custom_position_direction", ((void (*)(Fvector&, Fvector&))&set_cam_position_direction)),
 +			def("remove_cam_custom_position_direction", &remove_cam_position_direction),
@@ -36895,7 +37234,7 @@ index c16d21c..a541e9b 100644
  			def("remove_cam_effector", &remove_cam_effector),
  			def("set_cam_effector_factor", &set_cam_effector_factor),
  			def("get_cam_effector_factor", &get_cam_effector_factor),
-@@ -1762,6 +2028,21 @@ void CLevel::script_register(lua_State* L)
+@@ -1762,6 +2042,21 @@ void CLevel::script_register(lua_State* L)
  		.def_readonly("object", &script_rq_result::O)
  		.def_readonly("range", &script_rq_result::range)
  		.def_readonly("element", &script_rq_result::element)
@@ -36917,7 +37256,7 @@ index c16d21c..a541e9b 100644
  		.def(constructor<>()),
  		class_<enum_exporter<collide::rq_target>>("rq_target")
  		.enum_("targets")
-@@ -1887,6 +2168,8 @@ void CLevel::script_register(lua_State* L)
+@@ -1887,6 +2182,8 @@ void CLevel::script_register(lua_State* L)
  		def("prefetch_texture", prefetch_texture),
  		def("prefetch_model", prefetch_model),
  		def("get_visual_userdata", GetVisualUserdata),
@@ -37130,10 +37469,27 @@ index 0000000..229a8a3
 +std::map<shared_str, float> listScopeRadii;
 \ No newline at end of file
 diff --git a/src/xrGame/player_hud.cpp b/src/xrGame/player_hud.cpp
-index 96fae36..b2c924c 100644
+index 96fae36..a58d7d5 100644
 --- a/src/xrGame/player_hud.cpp
 +++ b/src/xrGame/player_hud.cpp
-@@ -401,7 +401,7 @@ void attachable_hud_item::load(const shared_str& sect_name)
+@@ -154,7 +154,7 @@ void attachable_hud_item::update(bool bForce)
+ 	m_attach_offset.setHPB(ypr.x, ypr.y, ypr.z);
+ 	m_attach_offset.translate_over(m_parent->m_adjust_mode ? m_parent->m_adjust_obj[0] : m_measures.m_item_attach[0]);
+ 
+-	m_parent->calc_transform(m_attach_place_idx, m_attach_offset, m_item_transform);
++	m_parent->calc_transform(m_attach_place_idx, m_attach_offset, m_item_transform, m_measures.m_bLeadGunLeftHand);
+ 	m_upd_firedeps_frame = Device.dwFrame;
+ 
+ 	IKinematicsAnimated* ka = m_model->dcast_PKinematicsAnimated();
+@@ -385,6 +385,7 @@ void hud_item_measures::load(const shared_str& sect_name, IKinematics* K)
+ 	//--#SM+# End--
+ 
+ 	m_fFreelookZOffset = READ_IF_EXISTS(pSettings, r_float, sect_name, "freelook_z_offset_mul", 0.f);
++	m_bLeadGunLeftHand = READ_IF_EXISTS(pSettings, r_bool, sect_name, "lh_lead_gun", false);
+ }
+ 
+ attachable_hud_item::~attachable_hud_item()
+@@ -401,7 +402,7 @@ void attachable_hud_item::load(const shared_str& sect_name)
  	// Visual
  	LPCSTR visual_name = pSettings->r_string(sect_name, "item_visual");
  	IKinematicsAnimated* visual = ::Render->model_Create(visual_name)->dcast_PKinematicsAnimated();
@@ -37142,7 +37498,7 @@ index 96fae36..b2c924c 100644
  	m_model = smart_cast<IKinematics*>(visual);
  
  	m_attach_place_idx = pSettings->r_u16(sect_name, "attach_place_idx");
-@@ -456,7 +456,7 @@ u32 attachable_hud_item::anim_play(const shared_str& anm_name_b, BOOL bMixIn, co
+@@ -456,7 +457,7 @@ u32 attachable_hud_item::anim_play(const shared_str& anm_name_b, BOOL bMixIn, co
  		else if (bDebug)
  			Msg("playing item animation [%s]", item_anm_name.c_str());
  
@@ -37151,30 +37507,55 @@ index 96fae36..b2c924c 100644
  
  		u16 root_id = m_model->LL_GetBoneRoot();
  		CBoneInstance& root_binst = m_model->LL_GetBoneInstance(root_id);
-@@ -493,12 +493,16 @@ u32 attachable_hud_item::anim_play(const shared_str& anm_name_b, BOOL bMixIn, co
- 			strconcat(sizeof(anm_name), anm_name, "camera_effects\\weapon\\", M.name.c_str(), ".anm");
- 			if (FS.exist(ce_path, "$game_anims$", anm_name))
- 			{
+@@ -465,11 +466,7 @@ u32 attachable_hud_item::anim_play(const shared_str& anm_name_b, BOOL bMixIn, co
+ 
+ 		u16 pc = ka->partitions().count();
+ 		for (u16 pid = 0; pid < pc; ++pid)
+-		{
+-			CBlend* B = ka->PlayCycle(pid, M2, (bMixIn && !!bMixIn2));
+-			R_ASSERT(B);
+-			B->speed *= speed;
+-		}
++			CBlend* B = ka->PlayCycle(pid, M2, (!!bMixIn && bMixIn2), 0, 0, 0, speed);
+ 
+ 		m_model->CalculateBones_Invalidate();
+ 	}
+@@ -483,23 +480,19 @@ u32 attachable_hud_item::anim_play(const shared_str& anm_name_b, BOOL bMixIn, co
+ 	{
+ 		CActor* current_actor = static_cast_checked<CActor*>(Level().CurrentControlEntity());
+ 		VERIFY(current_actor);
+-		CEffectorCam* ec = current_actor->Cameras().GetCamEffector(eCEWeaponAction);
+ 
+-
+-		if (NULL == ec)
++		string_path ce_path;
++		string_path anm_name;
++		strconcat(sizeof(anm_name), anm_name, "camera_effects\\weapon\\", M.name.c_str(), ".anm");
++		if (FS.exist(ce_path, "$game_anims$", anm_name))
+ 		{
+-			string_path ce_path;
+-			string_path anm_name;
+-			strconcat(sizeof(anm_name), anm_name, "camera_effects\\weapon\\", M.name.c_str(), ".anm");
+-			if (FS.exist(ce_path, "$game_anims$", anm_name))
+-			{
 -				CAnimatorCamEffector* e = xr_new<CAnimatorCamEffector>();
 -				e->SetType(eCEWeaponAction);
 -				e->SetHudAffect(false);
 -				e->SetCyclic(false);
 -				e->Start(anm_name);
 -				current_actor->Cameras().AddCamEffector(e);
-+				if (!(m_attach_place_idx == 1 && m_parent->attached_item(0)))
-+				{
-+					int rand = ::Random.randI(5000, 10000);
-+					CAnimatorCamEffector* e = xr_new<CAnimatorCamEffector>();
-+					e->SetType(ECamEffectorType(rand));
-+					e->SetHudAffect(false);
-+					e->SetCyclic(false);
-+					e->Start(anm_name);
-+					current_actor->Cameras().AddCamEffector(e);
-+				}
- 			}
+-			}
++			int rand = ::Random.randI(5000, 10000);
++			CAnimatorCamEffector* e = xr_new<CAnimatorCamEffector>();
++			e->SetType(ECamEffectorType(rand));
++			e->SetHudAffect(false);
++			e->SetCyclic(false);
++			e->Start(anm_name);
++			current_actor->Cameras().AddCamEffector(e);
  		}
  	}
-@@ -682,6 +686,10 @@ void player_hud::load(const shared_str& player_hud_sect, bool force)
+ 	return ret;
+@@ -682,6 +675,10 @@ void player_hud::load(const shared_str& player_hud_sect, bool force)
  	m_model_2->dcast_PKinematics()->CalculateBones_Invalidate();
  	m_model_2->dcast_PKinematics()->CalculateBones(TRUE);
  
@@ -37185,7 +37566,7 @@ index 96fae36..b2c924c 100644
  }
  
  void player_hud::load_script(LPCSTR section)
-@@ -705,11 +713,18 @@ bool player_hud::render_item_ui_query()
+@@ -705,11 +702,18 @@ bool player_hud::render_item_ui_query()
  
  void player_hud::render_item_ui()
  {
@@ -37204,7 +37585,7 @@ index 96fae36..b2c924c 100644
  }
  
  void player_hud::render_hud()
-@@ -896,8 +911,11 @@ void player_hud::update(const Fmatrix& cam_trans)
+@@ -896,8 +900,11 @@ void player_hud::update(const Fmatrix& cam_trans)
  		if (wep && wep->IsZoomed())
  			trans_2.mulB_43(wep->m_shoot_shake_mat);
  	}
@@ -37217,7 +37598,121 @@ index 96fae36..b2c924c 100644
  	
  	// override hand offset for single hand animation
  	if (script_anim_part == 2 || (script_anim_part && !m_attached_items[0] && !m_attached_items[1]))
-@@ -1263,7 +1281,7 @@ player_hud_motion_container* player_hud::get_hand_motions(LPCSTR section)
+@@ -1173,11 +1180,36 @@ float player_hud::SetBlendAnmTime(LPCSTR name, float time)
+ 	return 0;
+ }
+ 
++void play_blend(player_hud* hud, u8 pid, const MotionID& M, BOOL bMixIn, float speed)
++{
++	switch (pid)
++	{
++	case 0:
++	{
++		play_blend(hud, 1, M, bMixIn, speed);
++		play_blend(hud, 2, M, bMixIn, speed);
++		break;
++	}
++	case 1:
++		hud->m_model_2->PlayCycle(0, M, bMixIn, 0, 0, 0, speed);
++		hud->m_model_2->PlayCycle(1, M, bMixIn, 0, 0, 0, speed);
++		hud->m_model_2->PlayCycle(2, M, bMixIn, 0, 0, 0, speed);
++		hud->m_model_2->dcast_PKinematics()->CalculateBones_Invalidate();
++		break;
++	case 2:
++		hud->m_model->PlayCycle(0, M, bMixIn, 0, 0, 0, speed);
++		hud->m_model->PlayCycle(2, M, bMixIn, 0, 0, 0, speed);
++		hud->m_model->dcast_PKinematics()->CalculateBones_Invalidate();
++		break;
++	}
++}
++
+ void player_hud::StopScriptAnim()
+ {
+ 	u8 part = script_anim_part;
+ 	script_anim_part = u8(-1);
+ 	script_anim_item_model = nullptr;
++	script_anim_lead_gun = false;
+ 
+ 	updateMovementLayerState();
+ 
+@@ -1187,71 +1219,19 @@ void player_hud::StopScriptAnim()
+ 		OnMovementChanged((ACTOR_DEFS::EMoveCommand) 0);
+ }
+ 
++//part: 0 = right arm; 1 = left arm
+ u32 player_hud::anim_play(u16 part, const MotionID& M, BOOL bMixIn, const CMotionDef*& md, float speed, u16 override_part)
+ {
+ 	u16 part_id = u16(-1);
+ 	if (attached_item(0) && attached_item(1))
+-		part_id = m_model->partitions().part_id((part == 0) ? "right_hand" : "left_hand");
++		part_id = ((part == 0) ? 2 : 1);
++	else
++		part_id = 0;
+ 
+ 	if (override_part != u16(-1))
+ 		part_id = override_part;
+-	else if (script_anim_part != u8(-1))
+-	{
+-		if (script_anim_part != 2)
+-			part_id = script_anim_part == 0 ? 1 : 0;
+-		else
+-			return 0;
+-	}
+ 	
+-	if (part_id == u16(-1))
+-	{
+-		for (u8 pid = 0; pid < 3; pid++)
+-		{
+-			if (pid == 0 || pid == 2)
+-			{
+-				CBlend* B = m_model->PlayCycle(pid, M, bMixIn);
+-				R_ASSERT(B);
+-				B->speed *= speed;
+-			}
+-			if (pid == 0 || pid == 1)
+-			{
+-				CBlend* B = m_model_2->PlayCycle(pid, M, bMixIn);
+-				R_ASSERT(B);
+-				B->speed *= speed;
+-			}
+-		}
+-
+-		m_model->dcast_PKinematics()->CalculateBones_Invalidate();
+-		m_model_2->dcast_PKinematics()->CalculateBones_Invalidate();
+-	}
+-	else if (part_id == 0 || part_id == 2)
+-	{
+-		for (u8 pid = 0; pid < 3; pid++)
+-		{
+-			if (pid != 1)
+-			{
+-				CBlend* B = m_model->PlayCycle(pid, M, bMixIn);
+-				R_ASSERT(B);
+-				B->speed *= speed;
+-			}
+-		}
+-
+-		m_model->dcast_PKinematics()->CalculateBones_Invalidate();
+-	}
+-	else if (part_id == 1)
+-	{
+-		for (u8 pid = 0; pid < 3; pid++)
+-		{
+-			if (pid != 2)
+-			{
+-				CBlend* B = m_model_2->PlayCycle(pid, M, bMixIn);
+-				R_ASSERT(B);
+-				B->speed *= speed;
+-			}
+-		}
+-
+-		m_model_2->dcast_PKinematics()->CalculateBones_Invalidate();
+-	}
++	play_blend(this, part_id, M, bMixIn, speed);
+ 
+ 	return motion_length(M, md, speed);
+ }
+@@ -1263,7 +1243,7 @@ player_hud_motion_container* player_hud::get_hand_motions(LPCSTR section)
  		if (phm->section == section)
  			return &phm->pm;
  	}
@@ -37226,7 +37721,75 @@ index 96fae36..b2c924c 100644
  	hand_motions* res = xr_new<hand_motions>();
  	res->section = section;
  	res->pm.load(m_model, section);
-@@ -1442,8 +1460,10 @@ void player_hud::remove_from_model_pool(LPCSTR sect)
+@@ -1279,7 +1259,7 @@ void player_hud::update_script_item()
+ 	m_attach_offset.setHPB(ypr.x, ypr.y, ypr.z);
+ 	m_attach_offset.translate_over(item_pos[0]);
+ 
+-	calc_transform(m_attach_idx, m_attach_offset, m_item_pos);
++	calc_transform(m_attach_idx, m_attach_offset, m_item_pos, script_anim_lead_gun);
+ 
+ 	if (script_anim_item_model)
+ 	{
+@@ -1289,6 +1269,7 @@ void player_hud::update_script_item()
+ 	}
+ }
+ 
++// 0 = right arm + hand, 1 = left arm + hand, 2 = both
+ u32 player_hud::script_anim_play(u8 hand, LPCSTR section, LPCSTR anm_name, bool bMixIn, float speed)
+ {
+ 	if (!pSettings->section_exist(section))
+@@ -1320,6 +1301,7 @@ u32 player_hud::script_anim_play(u8 hand, LPCSTR section, LPCSTR anm_name, bool
+ 		item_pos[1] = READ_IF_EXISTS(pSettings, r_fvector3, section, "item_orientation", def);
+ 		script_anim_item_attached = READ_IF_EXISTS(pSettings, r_bool, section, "item_attached", true);
+ 		m_attach_idx = READ_IF_EXISTS(pSettings, r_u8, section, "attach_place_idx", 0);
++		script_anim_lead_gun = READ_IF_EXISTS(pSettings, r_bool, section, "lh_lead_gun", false);
+ 
+ 		if (!script_anim_item_attached)
+ 		{
+@@ -1371,40 +1353,12 @@ u32 player_hud::script_anim_play(u8 hand, LPCSTR section, LPCSTR anm_name, bool
+ 
+ 		u16 pc = script_anim_item_model->partitions().count();
+ 		for (u16 pid = 0; pid < pc; ++pid)
+-		{
+-			CBlend* B = script_anim_item_model->PlayCycle(pid, M2, bMixIn);
+-			R_ASSERT(B);
+-			B->speed *= speed;
+-		}
++			CBlend* B = script_anim_item_model->PlayCycle(pid, M2, bMixIn, 0, 0, 0, speed);
+ 
+ 		script_anim_item_model->dcast_PKinematics()->CalculateBones_Invalidate();
+ 	}
+ 
+-	if (hand == 0) // right hand
+-	{
+-		CBlend* B = m_model->PlayCycle(0, M.mid, bMixIn);
+-		B->speed *= speed;
+-		B = m_model->PlayCycle(2, M.mid, bMixIn);
+-		B->speed *= speed;
+-	}
+-	else if (hand == 1) // left hand
+-	{
+-		CBlend* B = m_model_2->PlayCycle(0, M.mid, bMixIn);
+-		B->speed *= speed;
+-		B = m_model_2->PlayCycle(1, M.mid, bMixIn);
+-		B->speed *= speed;
+-	}
+-	else if (hand == 2) // both hands
+-	{
+-		CBlend* B = m_model->PlayCycle(0, M.mid, bMixIn);
+-		B->speed *= speed;
+-		B = m_model_2->PlayCycle(0, M.mid, bMixIn);
+-		B->speed *= speed;
+-		B = m_model->PlayCycle(2, M.mid, bMixIn);
+-		B->speed *= speed;
+-		B = m_model_2->PlayCycle(1, M.mid, bMixIn);
+-		B->speed *= speed;
+-	}
++	play_blend(this, (hand == 2 ? 0 : (hand + 1)), M.mid, bMixIn, speed);
+ 
+ 	const CMotionDef* md;
+ 	u32 length = motion_length(M.mid, md, speed);
+@@ -1442,8 +1396,10 @@ void player_hud::remove_from_model_pool(LPCSTR sect)
  	}
  }
  
@@ -37237,11 +37800,71 @@ index 96fae36..b2c924c 100644
  	xr_vector<attachable_hud_item*>::iterator it = m_pool.begin();
  	xr_vector<attachable_hud_item*>::iterator it_e = m_pool.end();
  	for (; it != it_e; ++it)
+@@ -1510,18 +1466,15 @@ void player_hud::re_sync_anim(u8 part)
+ 		{
+ 			if (pid == 0)
+ 			{
+-				CBlend* B = m_model->PlayCycle(0, M, TRUE);
++				CBlend* B = m_model->PlayCycle(0, M, TRUE, 0, 0, 0, BR->speed);
+ 				B->timeCurrent = BR->timeCurrent;
+-				B->speed = BR->speed;
+-				B = m_model_2->PlayCycle(0, M, TRUE);
++				B = m_model_2->PlayCycle(0, M, TRUE, 0, 0, 0, BR->speed);
+ 				B->timeCurrent = BR->timeCurrent;
+-				B->speed = BR->speed;
+ 			}
+ 			else if (pid != part)
+ 			{
+-				CBlend* B = part == 1 ? m_model->PlayCycle(pid, M, TRUE) : m_model_2->PlayCycle(pid, M, TRUE);
++				CBlend* B = part == 1 ? m_model->PlayCycle(pid, M, TRUE, 0, 0, 0, BR->speed) : m_model_2->PlayCycle(pid, M, TRUE, 0, 0, 0, BR->speed);
+ 				B->timeCurrent = BR->timeCurrent;
+-				B->speed = BR->speed;
+ 			}
+ 		}
+ 	}
+@@ -1631,10 +1584,10 @@ bool player_hud::allow_script_anim()
+ 	return true;
+ }
+ 
+-void player_hud::calc_transform(u16 attach_slot_idx, const Fmatrix& offset, Fmatrix& result)
++void player_hud::calc_transform(u16 attach_slot_idx, const Fmatrix& offset, Fmatrix& result, bool leadGun)
+ {
+ 	IKinematics* kin = (attach_slot_idx == 0) ? m_model->dcast_PKinematics() : m_model_2->dcast_PKinematics();
+-	Fmatrix ancor_m =  kin->LL_GetTransform(m_ancors[attach_slot_idx]);
++	Fmatrix ancor_m =  kin->LL_GetTransform(m_ancors[(leadGun ? 0 : attach_slot_idx)]);
+ 	result.mul((attach_slot_idx == 0) ? m_transform : m_transform_2, ancor_m);
+ 	result.mulB_43(offset);
+ }
 diff --git a/src/xrGame/player_hud.h b/src/xrGame/player_hud.h
-index 71e970e..dec8c86 100644
+index 71e970e..f381a19 100644
 --- a/src/xrGame/player_hud.h
 +++ b/src/xrGame/player_hud.h
-@@ -371,14 +371,13 @@ private:
+@@ -245,6 +245,7 @@ struct hud_item_measures
+ 	shooting_params m_shooting_params; //--#SM+#--
+ 
+ 	float m_fFreelookZOffset;
++	bool m_bLeadGunLeftHand;
+ };
+ 
+ struct attachable_hud_item
+@@ -320,6 +321,7 @@ public:
+ 	bool m_bStopAtEndAnimIsRunning;
+ 	bool script_anim_item_attached;
+ 	bool script_override_arms;
++	bool script_anim_lead_gun;
+ 	IKinematicsAnimated* script_anim_item_model;
+ 	Fvector item_pos[2];
+ 	Fmatrix m_item_pos;
+@@ -359,7 +361,7 @@ public:
+ 	Fmatrix m_attach_offset;
+ 	Fmatrix m_attach_offset_2;
+ 
+-	void calc_transform(u16 attach_slot_idx, const Fmatrix& offset, Fmatrix& result);
++	void calc_transform(u16 attach_slot_idx, const Fmatrix& offset, Fmatrix& result, bool leadGun = false);
+ 	void tune(Ivector values);
+ 	u32 motion_length(const MotionID& M, const CMotionDef*& md, float speed);
+ 	u32 motion_length_script(LPCSTR section, LPCSTR anm_name, float speed);
+@@ -371,14 +373,13 @@ private:
  	const Fvector& attach_pos(u8 part) const;
  
  	shared_str m_sect_name;
