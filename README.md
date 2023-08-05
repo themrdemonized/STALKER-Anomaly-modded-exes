@@ -170,6 +170,9 @@ How to compile exes:
 7. To compile the engine open the solution in VS2022, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.08.06**
+* SSS update
+
 **2023.08.05**
 * Fixed possible malfunction of shader scopes by enforcing `r__fakescope 1` on first update
 * New callback `on_before_hit_after_calcs` that will fire just before applying hit to an entity, refer to `callbacks_gameobject.script`

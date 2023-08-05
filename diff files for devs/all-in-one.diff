@@ -14792,8 +14792,29 @@ index 79277e4..2d6c106 100644
  		C.r_End();
  	}
  }
+diff --git a/src/Layers/xrRender/Blender_Model_EbB.cpp b/src/Layers/xrRender/Blender_Model_EbB.cpp
+index ee4b9a9..8669ab3 100644
+--- a/src/Layers/xrRender/Blender_Model_EbB.cpp
++++ b/src/Layers/xrRender/Blender_Model_EbB.cpp
+@@ -223,7 +223,15 @@ void CBlender_Model_EbB::Compile(CBlender_Compile& C)
+ 		switch (C.iElement)
+ 		{
+ 		case SE_R2_NORMAL_HQ: // deffer
+-			uber_deffer(C, true, "model", "base", false, 0, true);
++			
++			if (C.HudElement)
++			{
++				uber_deffer(C, true, "model_hud", "base_hud", false, 0, true);
++				C.r_dx10Texture("s_hud_rain", "fx\\hud_rain");
++			}
++			else
++				uber_deffer(C, true, "model", "base", false, 0, true);
++
+ 			C.r_Stencil(TRUE, D3DCMP_ALWAYS, 0xff, 0x7f, D3DSTENCILOP_KEEP, D3DSTENCILOP_REPLACE, D3DSTENCILOP_KEEP);
+ 			C.r_StencilRef(0x01);
+ 			C.r_End();
 diff --git a/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp b/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
-index 5035624..6d370c4 100644
+index 5035624..659618d 100644
 --- a/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
 +++ b/src/Layers/xrRender/Blender_Recorder_StandartBinding.cpp
 @@ -258,9 +258,26 @@ class cl_eye_P : public R_constant_setup
@@ -14970,18 +14991,21 @@ index 5035624..6d370c4 100644
  #endif
  
  static class cl_screen_res : public R_constant_setup
-@@ -521,6 +659,10 @@ static class cl_near_far_plane : public R_constant_setup
+@@ -521,6 +659,13 @@ static class cl_near_far_plane : public R_constant_setup
  	}
  } binder_near_far_plane;
  
 +// Screen Space Shaders Stuff
++extern Fvector4 ps_ssfx_hud_drops_1;
++extern Fvector4 ps_ssfx_hud_drops_2;
++extern Fvector4 ps_ssfx_blood_decals;
 +extern Fvector4 ps_ssfx_wpn_dof_1;
 +extern float ps_ssfx_wpn_dof_2;
 +
  //Sneaky debug stuff
  extern Fvector4 ps_dev_param_1;
  extern Fvector4 ps_dev_param_2;
-@@ -595,6 +737,22 @@ static class dev_param_8 : public R_constant_setup
+@@ -595,6 +740,46 @@ static class dev_param_8 : public R_constant_setup
  	}
  }    dev_param_8;
  
@@ -15001,10 +15025,34 @@ index 5035624..6d370c4 100644
 +	}
 +}    ssfx_wpn_dof_2;
 +
++static class ssfx_blood_decals : public R_constant_setup
++{
++	virtual void setup(R_constant* C)
++	{
++		RCache.set_c(C, ps_ssfx_blood_decals);
++	}
++}    ssfx_blood_decals;
++
++static class ssfx_hud_drops_1 : public R_constant_setup
++{
++	virtual void setup(R_constant* C)
++	{
++		RCache.set_c(C, ps_ssfx_hud_drops_1);
++	}
++}    ssfx_hud_drops_1;
++
++static class ssfx_hud_drops_2 : public R_constant_setup
++{
++	virtual void setup(R_constant* C)
++	{
++		RCache.set_c(C, ps_ssfx_hud_drops_2);
++	}
++}    ssfx_hud_drops_2;
++
  // Standart constant-binding
  void CBlender_Compile::SetMapping()
  {
-@@ -639,7 +797,9 @@ void CBlender_Compile::SetMapping()
+@@ -639,7 +824,9 @@ void CBlender_Compile::SetMapping()
  
  	// eye-params
  	r_Constant("eye_position", &binder_eye_P);
@@ -15014,7 +15062,7 @@ index 5035624..6d370c4 100644
  	r_Constant("eye_normal", &binder_eye_N);
  
  #ifndef _EDITOR
-@@ -680,6 +840,11 @@ void CBlender_Compile::SetMapping()
+@@ -680,6 +867,14 @@ void CBlender_Compile::SetMapping()
  	// PDA
  	r_Constant("pda_params", &binder_pda_params);
  
@@ -15022,11 +15070,14 @@ index 5035624..6d370c4 100644
 +	r_Constant("sky_color", &binder_sky_color);
 +	r_Constant("ssfx_wpn_dof_1", &ssfx_wpn_dof_1);
 +	r_Constant("ssfx_wpn_dof_2", &ssfx_wpn_dof_2);
++	r_Constant("ssfx_blood_decals", &ssfx_blood_decals);
++	r_Constant("ssfx_hud_drops_1", &ssfx_hud_drops_1);
++	r_Constant("ssfx_hud_drops_2", &ssfx_hud_drops_2);
 +
  	// Shader stuff
  	r_Constant("shader_param_1", &dev_param_1);
  	r_Constant("shader_param_2", &dev_param_2);
-@@ -690,10 +855,23 @@ void CBlender_Compile::SetMapping()
+@@ -690,10 +885,23 @@ void CBlender_Compile::SetMapping()
  	r_Constant("shader_param_7", &dev_param_7);
  	r_Constant("shader_param_8", &dev_param_8);
  
@@ -15051,17 +15102,19 @@ index 5035624..6d370c4 100644
 +	//--DSR-- HeatVision_end
  }
 diff --git a/src/Layers/xrRender/Blender_tree.cpp b/src/Layers/xrRender/Blender_tree.cpp
-index 7a8b831..234bee3 100644
+index 7a8b831..48d3c29 100644
 --- a/src/Layers/xrRender/Blender_tree.cpp
 +++ b/src/Layers/xrRender/Blender_tree.cpp
-@@ -216,6 +216,11 @@ void CBlender_Tree::Compile(CBlender_Compile& C)
+@@ -216,6 +216,13 @@ void CBlender_Tree::Compile(CBlender_Compile& C)
  	switch (C.iElement)
  	{
  	case SE_R2_NORMAL_HQ: // deffer
 +
++#if defined(USE_DX11)
 +		// Is a branch/bush. Use a different VS
-+		if (oBlend.value)
++		if (oBlend.value && RImplementation.o.ssfx_branches)
 +			tvs = "tree_branch";
++#endif
 +
  		if (bUseATOC)
  		{
@@ -15283,7 +15336,7 @@ index 5f20c61..960ffe0 100644
  
  #endif //FHierrarhyVisualH
 diff --git a/src/Layers/xrRender/FTreeVisual.cpp b/src/Layers/xrRender/FTreeVisual.cpp
-index 0489ef7..ae734d7 100644
+index 0489ef7..2afa75a 100644
 --- a/src/Layers/xrRender/FTreeVisual.cpp
 +++ b/src/Layers/xrRender/FTreeVisual.cpp
 @@ -19,6 +19,9 @@ shared_str c_c_bias;
@@ -15332,7 +15385,7 @@ index 0489ef7..ae734d7 100644
 +		Fvector4* c_grass;
 +		{
 +			void* GrassData;
-+			RCache.get_ConstantDirect(c_c_BendersPos, BendersQty * sizeof(Fvector4), &GrassData, 0, 0);
++			RCache.get_ConstantDirect(c_c_BendersPos, BendersQty * sizeof(Fvector4) * 2, &GrassData, 0, 0);
 +
 +			c_grass = (Fvector4*)GrassData;
 +		}
@@ -16057,6 +16110,37 @@ index eaff851..911a71d 100644
 +	//--DSR-- HeatVision_end
  };
  #endif
+diff --git a/src/Layers/xrRender/ResourceManager.cpp b/src/Layers/xrRender/ResourceManager.cpp
+index 681f58b..ea04512 100644
+--- a/src/Layers/xrRender/ResourceManager.cpp
++++ b/src/Layers/xrRender/ResourceManager.cpp
+@@ -176,6 +176,11 @@ Shader* CResourceManager::_cpp_Create(IBlender* B, LPCSTR s_shader, LPCSTR s_tex
+ 	C.BT = B;
+ 	C.bEditor = FALSE;
+ 	C.bDetail = FALSE;
++
++#if defined(USE_DX11)
++	C.HudElement = false;
++#endif
++
+ #ifdef _EDITOR
+ 	if (!C.BT)			{ ELog.Msg(mtError,"Can't find shader '%s'",s_shader); return 0; }
+ 	C.bEditor			= TRUE;
+@@ -186,6 +191,14 @@ Shader* CResourceManager::_cpp_Create(IBlender* B, LPCSTR s_shader, LPCSTR s_tex
+ 	_ParseList(C.L_constants, s_constants);
+ 	_ParseList(C.L_matrices, s_matrices);
+ 
++#if defined(USE_DX11)
++	if (::Render->hud_loading && RImplementation.o.ssfx_hud_raindrops)
++	{
++		Msg(":::::::::::::::: HUD ELEMENT [%s] [%s]", s_shader, s_textures);
++		C.HudElement = true;
++	}
++#endif
++
+ 	// Compile element	(LOD0 - HQ)
+ 	{
+ 		C.iElement = 0;
 diff --git a/src/Layers/xrRender/SH_Texture.h b/src/Layers/xrRender/SH_Texture.h
 index 62f91a6..cde2b8a 100644
 --- a/src/Layers/xrRender/SH_Texture.h
@@ -16308,6 +16392,18 @@ index 9ce1dde..2b30c50 100644
  	void AddSkeletonWallmark(intrusive_ptr<CSkeletonWallmark> wm);
  	void AddSkeletonWallmark(const Fmatrix* xf, CKinematics* obj, ref_shader& sh, const Fvector& start,
  	                         const Fvector& dir, float size, float ttl = 0.f, bool ignore_opt = false);
+diff --git a/src/Layers/xrRender/blenders/Blender_Recorder.h b/src/Layers/xrRender/blenders/Blender_Recorder.h
+index 6e2efdf..57f0f51 100644
+--- a/src/Layers/xrRender/blenders/Blender_Recorder.h
++++ b/src/Layers/xrRender/blenders/Blender_Recorder.h
+@@ -26,6 +26,7 @@ public:
+ 	BOOL bDetail_Bump;
+ 	BOOL bUseSteepParallax;
+ 	int iElement;
++	bool HudElement = false;
+ 
+ public:
+ 	CSimulator RS;
 diff --git a/src/Layers/xrRender/dxApplicationRender.cpp b/src/Layers/xrRender/dxApplicationRender.cpp
 index 658ef34..db1d6b5 100644
 --- a/src/Layers/xrRender/dxApplicationRender.cpp
@@ -16675,6 +16771,112 @@ index 9db3d58..ba3cdb5 100644
 -#endif // DEBUG
 -
 -#endif	//	dxDebugRender_included
+diff --git a/src/Layers/xrRender/dxRainRender.cpp b/src/Layers/xrRender/dxRainRender.cpp
+index e67cfb2..f27c66a 100644
+--- a/src/Layers/xrRender/dxRainRender.cpp
++++ b/src/Layers/xrRender/dxRainRender.cpp
+@@ -33,6 +33,11 @@ dxRainRender::dxRainRender()
+ 	hGeom_Rain.create(FVF::F_LIT, RCache.Vertex.Buffer(), RCache.QuadIB);
+ 	hGeom_Drops.create(D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1, RCache.Vertex.Buffer(), RCache.Index.Buffer());
+ 
++#if defined(USE_DX11)
++	if (RImplementation.o.ssfx_rain)
++		SH_Splash.create("effects\\rain_splash", "fx\\fx_rain");
++#endif
++
+ 	FS.r_close(F);
+ }
+ 
+@@ -53,6 +58,23 @@ void dxRainRender::Render(CEffect_Rain& owner)
+ 	float factor = g_pGamePersistent->Environment().CurrentEnv->rain_density;
+ 	if (factor < EPS_L) return;
+ 
++	float _drop_len = drop_length;
++	float _drop_width = drop_width;
++	float _drop_speed = 1.0f;
++	ref_shader& _splash_SH = DM_Drop->shader;
++	static shared_str s_shader_setup = "ssfx_rain_setup";
++
++	// SSS Rain shader is available
++#if defined(USE_DX11)
++	if (RImplementation.o.ssfx_rain)
++	{
++		_drop_len = ps_ssfx_rain_1.x;
++		_drop_width = ps_ssfx_rain_1.y;
++		_drop_speed = ps_ssfx_rain_1.z;
++		_splash_SH = SH_Splash;
++	}
++#endif
++
+ 	u32 desired_items = iFloor(0.5f * (1.f + factor) * float(max_desired_items));
+ 	// visual
+ 	float factor_visual = factor / 2.f + .5f;
+@@ -67,7 +89,7 @@ void dxRainRender::Render(CEffect_Rain& owner)
+ 		while (owner.items.size() < desired_items)
+ 		{
+ 			CEffect_Rain::Item one;
+-			owner.Born(one, source_radius);
++			owner.Born(one, source_radius, _drop_speed);
+ 			owner.items.push_back(one);
+ 		}
+ 	}
+@@ -90,7 +112,7 @@ void dxRainRender::Render(CEffect_Rain& owner)
+ 		CEffect_Rain::Item& one = owner.items[I];
+ 
+ 		if (one.dwTime_Hit < Device.dwTimeGlobal) owner.Hit(one.Phit);
+-		if (one.dwTime_Life < Device.dwTimeGlobal) owner.Born(one, source_radius);
++		if (one.dwTime_Life < Device.dwTimeGlobal) owner.Born(one, source_radius, _drop_speed);
+ 
+ 		// последн€€ дельта ??
+ 		//.		float xdt		= float(one.dwTime_Hit-Device.dwTimeGlobal)/1000.f;
+@@ -154,7 +176,7 @@ void dxRainRender::Render(CEffect_Rain& owner)
+ 		// Build line
+ 		Fvector& pos_head = one.P;
+ 		Fvector pos_trail;
+-		pos_trail.mad(pos_head, one.D, -drop_length * factor_visual);
++		pos_trail.mad(pos_head, one.D, -_drop_len * factor_visual);
+ 
+ 		// Culling
+ 		Fvector sC, lineD;
+@@ -176,7 +198,7 @@ void dxRainRender::Render(CEffect_Rain& owner)
+ 		camDir.sub(sC, vEye);
+ 		camDir.normalize();
+ 		lineTop.crossproduct(camDir, lineD);
+-		float w = drop_width;
++		float w = _drop_width;
+ 		u32 s = one.uv_set;
+ 		P.mad(pos_trail, lineTop, -w);
+ 		verts->set(P, u_rain_color, UV[s][0].x, UV[s][0].y);
+@@ -205,6 +227,7 @@ void dxRainRender::Render(CEffect_Rain& owner)
+ 		RCache.Render(D3DPT_TRIANGLELIST, vOffset, 0, vCount, 0, vCount / 2);
+ 		//HW.pDevice->SetRenderState	(D3DRS_CULLMODE,D3DCULL_CCW);
+ 		RCache.set_CullMode(CULL_CCW);
++		RCache.set_c(s_shader_setup, ps_ssfx_rain_2); // Alpha, Brigthness, Refraction, Reflection
+ 	}
+ 
+ 	// Particles
+@@ -214,7 +237,8 @@ void dxRainRender::Render(CEffect_Rain& owner)
+ 	{
+ 		float dt = Device.fTimeDelta;
+ 		_IndexStream& _IS = RCache.Index;
+-		RCache.set_Shader(DM_Drop->shader);
++		RCache.set_Shader(_splash_SH);
++		RCache.set_c(s_shader_setup, ps_ssfx_rain_3); // Alpha, Refraction
+ 
+ 		Fmatrix mXform, mScale;
+ 		int pcount = 0;
+diff --git a/src/Layers/xrRender/dxRainRender.h b/src/Layers/xrRender/dxRainRender.h
+index 80dcbc9..4b76746 100644
+--- a/src/Layers/xrRender/dxRainRender.h
++++ b/src/Layers/xrRender/dxRainRender.h
+@@ -23,6 +23,7 @@ private:
+ 	// Visualization	(drops)
+ 	IRender_DetailModel* DM_Drop;
+ 	ref_geom hGeom_Drops;
++	ref_shader SH_Splash;
+ };
+ 
+ #endif	//	RainRender_included
 diff --git a/src/Layers/xrRender/dxRenderDeviceRender.cpp b/src/Layers/xrRender/dxRenderDeviceRender.cpp
 index 795c35c..902f053 100644
 --- a/src/Layers/xrRender/dxRenderDeviceRender.cpp
@@ -16705,6 +16907,35 @@ index 12d1e33..bef35d4 100644
  	{
  		pv->set(owner.lt.x, int(base_y - g_y * owner.grid_step.y * elem_factor), owner.grid_color);
  		pv++;
+diff --git a/src/Layers/xrRender/dxWallMarkArray.cpp b/src/Layers/xrRender/dxWallMarkArray.cpp
+index 384d8d3..847c526 100644
+--- a/src/Layers/xrRender/dxWallMarkArray.cpp
++++ b/src/Layers/xrRender/dxWallMarkArray.cpp
+@@ -17,7 +17,24 @@ dxWallMarkArray::~dxWallMarkArray()
+ void dxWallMarkArray::AppendMark(LPCSTR s_textures)
+ {
+ 	ref_shader s;
++
++#if defined(USE_DX11)
++
++	LPCSTR sh_name = "effects\\wallmark";
++
++	if (RImplementation.o.ssfx_blood)
++	{
++		// Use the blood shader for any texture with the name wm_blood_*
++		if (strstr(s_textures, "wm_blood_"))
++			sh_name = "effects\\wallmark_blood";
++	}
++
++	s.create(sh_name, s_textures);
++
++#else
+ 	s.create("effects\\wallmark", s_textures);
++#endif
++
+ 	m_CollideMarks.push_back(s);
+ }
+ 
 diff --git a/src/Layers/xrRender/light.h b/src/Layers/xrRender/light.h
 index 8146a37..7b24183 100644
 --- a/src/Layers/xrRender/light.h
@@ -16947,7 +17178,7 @@ index 248d1c4..066b762 100644
 +};
 +//--DSR-- HeatVision_start
 diff --git a/src/Layers/xrRender/xrRender_console.cpp b/src/Layers/xrRender/xrRender_console.cpp
-index 19cf561..c8a1ec7 100644
+index 19cf561..8e08604 100644
 --- a/src/Layers/xrRender/xrRender_console.cpp
 +++ b/src/Layers/xrRender/xrRender_console.cpp
 @@ -258,6 +258,18 @@ Fvector ps_r2_drops_control = {.0f, 1.15f, .0f}; // r2-only
@@ -16969,7 +17200,7 @@ index 19cf561..c8a1ec7 100644
  float ps_r2_ss_sunshafts_length = 1.f;
  float ps_r2_ss_sunshafts_radius = 1.f;
  
-@@ -290,8 +302,21 @@ Fvector4 ps_dev_param_6 = { .0f, .0f, .0f, .0f };
+@@ -290,8 +302,29 @@ Fvector4 ps_dev_param_6 = { .0f, .0f, .0f, .0f };
  Fvector4 ps_dev_param_7 = { .0f, .0f, .0f, .0f };
  Fvector4 ps_dev_param_8 = { .0f, .0f, .0f, .0f };
  
@@ -16978,6 +17209,14 @@ index 19cf561..c8a1ec7 100644
  /////////////////////////////////
  
 +// Screen Space Shaders Stuff
++Fvector4 ps_ssfx_hud_drops_1 = { 1.0f, 1.0f, 1.0f, 1.0f }; // Anim Speed, Int, Reflection, Refraction
++Fvector4 ps_ssfx_hud_drops_2 = { 1.5f, 0.85f, 0.0f, 2.0f }; // Density, Size, Extra Gloss, Gloss
++
++Fvector4 ps_ssfx_blood_decals = { 0.6f, 0.6f, 0.f, 0.f };
++Fvector4 ps_ssfx_rain_1 = { 2.0f, 0.1f, 0.6f, 2.f }; // Len, Width, Speed, Quality
++Fvector4 ps_ssfx_rain_2 = { 0.7f, 0.1f, 1.0f, 0.5f }; // Alpha, Brigthness, Refraction, Reflection
++Fvector4 ps_ssfx_rain_3 = { 0.5f, 1.0f, 0.0f, 0.0f }; // Alpha, Refraction ( Splashes )
++
 +Fvector3 ps_ssfx_shadow_cascades = { 20, 40, 160 };
 +Fvector4 ps_ssfx_grass_shadows = { .0f, .35f, 30.0f, .0f };
 +
@@ -16991,7 +17230,7 @@ index 19cf561..c8a1ec7 100644
  //	x - min (0), y - focus (1.4), z - max (100)
  Fvector3 ps_r2_dof = { -1.25f, 0.f, 600.f };
  float ps_r2_dof_sky = 30; //	distance to sky
-@@ -347,6 +372,33 @@ int opt_dynamic = 2;
+@@ -347,6 +380,33 @@ int opt_dynamic = 2;
  #include "../xrRenderDX10/StateManager/dx10SamplerStateCache.h"
  #endif	//	USE_DX10
  
@@ -17025,7 +17264,7 @@ index 19cf561..c8a1ec7 100644
  //-----------------------------------------------------------------------
  //AVO: detail draw radius
  #ifdef DETAIL_RADIUS
-@@ -1046,6 +1098,10 @@ void xrRender_initconsole()
+@@ -1046,6 +1106,10 @@ void xrRender_initconsole()
  	CMD4(CCC_Vector4, "r__bloom_weight", &ps_pp_bloom_weight, twb_min, twb_max);
  	CMD4(CCC_Vector4, "r__bloom_thresh", &ps_pp_bloom_thresh, twb_min, twb_max);
  	CMD4(CCC_Integer, "r__nightvision", &ps_r2_nightvision, 0, 3); //For beef's nightvision shader or other stuff
@@ -17036,12 +17275,21 @@ index 19cf561..c8a1ec7 100644
  	CMD3(CCC_Mask, "r2_terrain_z_prepass", &ps_r2_ls_flags, R2FLAG_TERRAIN_PREPASS); //Terrain Z Prepass @Zagolski
  	
  	//////////other
-@@ -1070,6 +1126,27 @@ void xrRender_initconsole()
+@@ -1070,6 +1134,36 @@ void xrRender_initconsole()
  	CMD4(CCC_Vector4, "shader_param_6", &ps_dev_param_6, tw2_min, tw2_max);
  	CMD4(CCC_Vector4, "shader_param_7", &ps_dev_param_7, tw2_min, tw2_max);
  	CMD4(CCC_Vector4, "shader_param_8", &ps_dev_param_8, tw2_min, tw2_max);
 +	
 +	// Screen Space Shaders
++	CMD4(CCC_Vector4, "ssfx_hud_drops_1", &ps_ssfx_hud_drops_1, Fvector4().set(0, 0, 0, 0), Fvector4().set(100000, 100, 100, 100));
++	CMD4(CCC_Vector4, "ssfx_hud_drops_2", &ps_ssfx_hud_drops_2, Fvector4().set(0, 0, 0, 0), tw2_max);
++
++	CMD4(CCC_Vector4, "ssfx_blood_decals", &ps_ssfx_blood_decals, Fvector4().set(0, 0, 0, 0), Fvector4().set(5, 5, 0, 0));
++
++	CMD4(CCC_Vector4, "ssfx_rain_1", &ps_ssfx_rain_1, Fvector4().set(0, 0, 0, 0), Fvector4().set(10, 5, 5, 2));
++	CMD4(CCC_Vector4, "ssfx_rain_2", &ps_ssfx_rain_2, Fvector4().set(0, 0, 0, 0), Fvector4().set(1, 10, 10, 10));
++	CMD4(CCC_Vector4, "ssfx_rain_3", &ps_ssfx_rain_3, Fvector4().set(0, 0, 0, 0), Fvector4().set(1, 10, 10, 10));
++
 +	CMD4(CCC_Vector4, "ssfx_grass_shadows", &ps_ssfx_grass_shadows, Fvector4().set(0, 0, 0, 0), Fvector4().set(3, 1, 100, 100));
 +	CMD4(CCC_ssfx_cascades, "ssfx_shadow_cascades", &ps_ssfx_shadow_cascades, Fvector3().set(1.0f, 1.0f, 1.0f), Fvector3().set(300, 300, 300));
 +	
@@ -17065,13 +17313,16 @@ index 19cf561..c8a1ec7 100644
  	// Geometry optimization
  	CMD4(CCC_Integer, "r__optimize_static_geom", &opt_static, 0, 4);
 diff --git a/src/Layers/xrRender/xrRender_console.h b/src/Layers/xrRender/xrRender_console.h
-index 7ee8c11..21be1bf 100644
+index 7ee8c11..bdbbede 100644
 --- a/src/Layers/xrRender/xrRender_console.h
 +++ b/src/Layers/xrRender/xrRender_console.h
-@@ -3,6 +3,12 @@
+@@ -3,6 +3,15 @@
  #pragma once
  
  // Common
++extern ECORE_API Fvector4 ps_ssfx_rain_1;
++extern ECORE_API Fvector4 ps_ssfx_rain_2;
++extern ECORE_API Fvector4 ps_ssfx_rain_3;
 +extern ECORE_API Fvector4 ps_ssfx_grass_shadows;
 +extern ECORE_API Fvector3 ps_ssfx_shadow_cascades;
 +extern ECORE_API Fvector4 ps_ssfx_grass_interactive;
@@ -17081,7 +17332,7 @@ index 7ee8c11..21be1bf 100644
  extern ECORE_API u32 ps_r_sun_shafts; //=	0;
  extern ECORE_API xr_token qsun_shafts_token[];
  
-@@ -140,6 +146,8 @@ extern ECORE_API int ps_r2_qsync;
+@@ -140,6 +149,8 @@ extern ECORE_API int ps_r2_qsync;
  extern ECORE_API Fvector4 ps_r2_mask_control; // r2-only
  extern ECORE_API Fvector ps_r2_drops_control; // r2-only
  extern ECORE_API int ps_r2_nightvision;
@@ -17160,7 +17411,7 @@ index 920b16f..eb1d10a 100644
  	void SetMultisample(u32 Enable);
  	void SetSampleMask(u32 Mask);
 diff --git a/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp b/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp
-index bb08aa2..e4e26ea 100644
+index bb08aa2..e26e3fe 100644
 --- a/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp
 +++ b/src/Layers/xrRenderDX10/dx10DetailManager_VS.cpp
 @@ -110,6 +110,18 @@ void CDetailManager::hw_Render_dump(const Fvector4& consts, const Fvector4& wave
@@ -17193,7 +17444,7 @@ index bb08aa2..e4e26ea 100644
 +					Fvector4* c_grass;
 +					{
 +						void* GrassData;
-+						RCache.get_ConstantDirect(strPos, BendersQty * sizeof(Fvector4), &GrassData, 0, 0);
++						RCache.get_ConstantDirect(strPos, BendersQty * sizeof(Fvector4) * 2, &GrassData, 0, 0);
 +						c_grass = (Fvector4*)GrassData;
 +					}
 +					VERIFY(c_grass);
@@ -23021,6 +23272,25 @@ index a128b31..77748bf 100644
  		xrRender_initconsole();
  		break ;
  	case DLL_THREAD_ATTACH:
+diff --git a/src/Layers/xrRenderPC_R4/blender_deffer_model.cpp b/src/Layers/xrRenderPC_R4/blender_deffer_model.cpp
+index 852818e..74ff68e 100644
+--- a/src/Layers/xrRenderPC_R4/blender_deffer_model.cpp
++++ b/src/Layers/xrRenderPC_R4/blender_deffer_model.cpp
+@@ -116,7 +116,13 @@ void CBlender_deffer_model::Compile(CBlender_Compile& C)
+ 				C.r_End();
+ 			}
+ 
+-			uber_deffer(C, true, "model", "base", bAref, 0, true);
++			if (C.HudElement)
++			{
++				uber_deffer(C, true, "model_hud", "base_hud", bAref, 0, true);
++				C.r_dx10Texture("s_hud_rain", "fx\\hud_rain");
++			}
++			else
++				uber_deffer(C, true, "model", "base", bAref, 0, true);
+ 
+ 			C.r_Stencil(TRUE, D3DCMP_ALWAYS, 0xff, 0x7f, D3DSTENCILOP_KEEP, D3DSTENCILOP_REPLACE, D3DSTENCILOP_KEEP);
+ 			C.r_StencilRef(0x01);
 diff --git a/src/Layers/xrRenderPC_R4/blender_nightvision.cpp b/src/Layers/xrRenderPC_R4/blender_nightvision.cpp
 index 1a5d5c6..a88a9a5 100644
 --- a/src/Layers/xrRenderPC_R4/blender_nightvision.cpp
@@ -23287,10 +23557,29 @@ index 18a11d4..723d606 100644
  #define		r2_RT_smaa_blendtex "$user$smaa_blendtex"
  
 diff --git a/src/Layers/xrRenderPC_R4/r4.cpp b/src/Layers/xrRenderPC_R4/r4.cpp
-index 77fb925..9ef4c87 100644
+index 77fb925..95a79cd 100644
 --- a/src/Layers/xrRenderPC_R4/r4.cpp
 +++ b/src/Layers/xrRenderPC_R4/r4.cpp
-@@ -614,6 +614,9 @@ void CRender::OnFrame()
+@@ -456,6 +456,18 @@ void CRender::create()
+ 		}
+ 	}
+ 
++	// Check if SSS shaders exist
++	string_path fn;
++	o.ssfx_rain = FS.exist(fn, "$game_shaders$", "r3\\effects_rain_splash", ".ps") ? 1 : 0;
++	o.ssfx_blood = FS.exist(fn, "$game_shaders$", "r3\\effects_wallmark_blood", ".ps") ? 1 : 0;
++	o.ssfx_branches = FS.exist(fn, "$game_shaders$", "r3\\deffer_tree_branch_bump-hq", ".vs") ? 1 : 0;
++	o.ssfx_hud_raindrops = FS.exist(fn, "$game_shaders$", "r3\\deffer_base_hud_bump", ".ps") ? 1 : 0;
++
++	Msg("- SSS HUD RAINDROPS SHADER INSTALLED %i", o.ssfx_hud_raindrops);
++	Msg("- SSS RAIN SHADER INSTALLED %i", o.ssfx_rain);
++	Msg("- SSS BLOOD SHADER INSTALLED %i", o.ssfx_blood);
++	Msg("- SSS BRANCHES SHADER INSTALLED %i", o.ssfx_branches);
++
+ 	// constants
+ 	CResourceManager* RM = dxRenderDeviceRender::Instance().Resources;
+ 	RM->RegisterConstantSetup("parallax", &binder_parallax);
+@@ -614,6 +626,9 @@ void CRender::OnFrame()
  		Device.seqParallel.insert(Device.seqParallel.begin(),
  			fastdelegate::FastDelegate0<>(&HOM, &CHOM::MT_RENDER));
  	}
@@ -23300,7 +23589,7 @@ index 77fb925..9ef4c87 100644
  }
  
  // Particles
-@@ -777,24 +780,35 @@ BOOL CRender::occ_visible(Fbox& P) { return HOM.visible(P); }
+@@ -777,24 +792,35 @@ BOOL CRender::occ_visible(Fbox& P) { return HOM.visible(P); }
  void CRender::add_Visual(IRenderVisual* V) { add_leafs_Dynamic((dxRender_Visual*)V, V->_ignore_optimization); }
  void CRender::add_Geometry(IRenderVisual* V) { add_Static((dxRender_Visual*)V, View->getMask()); }
  
@@ -23341,20 +23630,37 @@ index 77fb925..9ef4c87 100644
  }
  
  void CRender::clear_static_wallmarks()
-@@ -1223,6 +1237,8 @@ HRESULT CRender::shader_compile(
+@@ -1223,6 +1249,10 @@ HRESULT CRender::shader_compile(
  	char c_ssao [32];
  	char c_sun_quality [32];
  	char c_smaa_quality [32];
 +	
++	// SSS preprocessor stuff
++	char c_rain_quality[32];
 +	char c_inter_grass[32];
  
  	char sh_name[MAX_PATH] = "";
  
-@@ -1680,6 +1696,27 @@ HRESULT CRender::shader_compile(
+@@ -1680,6 +1710,42 @@ HRESULT CRender::shader_compile(
  	}
  	sh_name[len] = '0' + char(o.dx10_minmax_sm != 0);
  	++len;
 +	
++	if (ps_ssfx_rain_1.w > 0)
++	{
++		xr_sprintf(c_rain_quality, "%d", u8(ps_ssfx_rain_1.w));
++		defines[def_it].Name = "SSFX_RAIN_QUALITY";
++		defines[def_it].Definition = c_rain_quality;
++		def_it++;
++		xr_strcat(sh_name, c_rain_quality);
++		len += xr_strlen(c_rain_quality);
++	}
++	else
++	{
++		sh_name[len] = '0';
++		++len;
++	}
++
 +	if (ps_ssfx_grass_interactive.y > 0)
 +	{
 +		xr_sprintf(c_inter_grass, "%d", u8(ps_ssfx_grass_interactive.y));
@@ -23379,10 +23685,22 @@ index 77fb925..9ef4c87 100644
  	//Be carefull!!!!! this should be at the end to correctly generate
  	//compiled shader name;
 diff --git a/src/Layers/xrRenderPC_R4/r4.h b/src/Layers/xrRenderPC_R4/r4.h
-index 9ae8b61..7568e78 100644
+index 9ae8b61..53c3d6e 100644
 --- a/src/Layers/xrRenderPC_R4/r4.h
 +++ b/src/Layers/xrRenderPC_R4/r4.h
-@@ -233,6 +233,9 @@ public:
+@@ -57,6 +57,11 @@ public:
+ public:
+ 	struct _options
+ 	{
++		u32 ssfx_branches : 1;
++		u32 ssfx_blood : 1;
++		u32 ssfx_rain : 1;
++		u32 ssfx_hud_raindrops : 1;
++
+ 		u32 bug : 1;
+ 
+ 		u32 ssao_blur_on : 1;
+@@ -233,6 +238,9 @@ public:
  		o_hemi = 0.75f * LT.get_hemi();
  		//o_hemi						= 0.5f*LT.get_hemi			()	;
  		o_sun = 0.75f * LT.get_sun();
@@ -23392,7 +23710,7 @@ index 9ae8b61..7568e78 100644
  		CopyMemory(o_hemi_cube, LT.get_hemi_cube(), CROS_impl::NUM_FACES*sizeof(float));
  	}
  
-@@ -248,6 +251,9 @@ public:
+@@ -248,6 +256,9 @@ public:
  #ifdef	DEBUG
          if (ps_r2_ls_flags.test(R2FLAG_GLOBALMATERIAL))	mtl=ps_r2_gmaterial;
  #endif
@@ -23402,7 +23720,7 @@ index 9ae8b61..7568e78 100644
  		RCache.hemi.set_material(o_hemi, o_sun, 0, (mtl < 5 ? (mtl + .5f) / 4.f : mtl));
  		RCache.hemi.set_pos_faces(o_hemi_cube[CROS_impl::CUBE_FACE_POS_X],
  		                          o_hemi_cube[CROS_impl::CUBE_FACE_POS_Y],
-@@ -300,8 +306,12 @@ public:
+@@ -300,8 +311,12 @@ public:
  	virtual void add_Geometry(IRenderVisual* V); // add visual(s)	(all culling performed)
  
  	// wallmarks
@@ -30779,11 +31097,78 @@ index 040868a..b7c60d3 100644
  };
  
  #endif // IRENDERABLE_H_INCLUDED
+diff --git a/src/xrEngine/Rain.cpp b/src/xrEngine/Rain.cpp
+index b4de67e..98f0876 100644
+--- a/src/xrEngine/Rain.cpp
++++ b/src/xrEngine/Rain.cpp
+@@ -70,7 +70,7 @@ CEffect_Rain::~CEffect_Rain()
+ }
+ 
+ // Born
+-void CEffect_Rain::Born(Item& dest, float radius)
++void CEffect_Rain::Born(Item& dest, float radius, float speed)
+ {
+ 	Fvector axis;
+ 	axis.set(0, -1, 0);
+@@ -89,7 +89,7 @@ void CEffect_Rain::Born(Item& dest, float radius)
+ 	dest.D.random_dir(axis, deg2rad(drop_angle));
+ 	dest.P.set(x + view.x - dest.D.x * source_offset, source_offset + view.y, z + view.z - dest.D.z * source_offset);
+ 	// dest.P.set (x+view.x,height+view.y,z+view.z);
+-	dest.fSpeed = ::Random.randF(drop_speed_min, drop_speed_max);
++	dest.fSpeed = ::Random.randF(drop_speed_min, drop_speed_max) * speed;
+ 
+ 	float height = max_distance;
+ 	RenewItem(dest, height, RayPick(dest.P, dest.D, height, collide::rqtBoth));
+@@ -155,6 +155,7 @@ void CEffect_Rain::OnFrame()
+ 		float t = Device.fTimeDelta;
+ 		clamp(t, 0.001f, 1.0f);
+ 		hemi_factor = hemi_factor * (1.0f - t) + f * t;
++		rain_hemi = hemi_val;
+ 	}
+ #endif
+ 
+diff --git a/src/xrEngine/Rain.h b/src/xrEngine/Rain.h
+index 7f59021..7862149 100644
+--- a/src/xrEngine/Rain.h
++++ b/src/xrEngine/Rain.h
+@@ -74,6 +74,7 @@ private:
+ 	// Sounds
+ 	ref_sound snd_Ambient;
+ 	float rain_volume;
++	float rain_hemi = 0.0f;
+ 
+ 	// Utilities
+ 	void p_create();
+@@ -86,7 +87,7 @@ private:
+ 	void p_free(Particle* P);
+ 
+ 	// Some methods
+-	void Born(Item& dest, float radius);
++	void Born(Item& dest, float radius, float speed);
+ 	void Hit(Fvector& pos);
+ 	BOOL RayPick(const Fvector& s, const Fvector& d, float& range, collide::rq_target tgt);
+ 	void RenewItem(Item& dest, float height, BOOL bHit);
+@@ -105,6 +106,7 @@ public:
+ 	}
+ 
+ 	float GetRainVolume() { return rain_volume; }
++	float GetRainHemi() { return rain_hemi; }
+ };
+ 
+ #endif //RainH
 diff --git a/src/xrEngine/Render.h b/src/xrEngine/Render.h
-index df52521..29b8b22 100644
+index df52521..66e8dd8 100644
 --- a/src/xrEngine/Render.h
 +++ b/src/xrEngine/Render.h
-@@ -283,6 +283,9 @@ public:
+@@ -212,6 +212,7 @@ public:
+ 
+ public:
+ 	// options
++	bool hud_loading;
+ 	s32 m_skinning;
+ 	s32 m_MSAASample;
+ 
+@@ -283,6 +284,9 @@ public:
  	virtual void add_StaticWallmark(const wm_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V) = 0;
  	// Prefer this function when possible
  	virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V, float ttl = 0.f, bool ignore_opt = false, bool random_rotation = true) = 0;
@@ -36845,7 +37230,7 @@ index 271a67a..a81d297 100644
  		if (!xr_strcmp((*it).id, str_id))
  			break;
 diff --git a/src/xrGame/level_script.cpp b/src/xrGame/level_script.cpp
-index c16d21c..d96d07a 100644
+index c16d21c..87beab3 100644
 --- a/src/xrGame/level_script.cpp
 +++ b/src/xrGame/level_script.cpp
 @@ -50,6 +50,8 @@
@@ -36857,7 +37242,43 @@ index c16d21c..d96d07a 100644
  
  using namespace luabind;
  
-@@ -333,6 +335,12 @@ void map_remove_object_spot(u16 id, LPCSTR spot_type)
+@@ -279,6 +281,35 @@ float rain_factor()
+ 	return (g_pGamePersistent->Environment().CurrentEnv->rain_density);
+ }
+ 
++float rain_wetness()
++{
++	return (g_pGamePersistent->Environment().wetness_factor);
++}
++
++float rain_hemi()
++{
++	CEffect_Rain* rain = g_pGamePersistent->pEnvironment->eff_Rain;
++
++	if (rain)
++	{
++		return rain->GetRainHemi();
++	}
++	else
++	{
++		CObject* E = g_pGameLevel->CurrentViewEntity();
++		if (E && E->renderable_ROS())
++		{
++			float* hemi_cube = E->renderable_ROS()->get_luminocity_hemi_cube();
++			float hemi_val = _max(hemi_cube[0], hemi_cube[1]);
++			hemi_val = _max(hemi_val, hemi_cube[2]);
++			hemi_val = _max(hemi_val, hemi_cube[3]);
++			hemi_val = _max(hemi_val, hemi_cube[5]);
++
++			return hemi_val;
++		}
++	}
++}
++
+ u32 vertex_in_direction(u32 level_vertex_id, Fvector direction, float max_distance)
+ {
+ 	if (!ai().level_graph().valid_vertex_id(level_vertex_id))
+@@ -333,6 +364,12 @@ void map_remove_object_spot(u16 id, LPCSTR spot_type)
  	Level().MapManager().RemoveMapLocation(spot_type, id);
  }
  
@@ -36870,7 +37291,7 @@ index c16d21c..d96d07a 100644
  u16 map_has_object_spot(u16 id, LPCSTR spot_type)
  {
  	return Level().MapManager().HasMapLocation(spot_type, id);
-@@ -626,6 +634,39 @@ float add_cam_effector(LPCSTR fn, int id, bool cyclic, LPCSTR cb_func, float cam
+@@ -626,6 +663,39 @@ float add_cam_effector(LPCSTR fn, int id, bool cyclic, LPCSTR cb_func, float cam
  	return e->GetAnimatorLength();
  }
  
@@ -36910,7 +37331,7 @@ index c16d21c..d96d07a 100644
  void remove_cam_effector(int id)
  {
  	Actor()->Cameras().RemoveCamEffector((ECamEffectorType)id);
-@@ -679,6 +720,15 @@ void set_snd_volume(float v)
+@@ -679,6 +749,15 @@ void set_snd_volume(float v)
  	clamp(psSoundVFactor, 0.0f, 1.0f);
  }
  
@@ -36926,7 +37347,7 @@ index c16d21c..d96d07a 100644
  #include "actor_statistic_mgr.h"
  
  void add_actor_points(LPCSTR sect, LPCSTR detail_key, int cnt, int pts)
-@@ -1331,7 +1381,7 @@ const u32 ActorMovingState()
+@@ -1331,7 +1410,7 @@ const u32 ActorMovingState()
  
  extern ENGINE_API float psHUD_FOV;
  
@@ -36935,7 +37356,7 @@ index c16d21c..d96d07a 100644
  {
  	Fmatrix world, res;
  	world.identity();
-@@ -1359,8 +1409,11 @@ const Fvector2 world2ui(Fvector pos, bool hud = false)
+@@ -1359,8 +1438,11 @@ const Fvector2 world2ui(Fvector pos, bool hud = false)
  	v_res.y = res._42 / v_res.w;
  	v_res.z = res._43 / v_res.w;
  
@@ -36949,7 +37370,7 @@ index c16d21c..d96d07a 100644
  
  	float x = (1.f + v_res.x) / 2.f * (Device.dwWidth);
  	float y = (1.f - v_res.y) / 2.f * (Device.dwHeight);
-@@ -1374,6 +1427,98 @@ const Fvector2 world2ui(Fvector pos, bool hud = false)
+@@ -1374,6 +1456,98 @@ const Fvector2 world2ui(Fvector pos, bool hud = false)
  	return { x,y };
  }
  
@@ -37048,7 +37469,7 @@ index c16d21c..d96d07a 100644
  const float get_env_rads()
  {
  	if (!CurrentGameUI())
-@@ -1427,6 +1572,28 @@ u32 g_get_target_element()
+@@ -1427,6 +1601,28 @@ u32 g_get_target_element()
  	return (0);
  }
  
@@ -37077,7 +37498,7 @@ index c16d21c..d96d07a 100644
  u8 get_active_cam()
  {
  	CActor* actor = smart_cast<CActor*>(Level().CurrentViewEntity());
-@@ -1602,15 +1769,108 @@ CScriptIniFile* GetVisualUserdata(LPCSTR visual)
+@@ -1602,15 +1798,108 @@ CScriptIniFile* GetVisualUserdata(LPCSTR visual)
  	return ini;
  }
  
@@ -37189,7 +37610,7 @@ index c16d21c..d96d07a 100644
  
  	module(L, "level")
  		[
-@@ -1620,6 +1880,13 @@ void CLevel::script_register(lua_State* L)
+@@ -1620,6 +1909,13 @@ void CLevel::script_register(lua_State* L)
  			def("get_target_obj", &g_get_target_obj), //intentionally named to what is in xray extensions
  			def("get_target_dist", &g_get_target_dist),
  			def("get_target_element", &g_get_target_element), //Can get bone cursor is targetting
@@ -37203,7 +37624,16 @@ index c16d21c..d96d07a 100644
  			def("spawn_item", &spawn_section),
  			def("get_active_cam", &get_active_cam),
  			def("set_active_cam", &set_active_cam),
-@@ -1675,6 +1942,9 @@ void CLevel::script_register(lua_State* L)
+@@ -1661,6 +1957,8 @@ void CLevel::script_register(lua_State* L)
+ 			def("low_cover_in_direction", low_cover_in_direction),
+ 			def("vertex_in_direction", vertex_in_direction),
+ 			def("rain_factor", rain_factor),
++			def("rain_wetness", rain_wetness),
++			def("rain_hemi", rain_hemi),
+ 			def("patrol_path_exists", patrol_path_exists),
+ 			def("vertex_position", vertex_position),
+ 			def("name", get_name),
+@@ -1675,6 +1973,9 @@ void CLevel::script_register(lua_State* L)
  			def("map_has_object_spot", map_has_object_spot),
  			def("map_change_spot_hint", map_change_spot_hint),
  
@@ -37213,7 +37643,7 @@ index c16d21c..d96d07a 100644
  			def("add_dialog_to_render", add_dialog_to_render),
  			def("remove_dialog_to_render", remove_dialog_to_render),
  			def("hide_indicators", hide_indicators),
-@@ -1705,10 +1975,20 @@ void CLevel::script_register(lua_State* L)
+@@ -1705,10 +2006,20 @@ void CLevel::script_register(lua_State* L)
  			def("get_snd_volume", &get_snd_volume),
  			def("get_rain_volume", &get_rain_volume),
  			def("set_snd_volume", &set_snd_volume),
@@ -37234,7 +37664,7 @@ index c16d21c..d96d07a 100644
  			def("remove_cam_effector", &remove_cam_effector),
  			def("set_cam_effector_factor", &set_cam_effector_factor),
  			def("get_cam_effector_factor", &get_cam_effector_factor),
-@@ -1762,6 +2042,21 @@ void CLevel::script_register(lua_State* L)
+@@ -1762,6 +2073,21 @@ void CLevel::script_register(lua_State* L)
  		.def_readonly("object", &script_rq_result::O)
  		.def_readonly("range", &script_rq_result::range)
  		.def_readonly("element", &script_rq_result::element)
@@ -37256,7 +37686,7 @@ index c16d21c..d96d07a 100644
  		.def(constructor<>()),
  		class_<enum_exporter<collide::rq_target>>("rq_target")
  		.enum_("targets")
-@@ -1887,6 +2182,8 @@ void CLevel::script_register(lua_State* L)
+@@ -1887,6 +2213,8 @@ void CLevel::script_register(lua_State* L)
  		def("prefetch_texture", prefetch_texture),
  		def("prefetch_model", prefetch_model),
  		def("get_visual_userdata", GetVisualUserdata),
@@ -37469,7 +37899,7 @@ index 0000000..229a8a3
 +std::map<shared_str, float> listScopeRadii;
 \ No newline at end of file
 diff --git a/src/xrGame/player_hud.cpp b/src/xrGame/player_hud.cpp
-index 96fae36..a58d7d5 100644
+index 96fae36..2ed3955 100644
 --- a/src/xrGame/player_hud.cpp
 +++ b/src/xrGame/player_hud.cpp
 @@ -154,7 +154,7 @@ void attachable_hud_item::update(bool bForce)
@@ -37489,16 +37919,19 @@ index 96fae36..a58d7d5 100644
  }
  
  attachable_hud_item::~attachable_hud_item()
-@@ -401,7 +402,7 @@ void attachable_hud_item::load(const shared_str& sect_name)
+@@ -400,8 +401,10 @@ void attachable_hud_item::load(const shared_str& sect_name)
+ 
  	// Visual
  	LPCSTR visual_name = pSettings->r_string(sect_name, "item_visual");
++	::Render->hud_loading = true;
  	IKinematicsAnimated* visual = ::Render->model_Create(visual_name)->dcast_PKinematicsAnimated();
 -	R_ASSERT2(visual, make_string("could not create model %s", visual_name));
++	::Render->hud_loading = false;
 +	R_ASSERT2(visual, make_string("could not create model %s, section %s", visual_name, sect_name.c_str()));
  	m_model = smart_cast<IKinematics*>(visual);
  
  	m_attach_place_idx = pSettings->r_u16(sect_name, "attach_place_idx");
-@@ -456,7 +457,7 @@ u32 attachable_hud_item::anim_play(const shared_str& anm_name_b, BOOL bMixIn, co
+@@ -456,7 +459,7 @@ u32 attachable_hud_item::anim_play(const shared_str& anm_name_b, BOOL bMixIn, co
  		else if (bDebug)
  			Msg("playing item animation [%s]", item_anm_name.c_str());
  
@@ -37507,7 +37940,7 @@ index 96fae36..a58d7d5 100644
  
  		u16 root_id = m_model->LL_GetBoneRoot();
  		CBoneInstance& root_binst = m_model->LL_GetBoneInstance(root_id);
-@@ -465,11 +466,7 @@ u32 attachable_hud_item::anim_play(const shared_str& anm_name_b, BOOL bMixIn, co
+@@ -465,11 +468,7 @@ u32 attachable_hud_item::anim_play(const shared_str& anm_name_b, BOOL bMixIn, co
  
  		u16 pc = ka->partitions().count();
  		for (u16 pid = 0; pid < pc; ++pid)
@@ -37520,7 +37953,7 @@ index 96fae36..a58d7d5 100644
  
  		m_model->CalculateBones_Invalidate();
  	}
-@@ -483,23 +480,19 @@ u32 attachable_hud_item::anim_play(const shared_str& anm_name_b, BOOL bMixIn, co
+@@ -483,23 +482,19 @@ u32 attachable_hud_item::anim_play(const shared_str& anm_name_b, BOOL bMixIn, co
  	{
  		CActor* current_actor = static_cast_checked<CActor*>(Level().CurrentControlEntity());
  		VERIFY(current_actor);
@@ -37555,7 +37988,18 @@ index 96fae36..a58d7d5 100644
  		}
  	}
  	return ret;
-@@ -682,6 +675,10 @@ void player_hud::load(const shared_str& player_hud_sect, bool force)
+@@ -624,8 +619,10 @@ void player_hud::load(const shared_str& player_hud_sect, bool force)
+ 	}
+ 
+ 	const shared_str& model_name = pSettings->r_string(player_hud_sect, "visual");
++	::Render->hud_loading = true;
+ 	m_model = smart_cast<IKinematicsAnimated*>(::Render->model_Create(model_name.c_str()));
+ 	m_model_2 = smart_cast<IKinematicsAnimated*>(::Render->model_Create(pSettings->line_exist(player_hud_sect, "visual_2") ? pSettings->r_string(player_hud_sect, "visual_2") : model_name.c_str()));
++	::Render->hud_loading = true;
+ 	bool b_reload = (m_attached_items[0] != nullptr || m_attached_items[1] != nullptr);
+ 
+ 	u16 l_arm = m_model->dcast_PKinematics()->LL_BoneID("l_clavicle");
+@@ -682,6 +679,10 @@ void player_hud::load(const shared_str& player_hud_sect, bool force)
  	m_model_2->dcast_PKinematics()->CalculateBones_Invalidate();
  	m_model_2->dcast_PKinematics()->CalculateBones(TRUE);
  
@@ -37566,7 +38010,7 @@ index 96fae36..a58d7d5 100644
  }
  
  void player_hud::load_script(LPCSTR section)
-@@ -705,11 +702,18 @@ bool player_hud::render_item_ui_query()
+@@ -705,11 +706,18 @@ bool player_hud::render_item_ui_query()
  
  void player_hud::render_item_ui()
  {
@@ -37585,7 +38029,7 @@ index 96fae36..a58d7d5 100644
  }
  
  void player_hud::render_hud()
-@@ -896,8 +900,11 @@ void player_hud::update(const Fmatrix& cam_trans)
+@@ -896,8 +904,11 @@ void player_hud::update(const Fmatrix& cam_trans)
  		if (wep && wep->IsZoomed())
  			trans_2.mulB_43(wep->m_shoot_shake_mat);
  	}
@@ -37598,7 +38042,7 @@ index 96fae36..a58d7d5 100644
  	
  	// override hand offset for single hand animation
  	if (script_anim_part == 2 || (script_anim_part && !m_attached_items[0] && !m_attached_items[1]))
-@@ -1173,11 +1180,36 @@ float player_hud::SetBlendAnmTime(LPCSTR name, float time)
+@@ -1173,11 +1184,36 @@ float player_hud::SetBlendAnmTime(LPCSTR name, float time)
  	return 0;
  }
  
@@ -37635,7 +38079,7 @@ index 96fae36..a58d7d5 100644
  
  	updateMovementLayerState();
  
-@@ -1187,71 +1219,19 @@ void player_hud::StopScriptAnim()
+@@ -1187,71 +1223,19 @@ void player_hud::StopScriptAnim()
  		OnMovementChanged((ACTOR_DEFS::EMoveCommand) 0);
  }
  
@@ -37712,7 +38156,7 @@ index 96fae36..a58d7d5 100644
  
  	return motion_length(M, md, speed);
  }
-@@ -1263,7 +1243,7 @@ player_hud_motion_container* player_hud::get_hand_motions(LPCSTR section)
+@@ -1263,7 +1247,7 @@ player_hud_motion_container* player_hud::get_hand_motions(LPCSTR section)
  		if (phm->section == section)
  			return &phm->pm;
  	}
@@ -37721,7 +38165,7 @@ index 96fae36..a58d7d5 100644
  	hand_motions* res = xr_new<hand_motions>();
  	res->section = section;
  	res->pm.load(m_model, section);
-@@ -1279,7 +1259,7 @@ void player_hud::update_script_item()
+@@ -1279,7 +1263,7 @@ void player_hud::update_script_item()
  	m_attach_offset.setHPB(ypr.x, ypr.y, ypr.z);
  	m_attach_offset.translate_over(item_pos[0]);
  
@@ -37730,7 +38174,7 @@ index 96fae36..a58d7d5 100644
  
  	if (script_anim_item_model)
  	{
-@@ -1289,6 +1269,7 @@ void player_hud::update_script_item()
+@@ -1289,6 +1273,7 @@ void player_hud::update_script_item()
  	}
  }
  
@@ -37738,7 +38182,14 @@ index 96fae36..a58d7d5 100644
  u32 player_hud::script_anim_play(u8 hand, LPCSTR section, LPCSTR anm_name, bool bMixIn, float speed)
  {
  	if (!pSettings->section_exist(section))
-@@ -1320,6 +1301,7 @@ u32 player_hud::script_anim_play(u8 hand, LPCSTR section, LPCSTR anm_name, bool
+@@ -1315,11 +1300,14 @@ u32 player_hud::script_anim_play(u8 hand, LPCSTR section, LPCSTR anm_name, bool
+ 
+ 	if (pSettings->line_exist(section, "item_visual"))
+ 	{
++		::Render->hud_loading = true;
+ 		script_anim_item_model = ::Render->model_Create(pSettings->r_string(section, "item_visual"))->dcast_PKinematicsAnimated();
++		::Render->hud_loading = false;
+ 		item_pos[0] = READ_IF_EXISTS(pSettings, r_fvector3, section, "item_position", def);
  		item_pos[1] = READ_IF_EXISTS(pSettings, r_fvector3, section, "item_orientation", def);
  		script_anim_item_attached = READ_IF_EXISTS(pSettings, r_bool, section, "item_attached", true);
  		m_attach_idx = READ_IF_EXISTS(pSettings, r_u8, section, "attach_place_idx", 0);
@@ -37746,7 +38197,7 @@ index 96fae36..a58d7d5 100644
  
  		if (!script_anim_item_attached)
  		{
-@@ -1371,40 +1353,12 @@ u32 player_hud::script_anim_play(u8 hand, LPCSTR section, LPCSTR anm_name, bool
+@@ -1371,40 +1359,12 @@ u32 player_hud::script_anim_play(u8 hand, LPCSTR section, LPCSTR anm_name, bool
  
  		u16 pc = script_anim_item_model->partitions().count();
  		for (u16 pid = 0; pid < pc; ++pid)
@@ -37789,7 +38240,7 @@ index 96fae36..a58d7d5 100644
  
  	const CMotionDef* md;
  	u32 length = motion_length(M.mid, md, speed);
-@@ -1442,8 +1396,10 @@ void player_hud::remove_from_model_pool(LPCSTR sect)
+@@ -1442,8 +1402,10 @@ void player_hud::remove_from_model_pool(LPCSTR sect)
  	}
  }
  
@@ -37800,7 +38251,7 @@ index 96fae36..a58d7d5 100644
  	xr_vector<attachable_hud_item*>::iterator it = m_pool.begin();
  	xr_vector<attachable_hud_item*>::iterator it_e = m_pool.end();
  	for (; it != it_e; ++it)
-@@ -1510,18 +1466,15 @@ void player_hud::re_sync_anim(u8 part)
+@@ -1510,18 +1472,15 @@ void player_hud::re_sync_anim(u8 part)
  		{
  			if (pid == 0)
  			{
@@ -37822,7 +38273,7 @@ index 96fae36..a58d7d5 100644
  			}
  		}
  	}
-@@ -1631,10 +1584,10 @@ bool player_hud::allow_script_anim()
+@@ -1631,10 +1590,10 @@ bool player_hud::allow_script_anim()
  	return true;
  }
  
