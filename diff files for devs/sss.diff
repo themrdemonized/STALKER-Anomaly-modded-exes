@@ -318,7 +318,7 @@ index 0489ef7..2afa75a 100644
  
  #define PCOPY(a)	a = pFrom->a
 diff --git a/src/Layers/xrRender/ResourceManager.cpp b/src/Layers/xrRender/ResourceManager.cpp
-index 681f58b..ea04512 100644
+index 681f58b..115701c 100644
 --- a/src/Layers/xrRender/ResourceManager.cpp
 +++ b/src/Layers/xrRender/ResourceManager.cpp
 @@ -176,6 +176,11 @@ Shader* CResourceManager::_cpp_Create(IBlender* B, LPCSTR s_shader, LPCSTR s_tex
@@ -333,14 +333,13 @@ index 681f58b..ea04512 100644
  #ifdef _EDITOR
  	if (!C.BT)			{ ELog.Msg(mtError,"Can't find shader '%s'",s_shader); return 0; }
  	C.bEditor			= TRUE;
-@@ -186,6 +191,14 @@ Shader* CResourceManager::_cpp_Create(IBlender* B, LPCSTR s_shader, LPCSTR s_tex
+@@ -186,6 +191,13 @@ Shader* CResourceManager::_cpp_Create(IBlender* B, LPCSTR s_shader, LPCSTR s_tex
  	_ParseList(C.L_constants, s_constants);
  	_ParseList(C.L_matrices, s_matrices);
  
 +#if defined(USE_DX11)
 +	if (::Render->hud_loading && RImplementation.o.ssfx_hud_raindrops)
 +	{
-+		Msg(":::::::::::::::: HUD ELEMENT [%s] [%s]", s_shader, s_textures);
 +		C.HudElement = true;
 +	}
 +#endif
@@ -1499,7 +1498,7 @@ index a1ec515..3539662 100644
  #ifdef DEBUG
      extern BOOL debug_destroy;
 diff --git a/src/xrGame/CustomZone.cpp b/src/xrGame/CustomZone.cpp
-index ff568cd..248e7b8 100644
+index ff568cd..9cf1062 100644
 --- a/src/xrGame/CustomZone.cpp
 +++ b/src/xrGame/CustomZone.cpp
 @@ -22,6 +22,8 @@
@@ -1671,7 +1670,7 @@ index ff568cd..248e7b8 100644
 +		targetAnim = m_BendGrass_idle_anim;
 +
 +	// Update grass bender if the animation is > -1
-+	if (targetAnim > 0 || (GData.anim[grassbender_id] > 0 && grassbender_id > 0))
++	if (targetAnim > 0 || (grassbender_id > 0 && GData.anim[grassbender_id] > 0))
 +		g_pGamePersistent->GrassBendersUpdate(ID(), grassbender_id, grassbender_frame, Position(), m_BendGrass_idle_radius, 0.0f, false);
 +	else
 +		g_pGamePersistent->GrassBendersRemoveByIndex(grassbender_id);

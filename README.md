@@ -170,6 +170,10 @@ How to compile exes:
 7. To compile the engine open the solution in VS2022, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.08.08**
+* SSS update
+* Attempt to resolve not starting game with certain CPU configurations. Huge thanks to ![clayne](https://github.com/clayne) for contributing time and efforts to solve the problem
+
 **2023.08.07**
 * Lucy: Fix of broken left hand animations
 

@@ -16111,7 +16111,7 @@ index eaff851..911a71d 100644
  };
  #endif
 diff --git a/src/Layers/xrRender/ResourceManager.cpp b/src/Layers/xrRender/ResourceManager.cpp
-index 681f58b..ea04512 100644
+index 681f58b..115701c 100644
 --- a/src/Layers/xrRender/ResourceManager.cpp
 +++ b/src/Layers/xrRender/ResourceManager.cpp
 @@ -176,6 +176,11 @@ Shader* CResourceManager::_cpp_Create(IBlender* B, LPCSTR s_shader, LPCSTR s_tex
@@ -16126,14 +16126,13 @@ index 681f58b..ea04512 100644
  #ifdef _EDITOR
  	if (!C.BT)			{ ELog.Msg(mtError,"Can't find shader '%s'",s_shader); return 0; }
  	C.bEditor			= TRUE;
-@@ -186,6 +191,14 @@ Shader* CResourceManager::_cpp_Create(IBlender* B, LPCSTR s_shader, LPCSTR s_tex
+@@ -186,6 +191,13 @@ Shader* CResourceManager::_cpp_Create(IBlender* B, LPCSTR s_shader, LPCSTR s_tex
  	_ParseList(C.L_constants, s_constants);
  	_ParseList(C.L_matrices, s_matrices);
  
 +#if defined(USE_DX11)
 +	if (::Render->hud_loading && RImplementation.o.ssfx_hud_raindrops)
 +	{
-+		Msg(":::::::::::::::: HUD ELEMENT [%s] [%s]", s_shader, s_textures);
 +		C.HudElement = true;
 +	}
 +#endif
@@ -26415,21 +26414,22 @@ index 3f15b2c..8158b52 100644
  //-CALLBACKS
 diff --git a/src/engine-vs2022.sln b/src/engine-vs2022.sln
 new file mode 100644
-index 0000000..0e0819e
+index 0000000..5dcdfc7
 --- /dev/null
 +++ b/src/engine-vs2022.sln
-@@ -0,0 +1,812 @@
+@@ -0,0 +1,813 @@
 +Microsoft Visual Studio Solution File, Format Version 12.00
 +# Visual Studio Version 17
 +VisualStudioVersion = 17.4.33205.214
 +MinimumVisualStudioVersion = 10.0.40219.1
 +Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xrEngine", "xrEngine\vs2022\xrEngine.vcxproj", "{2578C6D8-660D-48AE-9322-7422F8664F06}"
 +	ProjectSection(ProjectDependencies) = postProject
-+		{3A214E06-B95E-4D61-A291-1F8DF2EC10FD} = {3A214E06-B95E-4D61-A291-1F8DF2EC10FD}
 +		{0BDF3377-F84E-4B42-A605-B45AAA244CB6} = {0BDF3377-F84E-4B42-A605-B45AAA244CB6}
-+		{CEBDE98B-A6AA-46E6-BC79-FAAF823DB9EC} = {CEBDE98B-A6AA-46E6-BC79-FAAF823DB9EC}
-+		{893887A1-3ABF-40A0-B931-CD0867010785} = {893887A1-3ABF-40A0-B931-CD0867010785}
++		{3A214E06-B95E-4D61-A291-1F8DF2EC10FD} = {3A214E06-B95E-4D61-A291-1F8DF2EC10FD}
 +		{632AEEB6-DC06-4E15-9551-B2B09A4B73C5} = {632AEEB6-DC06-4E15-9551-B2B09A4B73C5}
++		{893887A1-3ABF-40A0-B931-CD0867010785} = {893887A1-3ABF-40A0-B931-CD0867010785}
++		{9646DBF8-1A5E-41F0-9328-F65910706666} = {9646DBF8-1A5E-41F0-9328-F65910706666}
++		{CEBDE98B-A6AA-46E6-BC79-FAAF823DB9EC} = {CEBDE98B-A6AA-46E6-BC79-FAAF823DB9EC}
 +	EndProjectSection
 +EndProject
 +Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3rd party", "3rd party", "{2BFC806B-CE92-4EA4-8FE8-5F2EA54BA348}"
@@ -26449,8 +26449,8 @@ index 0000000..0e0819e
 +EndProject
 +Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xrGame", "xrGame\vs2022\xrGame.vcxproj", "{200652A6-043E-4634-8837-87983B3BD5E0}"
 +	ProjectSection(ProjectDependencies) = postProject
-+		{938C5808-85A1-4B5A-8CB4-D2D9D7851CB8} = {938C5808-85A1-4B5A-8CB4-D2D9D7851CB8}
 +		{880CD250-BA77-4DAF-A8D4-552F12DD3AE4} = {880CD250-BA77-4DAF-A8D4-552F12DD3AE4}
++		{938C5808-85A1-4B5A-8CB4-D2D9D7851CB8} = {938C5808-85A1-4B5A-8CB4-D2D9D7851CB8}
 +	EndProjectSection
 +EndProject
 +Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xrNetServer", "xrNetServer\vs2022\xrNetServer.vcxproj", "{435BAC9A-B225-457D-AB40-C9BD0CC8838C}"
@@ -26467,9 +26467,9 @@ index 0000000..0e0819e
 +Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xrSound", "xrSound\vs2022\xrSound.vcxproj", "{CCCA7859-EB86-493E-9B53-C4235F45B3C5}"
 +	ProjectSection(ProjectDependencies) = postProject
 +		{3A214E06-B95E-4D61-A291-1F8DF2EC10FD} = {3A214E06-B95E-4D61-A291-1F8DF2EC10FD}
-+		{CEBDE98B-A6AA-46E6-BC79-FAAF823DB9EC} = {CEBDE98B-A6AA-46E6-BC79-FAAF823DB9EC}
-+		{893887A1-3ABF-40A0-B931-CD0867010785} = {893887A1-3ABF-40A0-B931-CD0867010785}
 +		{566551F4-4EF1-4CB4-A131-F982E7606907} = {566551F4-4EF1-4CB4-A131-F982E7606907}
++		{893887A1-3ABF-40A0-B931-CD0867010785} = {893887A1-3ABF-40A0-B931-CD0867010785}
++		{CEBDE98B-A6AA-46E6-BC79-FAAF823DB9EC} = {CEBDE98B-A6AA-46E6-BC79-FAAF823DB9EC}
 +	EndProjectSection
 +EndProject
 +Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xrXMLParser", "xrXMLParser\vs2022\xrXMLParser.vcxproj", "{94A1C366-3D19-48E6-8170-4ADC2E70DF98}"
@@ -26559,8 +26559,8 @@ index 0000000..0e0819e
 +		{2578C6D8-660D-48AE-9322-7422F8664F06}.DX9-AVX|x64.ActiveCfg = ReleaseR2-AVX|x64
 +		{2578C6D8-660D-48AE-9322-7422F8664F06}.DX9-AVX|x64.Build.0 = ReleaseR2-AVX|x64
 +		{2578C6D8-660D-48AE-9322-7422F8664F06}.DX9-AVX|x64.Deploy.0 = ReleaseR2-AVX|x64
-+		{2578C6D8-660D-48AE-9322-7422F8664F06}.Release|x64.ActiveCfg = ReleaseR2-AVX|x64
-+		{2578C6D8-660D-48AE-9322-7422F8664F06}.Release|x64.Build.0 = ReleaseR2-AVX|x64
++		{2578C6D8-660D-48AE-9322-7422F8664F06}.Release|x64.ActiveCfg = ReleaseR2|x64
++		{2578C6D8-660D-48AE-9322-7422F8664F06}.Release|x64.Build.0 = ReleaseR2|x64
 +		{2578C6D8-660D-48AE-9322-7422F8664F06}.Release-AVX|x64.ActiveCfg = ReleaseR2-AVX|x64
 +		{2578C6D8-660D-48AE-9322-7422F8664F06}.Release-AVX|x64.Build.0 = ReleaseR2-AVX|x64
 +		{2578C6D8-660D-48AE-9322-7422F8664F06}.VerifiedDX11|x64.ActiveCfg = VerifiedDX11|x64
@@ -32898,7 +32898,7 @@ index 350d6f1..df7f414 100644
  	return result;
  }
 diff --git a/src/xrGame/CustomZone.cpp b/src/xrGame/CustomZone.cpp
-index ff568cd..248e7b8 100644
+index ff568cd..7d83a8d 100644
 --- a/src/xrGame/CustomZone.cpp
 +++ b/src/xrGame/CustomZone.cpp
 @@ -22,6 +22,8 @@
@@ -33070,7 +33070,7 @@ index ff568cd..248e7b8 100644
 +		targetAnim = m_BendGrass_idle_anim;
 +
 +	// Update grass bender if the animation is > -1
-+	if (targetAnim > 0 || (GData.anim[grassbender_id] > 0 && grassbender_id > 0))
++	if (targetAnim > 0 || (grassbender_id > 0 && GData.anim[grassbender_id] > 0))
 +		g_pGamePersistent->GrassBendersUpdate(ID(), grassbender_id, grassbender_frame, Position(), m_BendGrass_idle_radius, 0.0f, false);
 +	else
 +		g_pGamePersistent->GrassBendersRemoveByIndex(grassbender_id);
@@ -33105,7 +33105,6 @@ index ff568cd..248e7b8 100644
 +		GData.str_target[grassbender_id] += g_pGamePersistent->GrassBenderToValue(GData.str_target[grassbender_id], m_BendGrass_idle_str, 10.0f, true);
 +	}
 +}
-\ No newline at end of file
 diff --git a/src/xrGame/CustomZone.h b/src/xrGame/CustomZone.h
 index 3baa654..eca8679 100644
 --- a/src/xrGame/CustomZone.h
