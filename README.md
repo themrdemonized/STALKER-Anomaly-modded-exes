@@ -170,6 +170,11 @@ How to compile exes:
 7. To compile the engine open the solution in VS2022, select all projects and configurations in Batch build and start a build.
 
 ## Changelog
+**2023.08.09**
+* Reduced size of exes
+* Changes to build procedure to solve not starting game with certain CPU configurations
+* Restored original behaviour of `bone_position` and `bone_direction` functions to solve issues with some mods. If incorrect bone_id is specified for them, the warning will be printed in the console
+
 **2023.08.08**
 * SSS update
 * Attempt to resolve not starting game with certain CPU configurations. Huge thanks to ![clayne](https://github.com/clayne) for contributing time and efforts to solve the problem

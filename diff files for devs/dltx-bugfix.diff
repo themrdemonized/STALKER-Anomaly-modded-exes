@@ -13514,6 +13514,16 @@ index 35f5e1c..2298a74 100644
  	float AdditionalInventoryWeight() const { return m_additional_weight; }
  	bool m_bCanSpawnZone;
  	float m_fHealthRestoreSpeed;
+diff --git a/src/xrGame/CaptureBoneCallback.h b/src/xrGame/CaptureBoneCallback.h
+index e34535a..abca356 100644
+--- a/src/xrGame/CaptureBoneCallback.h
++++ b/src/xrGame/CaptureBoneCallback.h
+@@ -1,4 +1,4 @@
+-#pragma once;
++#pragma once
+ 
+ 
+ #include "../xrphysics/physicsshell.h"
 diff --git a/src/xrGame/CustomOutfit.cpp b/src/xrGame/CustomOutfit.cpp
 index 350d6f1..df7f414 100644
 --- a/src/xrGame/CustomOutfit.cpp
@@ -16870,7 +16880,7 @@ index 81e990e..de53eef 100644
  };
  
 diff --git a/src/xrGame/script_game_object.cpp b/src/xrGame/script_game_object.cpp
-index 5489997..c9c2f28 100644
+index 5489997..1284223 100644
 --- a/src/xrGame/script_game_object.cpp
 +++ b/src/xrGame/script_game_object.cpp
 @@ -181,11 +181,6 @@ const CScriptEntityAction* CScriptGameObject::GetActionByIndex(u32 action_index)
@@ -16885,7 +16895,7 @@ index 5489997..c9c2f28 100644
  cphysics_shell_scripted* CScriptGameObject::get_physics_shell() const
  {
  	CPhysicsShellHolder* ph_shell_holder = smart_cast<CPhysicsShellHolder*>(&object());
-@@ -343,44 +338,202 @@ u32 CScriptGameObject::get_current_patrol_point_index()
+@@ -343,44 +338,214 @@ u32 CScriptGameObject::get_current_patrol_point_index()
  //////////////////////////////////////////////////////////////////////////
  //////////////////////////////////////////////////////////////////////////
  
@@ -16926,7 +16936,7 @@ index 5489997..c9c2f28 100644
 +
 +Fvector CScriptGameObject::bone_position(u16 bone_id, bool bHud)
 +{
-+	if (bone_id == BI_NONE) return Fvector().set(0, 0, 0);
++	//if (bone_id == BI_NONE) return Fvector().set(0, 0, 0);
 +
 +	IKinematics* k = nullptr;
 +	Fmatrix* xform = nullptr;
@@ -16947,7 +16957,6 @@ index 5489997..c9c2f28 100644
 +		}
  	}
 -	else
--		bone_id = k->LL_GetBoneRoot();
 +
 +	if (!k)
 +	{
@@ -16956,6 +16965,12 @@ index 5489997..c9c2f28 100644
 +	}
 +
 +	if (!k) return Fvector().set(0, 0, 0);
++
++	// demonized: backwards compatibility with scripts, get root bone if bone_id is BI_NONE
++	if (bone_id == BI_NONE) {
++		Msg("![bone_position] Incorrect bone_id provided, fallback to root bone");
+ 		bone_id = k->LL_GetBoneRoot();
++	}
  
  	Fmatrix matrix;
 -	matrix.mul_43((bHud && itm && itm->HudItemData()) ? itm->HudItemData()->m_item_transform : object().XFORM(),
@@ -16966,7 +16981,7 @@ index 5489997..c9c2f28 100644
  
 +Fvector CScriptGameObject::bone_direction(u16 bone_id, bool bHud)
 +{
-+	if (bone_id == BI_NONE) return Fvector().set(0, 0, 0);
++	//if (bone_id == BI_NONE) return Fvector().set(0, 0, 0);
 +
 +	IKinematics* k = nullptr;
 +	Fmatrix* xform = nullptr;
@@ -16994,8 +17009,13 @@ index 5489997..c9c2f28 100644
 +	}
 +
 +	if (!k) return Fvector().set(0, 0, 0);
- 
--LPCSTR CScriptGameObject::bone_name(u16 id, bool bHud)
++
++	// demonized: backwards compatibility with scripts, get root bone if bone_id is BI_NONE
++	if (bone_id == BI_NONE) {
++		Msg("![bone_direction] Incorrect bone_id provided, fallback to root bone");
++		bone_id = k->LL_GetBoneRoot();
++	}
++
 +	Fmatrix matrix;
 +	Fvector res;
 +	matrix.mul_43(*xform, k->LL_GetTransform(bone_id));
@@ -17004,7 +17024,34 @@ index 5489997..c9c2f28 100644
 +}
 +
 +u16 CScriptGameObject::bone_parent(u16 bone_id, bool bHud)
++{
++	IKinematics* k = nullptr;
++
++	if (bHud)
++	{
++		CActor* act = smart_cast<CActor*>(&object());
++		CHudItem* itm = smart_cast<CHudItem*>(&object());
++		if (itm)
++			k = itm->HudItemData()->m_model;
++		else if (act)
++			k = g_player_hud->m_model->dcast_PKinematics();
++	}
++
++	if (!k)
++		k = object().Visual()->dcast_PKinematics();
+ 
+-LPCSTR CScriptGameObject::bone_name(u16 id, bool bHud)
++	if (!k || bone_id == k->LL_GetBoneRoot() || bone_id >= k->LL_BoneCount()) return BI_NONE;
++
++	CBoneData* data = &k->LL_GetData(bone_id);
++	u16 ParentID = data->GetParentID();
++	return ParentID;
++}
++
++LPCSTR CScriptGameObject::bone_name(u16 bone_id, bool bHud)
  {
++	if (bone_id == BI_NONE) return "";
++
  	IKinematics* k = nullptr;
  
 -	CHudItem* itm = smart_cast<CHudItem*>(&object());
@@ -17024,33 +17071,6 @@ index 5489997..c9c2f28 100644
 +	if (!k)
 +		k = object().Visual()->dcast_PKinematics();
 +
-+	if (!k || bone_id == k->LL_GetBoneRoot() || bone_id >= k->LL_BoneCount()) return BI_NONE;
-+
-+	CBoneData* data = &k->LL_GetData(bone_id);
-+	u16 ParentID = data->GetParentID();
-+	return ParentID;
-+}
-+
-+LPCSTR CScriptGameObject::bone_name(u16 bone_id, bool bHud)
-+{
-+	if (bone_id == BI_NONE) return "";
-+
-+	IKinematics* k = nullptr;
-+
-+	if (bHud)
-+	{
-+		CActor* act = smart_cast<CActor*>(&object());
-+		CHudItem* itm = smart_cast<CHudItem*>(&object());
-+		if (itm)
-+			k = itm->HudItemData()->m_model;
-+		else if (act)
-+			k = g_player_hud->m_model->dcast_PKinematics();
-+	}
-+
-+	if (!k)
- 		k = object().Visual()->dcast_PKinematics();
- 
--	return (k->LL_BoneName_dbg(id));
 +	if (!k) return "";
 +
 +	return (k->LL_BoneName_dbg(bone_id));
@@ -17073,8 +17093,9 @@ index 5489997..c9c2f28 100644
 +	}
 +
 +	if (!k)
-+		k = object().Visual()->dcast_PKinematics();
-+
+ 		k = object().Visual()->dcast_PKinematics();
+ 
+-	return (k->LL_BoneName_dbg(id));
 +	if (!k)
 +		return;
 +
@@ -17898,6 +17919,19 @@ index 9e58e02..d4afa47 100644
    </ItemGroup>
    <ItemGroup>
      <CustomBuild Include="ai\monsters\chimera\chimera_attack_state.h">
+diff --git a/src/xrServerEntities/alife_movement_manager_holder.h b/src/xrServerEntities/alife_movement_manager_holder.h
+index bff869b..36d9742 100644
+--- a/src/xrServerEntities/alife_movement_manager_holder.h
++++ b/src/xrServerEntities/alife_movement_manager_holder.h
+@@ -5,7 +5,7 @@
+ //	Author		: Plichko Alexander
+ //	Description : movement manager holder
+ ////////////////////////////////////////////////////////////////////////////
+-#pragma once;
++#pragma once
+ 
+ class CMovementManagerHolder
+ {
 diff --git a/src/xrServerEntities/script_engine.cpp b/src/xrServerEntities/script_engine.cpp
 index 6d36d9e..3e17f3e 100644
 --- a/src/xrServerEntities/script_engine.cpp
