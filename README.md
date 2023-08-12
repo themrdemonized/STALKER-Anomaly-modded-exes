@@ -161,14 +161,12 @@ Patches folder contains diffs used to create new exes, they are used to compile 
 
 How to compile exes:
 
-1. Git clone XRay-Monolith engine repository https://bitbucket.org/anomalymod/xray-monolith.git
-2. Open cloned repo in git console or in application of your choice (Sourcetree (recommended), Github Desktop)
-3. Make new branch from "master" branch
-4. From newly created branch make additional branches for each .diff file in "patches" folder of this repo that you want to apply
-5. Apply patches in those branches via `git apply <path_to_patch>` command
-6. Merge those branches back into your branch created in p.3
-7. To compile the engine open the solution in VS2022, select all projects and configurations in Batch build and start a build.
-8. For successful compilation, **14.36 build tools with MFC and ATL libraries is required**
+1. Fork xray-monolith repo from https://github.com/themrdemonized/xray-monolith
+2. Clone the fork onto your pc
+3. Select all-in-one-vs2022 branch
+4. Compile the engine-vs2022.sln solution with VS2022
+5. For batch builds of all configurations use `batch_build.bat` in xray-monolith repo
+6. For successful compilation, **14.36 build tools with MFC and ATL libraries is required**
 
 ## Changelog
 **2023.08.09**
