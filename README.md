@@ -157,10 +157,7 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
 
 ## How to make my own modded exe?
 
-Patches folder contains diffs used to create new exes, they are used to compile your own exes if you need that
-
 How to compile exes:
-
 1. Fork xray-monolith repo from https://github.com/themrdemonized/xray-monolith
 2. Clone the fork onto your pc
 3. Select all-in-one-vs2022 branch
