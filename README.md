@@ -3,7 +3,8 @@
 Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by community required for some advanced mods to work.
 
 # Read the instructions PLEASE!!!
-![image](https://github.com/themrdemonized/STALKER-Anomaly-modded-exes/assets/46323442/f7538503-c347-49d6-9bc0-e2bc9920671b)
+![image](https://github.com/themrdemonized/STALKER-Anomaly-modded-exes/assets/46323442/6c5b89c8-c749-4945-b842-ec0a7c4f748a)
+
 
 * Install the latest Visual C++ Redistributables: https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/
 * Download STALKER-Anomaly-modded-exes.zip archive.
