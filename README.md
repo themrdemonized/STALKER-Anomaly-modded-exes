@@ -167,6 +167,25 @@ How to compile exes:
 6. For successful compilation, **14.36 build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.08.19**
+* Removed diff files, please fork XRay-Monolith repo to work on engine and submit changes via pull requests: https://github.com/themrdemonized/xray-monolith
+* Added boneId parameter to `on_before_hit_after_calcs` callback
+* More descriptive error message on crashes if it was caused by Lua
+* Fixes by ![clayne](https://github.com/clayne)
+  * https://github.com/themrdemonized/xray-monolith/pull/1
+  * https://github.com/themrdemonized/xray-monolith/pull/2
+  * https://github.com/themrdemonized/xray-monolith/pull/3
+  * https://github.com/themrdemonized/xray-monolith/pull/4
+  * https://github.com/themrdemonized/xray-monolith/pull/5
+  * https://github.com/themrdemonized/xray-monolith/pull/6
+  * https://github.com/themrdemonized/xray-monolith/pull/7
+  * https://github.com/themrdemonized/xray-monolith/pull/8
+  * https://github.com/themrdemonized/xray-monolith/pull/9
+  * https://github.com/themrdemonized/xray-monolith/pull/10
+  * https://github.com/themrdemonized/xray-monolith/pull/11
+  * https://github.com/themrdemonized/xray-monolith/pull/12
+  * https://github.com/themrdemonized/xray-monolith/pull/13
+  
 **2023.08.09**
 * Reduced size of exes
 * Changes to build procedure to solve not starting game with certain CPU configurations
