@@ -167,6 +167,11 @@ How to compile exes:
 6. For successful compilation, **14.36 build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.08.29**
+* Added `apply_torque` function to `get_physics_shell()` Lua object to apply rotational force to models
+* Fixes by ![clayne](https://github.com/clayne)
+  * https://github.com/themrdemonized/xray-monolith/pull/14
+
 **2023.08.19**
 * Removed diff files, please fork XRay-Monolith repo to work on engine and submit changes via pull requests: https://github.com/themrdemonized/xray-monolith
 * Added boneId parameter to `on_before_hit_after_calcs` callback
