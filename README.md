@@ -167,6 +167,9 @@ How to compile exes:
 6. For successful compilation, **14.36 build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.09.02**
+* Performance improvements when calling level.object_by_id function, thanks Lucy for the hint
+
 **2023.08.29**
 * Added `apply_torque` function to `get_physics_shell()` Lua object to apply rotational force to models
 * Fixes by ![clayne](https://github.com/clayne)
