@@ -167,6 +167,12 @@ How to compile exes:
 6. For successful compilation, **14.36 build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.09.06**
+* Moved build procedure to Github Actions in https://github.com/themrdemonized/xray-monolith
+* Apart from exes themselves, https://github.com/themrdemonized/xray-monolith repo will contain PDB files if you want to debug the code yourself
+* Added `angle` and `force_set_angle` functions for game objects by GhenTuong
+* Added `get_modded_exes_version` function
+
 **2023.09.02**
 * Performance improvements when calling level.object_by_id function, thanks Lucy for the hint
 
