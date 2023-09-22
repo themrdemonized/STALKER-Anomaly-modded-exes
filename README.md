@@ -170,6 +170,7 @@ How to compile exes:
 **2023.09.22**
 * Added `on_map_right_click` callback, which allows to right click anywhere on the map and fire user functions at projected real world position. Refer to `callbacks_gameobject.script`
 * Added possibility to zoom in and out relative to cursor on the map, instead of always center
+* Fixed possible crash when using script functions for getting bone properties
 * Added temporary fix for view NPC PDA's function not working correctly if 2D PDA is used
 * Added `player_hud` functions documentation in `lua_help_ex.script`
 * Added global functions
