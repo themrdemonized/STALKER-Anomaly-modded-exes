@@ -167,6 +167,15 @@ How to compile exes:
 6. For successful compilation, **14.36 build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.09.22**
+* Added `on_map_right_click` callback, which allows to right click anywhere on the map and fire user functions at projected real world position. Refer to `callbacks_gameobject.script`
+* Added possibility to zoom in and out relative to cursor on the map, instead of always center
+* Added temporary fix for view NPC PDA's function not working correctly if 2D PDA is used
+* Added `player_hud` functions documentation in `lua_help_ex.script`
+* Added global functions
+  * `nextTick(f, n)` will execute function f on the next n-th game tick. Your function should return true if you want to fire it once, just like with time events
+  * `print_tip(s)` will print information in news feed as well as in console 
+
 **2023.09.06**
 * Moved build procedure to Github Actions in https://github.com/themrdemonized/xray-monolith
 * Apart from exes themselves, https://github.com/themrdemonized/xray-monolith repo will contain PDB files if you want to debug the code yourself
