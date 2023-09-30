@@ -167,6 +167,14 @@ How to compile exes:
 6. For successful compilation, **14.36 build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.09.30**
+* Added possibility to disable weapon switch with mouse wheel, use console command `mouse_wheel_change_weapon 0`
+* Fixed invisible console bug when there are invisible debug gizmos being used
+* `db.actor:set_actor_direction` supports pitch as a second argument
+* Minor fixes of right click PDA callback
+* Added print of stack when incorrect bone id provided for bone functions
+* Moved LuaJIT to VS2022 toolchain and applied optimization flags for build 
+
 **2023.09.22**
 * Added `on_map_right_click` callback, which allows to right click anywhere on the map and fire user functions at projected real world position. Refer to `callbacks_gameobject.script`
 * Added possibility to zoom in and out relative to cursor on the map, instead of always center
