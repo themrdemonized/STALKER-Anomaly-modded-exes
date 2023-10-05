@@ -167,6 +167,10 @@ How to compile exes:
 6. For successful compilation, **14.36 build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.10.05**
+* Fixed occasional crash when right click on PDA map
+* `db.actor:set_actor_direction` supports roll as third argument
+
 **2023.09.30**
 * Added possibility to disable weapon switch with mouse wheel, use console command `mouse_wheel_change_weapon 0`
 * Fixed invisible console bug when there are invisible debug gizmos being used
