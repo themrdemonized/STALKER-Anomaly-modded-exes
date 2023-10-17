@@ -167,6 +167,11 @@ How to compile exes:
 6. For successful compilation, **14.36 build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.10.17**
+* SSS 18 update
+* Lucy: specifying a custom UI bone for Svarog/Veles in the hud sections via `detector_ui_bone` property
+* `string_table_error_msg` console command to print missing translation strings 
+
 **2023.10.05**
 * Fixed occasional crash when right click on PDA map
 * `db.actor:set_actor_direction` supports roll as third argument
