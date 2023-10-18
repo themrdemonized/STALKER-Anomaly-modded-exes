@@ -169,7 +169,7 @@ How to compile exes:
 ## Changelog
 **2023.10.17**
 * SSS 18 update
-* Lucy: specifying a custom UI bone for Svarog/Veles in the hud sections via `detector_ui_bone` property
+* Lucy: specifying a custom UI bone for Svarog/Veles in the hud sections of detectors via `detector_ui_bone` property
 * `string_table_error_msg` console command to print missing translation strings 
 
 **2023.10.05**
