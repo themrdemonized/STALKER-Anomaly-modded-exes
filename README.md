@@ -164,7 +164,7 @@ How to compile exes:
 3. Select all-in-one-vs2022 branch
 4. Compile the engine-vs2022.sln solution with VS2022
 5. For batch builds of all configurations use `batch_build.bat` in xray-monolith repo
-6. For successful compilation, **14.36 build tools with MFC and ATL libraries is required**
+6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
 **2023.10.17**
