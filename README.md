@@ -167,6 +167,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.10.20**
+* Removed monster stuck fix due to big fps loses it causes. You can turn it back via console command `monster_stuck_fix 1`
+
 **2023.10.17**
 * SSS 18 update
 * Lucy: specifying a custom UI bone for Svarog/Veles in the hud sections of detectors via `detector_ui_bone` property
