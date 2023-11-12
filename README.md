@@ -167,6 +167,11 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.11.12**
+* Fixed physics initialization when obj:force_set_position(pos, true) is used
+* Fixed not working shader scopes when alternative sight is an optic
+* Removed (DLTX, DXML, ...) string from version title in the main menu screen
+
 **2023.10.27**
 * Reverted change to mouse wheel, its not inverted now
 * Toggle inverted mouse wheel with console command `mouse_wheel_invert_zoom 1` 
