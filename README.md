@@ -167,6 +167,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.11.14**
+* Fixed issue when having grenade launcher attached will trigger shader scopes
+
 **2023.11.12**
 * Fixed physics initialization when obj:force_set_position(pos, true) is used
 * Fixed not working shader scopes when alternative sight is an optic
