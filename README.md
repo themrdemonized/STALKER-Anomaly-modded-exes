@@ -167,6 +167,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.11.15**
+* Fixed crash when trying to use alt aim on Mosin-like scopes
+
 **2023.11.14**
 * Fixed issue when having grenade launcher attached will trigger shader scopes
 
