@@ -167,6 +167,19 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.11.22**
+* GhenTuong: parametrized functions in dialogs (precondition, action, script_text tags)
+  * '=' and '!' can be used and work same as condlist. `=` is true condition, `!` is false
+  * () can be used to input parameters. Parameters are separated by ':'
+  * Example: `<precondition>!file.func(dolg:1:false)</precondition>`
+  ```lua
+    function func(a,b,dialog_id,phrase_id,next_id,p)
+      printf("%s %s %s %s %s %s", a, b, dialog_id, phrase_id, next_id, table.concat(p, " "))
+    end
+  ```
+* Added option to write timestamps in console and log file. Type `log_timestamps 1` in console to turn on the feature
+* DXML query function will always return table even with invalid queries
+
 **2023.11.15**
 * Fixed crash when trying to use alt aim on Mosin-like scopes
 
