@@ -167,6 +167,12 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.11.25**
+* Added functions for manipulating map spot graphics
+  * `level.map_get_object_spot_static(u16 id, LPCSTR spot_type)` will return CUIStatic object of the spot on the map
+  * `level.map_get_object_minimap_spot_static(u16 id, LPCSTR spot_type)` will return CUIStatic object of the spot on the minimap
+* If DXML query is invalid, the game will crash with an error message and callstack
+
 **2023.11.22**
 * GhenTuong: parametrized functions in dialogs (precondition, action, script_text tags)
   * '=' and '!' can be used and work same as condlist. `=` is true condition, `!` is false
