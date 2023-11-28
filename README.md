@@ -167,6 +167,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.11.28**
+* Lucy: add a motion mark to the draw/holster animations of the flashlight to trigger when the light turns on or off
+
 **2023.11.25**
 * Added functions for manipulating map spot graphics
   * `level.map_get_object_spot_static(u16 id, LPCSTR spot_type)` will return CUIStatic object of the spot on the map
