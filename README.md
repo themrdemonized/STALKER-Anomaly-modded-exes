@@ -167,6 +167,10 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.12.02**
+* Added possibility to edit freelook angle limit with console command `freelook_cam_limit`
+* Using /Ob3 flag for compiling, theoretically should increase performance a bit
+
 **2023.11.28**
 * Lucy: add a motion mark to the draw/holster animations of the flashlight to trigger when the light turns on or off
 
