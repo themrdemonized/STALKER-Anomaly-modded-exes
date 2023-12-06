@@ -167,6 +167,11 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.12.06**
+* Added gun object and gun owner params to `actor_on_hud_animation_mark` and `
+actor_on_hud_animation_play` callbacks
+* Warnings when script fails to get console variables due to incorrect type
+
 **2023.12.02**
 * Added possibility to edit freelook angle limit with console command `freelook_cam_limit`
 * Using /Ob3 flag for compiling, theoretically should increase performance a bit
