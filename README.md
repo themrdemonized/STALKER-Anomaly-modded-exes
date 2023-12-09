@@ -167,6 +167,17 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.12.09**
+* Disabled get_console warning for bool variables
+* Lua unlocalizer supports `_g.script`
+* Lua unlocalizer filename check is insensitive, ie `[_G]` is the same as `[_g]`
+* Disabled Lua caches for ini files when using `SYS_GetParam` and reading variables such as `r_string_ex` in favor of engine functions and to reduce memory footprint and possible GC calls
+* Added undocumented Lua extensions exports into `lua_help_ex.script`
+* Added new callback `on_news_received` to manipulate game news when they are displayed
+* Added `game.change_game_news_show_time` function to postpone fadeout of game news
+* Added `throttle(func, time)` function to throttle calls to `func` by `time` in milliseconds
+
+
 **2023.12.06**
 * Added gun object and gun owner params to `actor_on_hud_animation_mark` and `
 actor_on_hud_animation_play` callbacks
