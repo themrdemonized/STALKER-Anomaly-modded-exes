@@ -167,6 +167,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.12.09u1**
+* Fixed crash on failed `tonumber` conversion when using `SYS_GetParam`
+
 **2023.12.09**
 * Disabled get_console warning for bool variables
 * Lua unlocalizer supports `_g.script`
