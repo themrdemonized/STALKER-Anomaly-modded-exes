@@ -167,6 +167,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.12.16u1**
+* Temporary disabled robin_hood hashing to fix crashes
+
 **2023.12.16**
 * `xr_unordered_map` type is replaced with robin_hood hashing from https://github.com/martinus/robin-hood-hashing. Additionaly introducing `xr_unordered_set` and `xr_pair` types based on this library
 * Added engine-based caching ini values in CIniFile class
