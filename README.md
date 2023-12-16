@@ -167,6 +167,16 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.12.16**
+* `xr_unordered_map` type is replaced with robin_hood hashing from https://github.com/martinus/robin-hood-hashing. Additionaly introducing `xr_unordered_set` and `xr_pair` types based on this library
+* Added engine-based caching ini values in CIniFile class
+* Added Lua function `ini_file:get_filename()` to return the filename of file
+* Replaced `ini_file_ex` class with implementation that is derived from `ini_file`, fully backwards compatible with existing `ini_file_ex`
+* `level.iterate_nearest` will sort objects by ascending distance before executing Lua callback
+* Added `game.update_pda_news_from_uiwindow(CUIWindow*)` function to update news in PDA from news window on the HUD
+* Added printing of engine stack trace in the log via StackWalker library https://github.com/JochenKalmbach/StackWalker
+  * To make it work you need to download `pdb` file for your DX/AVX version and put it into same place as `exe` file. PDB files are here: https://github.com/themrdemonized/xray-monolith/releases/latest
+
 **2023.12.09u1**
 * Fixed crash on failed `tonumber` conversion when using `SYS_GetParam`
 
