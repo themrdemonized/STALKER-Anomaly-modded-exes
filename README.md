@@ -167,6 +167,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.12.17**
+* Fixed getting wrong values in ini cache due to robin_hood hashing, reenabled the library
+
 **2023.12.16u1**
 * Temporary disabled robin_hood hashing to fix crashes
 
