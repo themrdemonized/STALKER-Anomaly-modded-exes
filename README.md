@@ -167,6 +167,10 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.12.23**
+* DLTX: simplified possibility to delete whole section, now its just enough to write `!![section]` to completely delete it
+* Longreed: added possibility for minimap to have a custom rectangular shape 
+
 **2023.12.17**
 * Fixed getting wrong values in ini cache due to robin_hood hashing, reenabled the library
 
