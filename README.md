@@ -167,6 +167,11 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2023.12.30**
+* Added `bullet_id` field to script hit struct
+* Restored behaviour of `r_bool_ex` and `r_value` functions to match vanilla code
+* Filtered useless lines in stack trace if `pdb` file is not present
+
 **2023.12.24**
 * SSS update
 * Minimap shape fix moved into option. Add `ratio_mode = "1"` in `zone_map_*.xml` files in `level_frame` node to enable the new code
