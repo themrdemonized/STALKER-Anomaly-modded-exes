@@ -94,6 +94,8 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
   * Added getting material of ray_pick() result with all of its properties
   * Potential fix for stuck monsters from OGSR Engine repo in `control_animation_base_accel.cpp`
   * Removed maximum engine limit of 5 artefacts on belt
+  * Added printing of engine stack trace in the log via StackWalker library https://github.com/JochenKalmbach/StackWalker
+   * To make it work you need to download `pdb` file for your DX/AVX version and put it into same place as `exe` file. PDB files are here: https://github.com/themrdemonized/xray-monolith/releases/latest
 
 * Fixes and features by Lucy
   * Reshade shaders won't affect UI, full addon support version of Reshade is required (see TROUBLESHOOTING for details)
