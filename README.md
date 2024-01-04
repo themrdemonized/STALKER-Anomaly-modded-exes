@@ -169,6 +169,36 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.01.04**
+* New `db.actor` exports
+  * `db.actor:get_actor_crouch_coef()`
+  * `db.actor:set_actor_crouch_coef(float)`
+  * `db.actor:get_actor_climb_coef()`
+  * `db.actor:set_actor_climb_coef(float)`
+  * `db.actor:get_actor_walk_strafe_coef()`
+  * `db.actor:set_actor_walk_strafe_coef(float)`
+  * `db.actor:get_actor_run_strafe_coef()`
+  * `db.actor:set_actor_run_strafe_coef(float)`
+  * `db.actor:get_actor_sprint_strafe_coef()`
+  * `db.actor:set_actor_sprint_strafe_coef(float)`
+* Added `hit_fraction_actor` field for helmet upgrades
+* Added filename field for section items
+* Added ini script methods for DLTX
+  * dltx_print(string sec = nil, string line = nil): prints information about sections. If sec is nil, then whole file will be printed. If section is provided and line is nil, then the whole section will be printed. If both provided, only the provided line will be printed
+  * dltx_get_filename_of_line(string sec, string line): returns filename that was used for a line in the section
+  * dltx_get_section(string sec): returns a table with section information with structure:
+  ```
+    {
+      [<section_1>] = {
+        name = <section_1>
+        value = <value_1>
+        filename = <filename_1>
+      }
+      ...
+    }
+  ```
+  * dltx_is_override(string sec, string line): returns true if line in section was overriden by DLTX mod
+
 **2023.12.30**
 * Added `bullet_id` field to script hit struct
 * Restored behaviour of `r_bool_ex` and `r_value` functions to match vanilla code
