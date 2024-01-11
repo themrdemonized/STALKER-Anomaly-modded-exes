@@ -169,6 +169,12 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.01.11**
+* Added possibility to override gamemtl.xr materials and define new ones via `materials.ltx` and `material_pairs.ltx` files. Please read the guide in those files in `gamedata/materials` folder
+* Removed `pSettings->line_exist(sect_name,"fire_point")==pSettings->line_exist(sect_name,"fire_bone")` game crash check
+* Raised `GAMEMTL_SUBITEM_COUNT` for material sounds and particles constant from 4 to 10
+* Fixed rare unlocalizer crash and crashes on Linux because of this bug
+
 **2024.01.04**
 * New `db.actor` exports
   * `db.actor:get_actor_crouch_coef()`
