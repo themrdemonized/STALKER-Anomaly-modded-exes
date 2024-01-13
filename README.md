@@ -169,6 +169,10 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.01.13**
+* Fixed typo in GameMtlLib.cpp
+* OneMorePseudoCoder: Memory leaks fixes
+
 **2024.01.11**
 * Added possibility to override gamemtl.xr materials and define new ones via `materials.ltx` and `material_pairs.ltx` files. Please read the guide in those files in `gamedata/materials` folder
 * Removed `pSettings->line_exist(sect_name,"fire_point")==pSettings->line_exist(sect_name,"fire_bone")` game crash check
