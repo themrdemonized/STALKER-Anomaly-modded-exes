@@ -169,6 +169,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.01.18**
+* MagielBruntink: Increased lua_gcstep default to 400 and allow console editing via `lua_gcstep` command 
+
 **2024.01.13**
 * Fixed typo in GameMtlLib.cpp
 * OneMorePseudoCoder: Memory leaks fixes
