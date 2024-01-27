@@ -169,6 +169,10 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.01.27**
+* Fixed: `[error]Expression    : left_eye_bone_id != u16(-1) && right_eye_bone_id != u16(-1), CBaseMonster::update_eyes_visibility`
+* Reenabled robinhood hashing
+
 **2024.01.26**
 * Temporary disabled robinhood hashing, reason: `[error]Expression    : left_eye_bone_id != u16(-1) && right_eye_bone_id != u16(-1), CBaseMonster::update_eyes_visibility`
 * Print Lua stack on `you are trying to use a destroyed object` error
