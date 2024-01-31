@@ -169,6 +169,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.01.31**
+* LVutner: compute shaders fix
+
 **2024.01.30**
 * Hrust: fix volumetric fog
 
