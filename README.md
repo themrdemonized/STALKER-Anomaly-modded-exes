@@ -169,6 +169,12 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.02.28**
+* Crash saving is enabled after loading screen and disabled on player net_destroy. This should fix fake `db.actor is nil` Lua errors
+* MOUSEBUFFERSIZE is increased from 64 to 1024
+* KEYBOARDBUFFERSIZE is increased from 64 to 128
+* Adjustable mouse and keyboard buffer size via console commands `mouse_buffer_size` and `keyboard_buffer_size`
+
 **2024.02.05**
 * Xr_ini.cpp fixes
 * Fixed incorrect bullet speed in `bullet_on_init` callback 
