@@ -169,6 +169,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.03.11**
+* damoldavskiy: Mark Switch shader param
+
 **2024.03.08**
 * Lucy, VodoXleb: new `on_phrase_callback`
 
