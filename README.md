@@ -169,6 +169,11 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.03.18**
+* vegeta1k95:
+  * Fix issue when lens flares - from sun, etc - were rendered on top of infrared image.
+  * Rendering sun/moon into heat RT - makes it possible for those to be displayed hot in infrared.
+
 **2024.03.12**
 * SSS 20.2 Update
 * Fix water rendering on DX10
