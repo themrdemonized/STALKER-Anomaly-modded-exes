@@ -169,6 +169,13 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.03.21**
+* vegeta1k95:
+  * Fix lens flares and sun/moon for heatvision for DX10 (forgot in the last request);
+  * Make corpses heat decay configurable through new console parameters;
+* Tosox:
+  * New npc_on_item_before_pickup callback
+
 **2024.03.18**
 * vegeta1k95:
   * Fix issue when lens flares - from sun, etc - were rendered on top of infrared image.
