@@ -169,6 +169,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.03.26**
+* vegeta1k95: Add optional "blowout_disable_idle" option for anomalies
+
 **2024.03.24**
 * Print Lua callstack when `level.object_by_id(nil)` is called
 
