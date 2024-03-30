@@ -169,6 +169,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.03.30**
+* vegeta1k95: Fixed gravity anomalies not always playing particles/sounds of body tearing
+
 **2024.03.26**
 * vegeta1k95: Add optional "blowout_disable_idle" option for anomalies
 
