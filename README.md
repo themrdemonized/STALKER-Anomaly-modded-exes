@@ -169,6 +169,12 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.04.01**
+* `npc:set_enable_movement_collision(true|false)` to enable or disable NPC's movement collision
+* strangerism:
+  * added to DemoRecord extra keybindings to support pc/laptops with no numpad
+  * added new console command (demo_record_return_ctrl_inputs) to launch DemoRecord with the ability for client scripts to receive certain keystrokes and react to it while DemoRecord is still running
+
 **2024.03.30**
 * vegeta1k95: Fixed gravity anomalies not always playing particles/sounds of body tearing
 
