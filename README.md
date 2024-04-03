@@ -169,6 +169,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.01.03**
+* vegeta1k95: Fixed the problem where weapon muzzle flash and smoke particles were wrongly aligned wrt each other.
+
 **2024.04.01**
 * `npc:set_enable_movement_collision(true|false)` to enable or disable NPC's movement collision
 * strangerism:
