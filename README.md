@@ -169,7 +169,14 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
-**2024.01.03**
+**2024.04.05**
+* DaimeneX: Editable variables that allow weapon position adjustements that don't require aim tweaks
+  * base_hud_offset_pos
+  * base_hud_offset_pos_16x9
+  * base_hud_offset_rot
+  * base_hud_offset_rot_16x9
+
+**2024.04.03**
 * vegeta1k95: Fixed the problem where weapon muzzle flash and smoke particles were wrongly aligned wrt each other.
 
 **2024.04.01**
