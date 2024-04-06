@@ -169,6 +169,10 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.04.06**
+* Safe reading of base_hud_offset_... params
+* `on_loading_screen_key_prompt` callback works with `keypress_on_start 0` cvar
+
 **2024.04.05**
 * DaimeneX: Editable variables that allow weapon position adjustements that don't require aim tweaks
   * base_hud_offset_pos
