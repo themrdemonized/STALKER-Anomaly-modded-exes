@@ -169,6 +169,16 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.04.07**
+* strangerism:
+  * fixed cursor staying visible when launching demo_record
+  * adds propagation of F12 keypress screenshot event (only available with cmd demo_record_return_ctrl_inputs )
+  * toggle cursor visibility when demo_record controls are switched to invoker script and back (only available with cmd demo_record_return_ctrl_inputs )
+  * added new api to enable camera bonduary check (limits the camera distance from the actor)
+  * added camera bonduary check and that the camera does not go below the actor ground (not really a ground collision check)
+  * update console cmd demo_record_return_ctrl_inputs to enable camera bonduary check
+* DaimeneX: base_hud_offset_... params work with PDA
+
 **2024.04.06**
 * Safe reading of base_hud_offset_... params
 * `on_loading_screen_key_prompt` callback works with `keypress_on_start 0` cvar
