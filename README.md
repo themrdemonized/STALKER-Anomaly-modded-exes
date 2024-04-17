@@ -169,8 +169,12 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.04.17**
+* Tosox:
+  * Poltergeists and Burers can throw corpses, to enable it check modded exes options menu or type in console `telekinetic_objects_include_corpses 1`
+
 **2024.04.12**
-* Script hit `.bone` field can be assigned `s_hit.bone = "bip01_spine`, as well as called `s_hit.bone("bip01_spine")`. This will potentially change behaviour of some vanilla scripts and mods to the authors' intended way.   
+* Script hit `.bone` field can be assigned `s_hit.bone = "bip01_spine"`, as well as called `s_hit.bone("bip01_spine")`. This will potentially change behaviour of some vanilla scripts and mods to the authors' intended way.   
 * vegeta1k95:
   * Added new optional telekinesis type for gravitational anomalies behavior: CTeleTrampolin
   * Can be used by mods, which set `tele_type 1` inside anomalies config sections.
@@ -185,7 +189,7 @@ How to compile exes:
   * Added new API to enable camera bonduary check (limits the camera distance from the actor)
   * Added camera bonduary check and that the camera does not go below the actor ground (not really a ground collision check)
   * Update console cmd `demo_record_return_ctrl_inputs` to enable camera bonduary check
-* ve: base_hud_offset_... params work with PDA
+* DaimeneX: base_hud_offset_... params work with PDA
 
 **2024.04.06**
 * Safe reading of base_hud_offset_... params
