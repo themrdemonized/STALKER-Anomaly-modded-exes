@@ -163,12 +163,26 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
 How to compile exes:
 1. Fork xray-monolith repo from https://github.com/themrdemonized/xray-monolith
 2. Clone the fork onto your pc
-3. Select all-in-one-vs2022 branch
+3. Select all-in-one-vs2022-wpo branch
 4. Compile the engine-vs2022.sln solution with VS2022
 5. For batch builds of all configurations use `batch_build.bat` in xray-monolith repo
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.04.22**
+* Added `complex_mode` attribute to `<list>` UI node (default is disabled), which allows for colored text of list items and other features. Example:
+  ```xml
+    <properties_box>
+      <texture>ui_inGame2_demo_player_info_window</texture>
+      <list x="0" y="0" width="10" height="10" item_height="18" always_show_scroll="0" can_select="1" bottom_indent="10" right_ident="10" left_ident="20" complex_mode="1">
+          <font_s r="220" g="220" b="220" />
+          <font r="150" g="150" b="150" font="letterica16" complex_mode="1" />
+      </list>
+  </properties_box>
+  ```
+* vegeta1k95:
+  * Added an optional and configurable texture glowing for silencers after consecutive shots, visually looks like overheating.
+
 **2024.04.17**
 * Tosox:
   * Poltergeists and Burers can throw corpses, to enable it check modded exes options menu or type in console `telekinetic_objects_include_corpses 1`
