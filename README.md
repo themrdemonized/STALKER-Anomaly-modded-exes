@@ -169,6 +169,12 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.05.01**
+* Fixed missing translation strings for some modded exes options
+* New Lua functions
+  * `db.actor:update_weight()` - Force update actor's inventory weight
+  * `db.actor:get_total_weight_force_update()` - Force update actor's inventory weight and return updated weight
+
 **2024.04.22**
 * Added `complex_mode` attribute to `<list>` UI node (default is disabled), which allows for colored text of list items and other features. Example:
   ```xml
