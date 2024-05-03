@@ -169,6 +169,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.05.03**
+* vegeta1k95: `get_hud():GetWindow()` method
+
 **2024.05.01**
 * Fixed missing translation strings for some modded exes options
 * New Lua functions
