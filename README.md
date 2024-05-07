@@ -169,6 +169,11 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.05.07**
+* Fixed CMovementManager parallel pathfinding that could lead to stuck monsters on the map
+* Reduced delay between pathfinding computations from 1.5-2.5 to 1-1.5 secs
+* Lua function `get_string_table()` to return a table of all translated string texts and corresponding string IDs
+
 **2024.05.06**
 * Fixes to `item_device.on_anomaly_touch` and `itms_manager.actor_on_item_before_use` callbacks that didn't respect input `flags.ret_value`
 * strangerism: New `freeze_time` console command that allows to freeze time but the sounds can still play
