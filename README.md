@@ -13,10 +13,11 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
 
 # List of patches
 
+* Moved solution to Visual Studio 2022, In case you have problems, make sure you installed the latest Visual C++ Redistributables. You can find them here: https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/
+
 * DLTX by MerelyMezz with edits and bugfixes by demonized, differences compare to original:
   * Attempting to override sections no longer crash the game, but prints the message into the log. All sections that triggers that error will be printed
   * Duplicate section errors now prints the root file where the error happened for easier checking mod_... ltxes
-  * Print of class and script errors in console
   * DLTX received possibility to create section if it doesn't exists and override section if it does with the same symbol `@`.
   Below is the example for `newsection` that wasn't defined. Firstly its created with one param `override = false`, then its overriden with `override = true`
 
@@ -65,25 +66,11 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
 
 * Pseudogiant stomps now can kill and damage any object, stalker or mutant, instead of only actor, configurable via console commands
 
-* New console commands for demo record stuff
-
-* Added CGameObject::NetSpawn and NetDestroy callbacks to Lua
-
-* Added `gameobjects_registry` table in `callbacks_gameobject.script` that contains all online game objects and updates accordingly. Additionally, a global iterator `game_objects_iter` added that will go through all online game objects
-
-  ```lua
-  for obj in game_objects_iter() do
-    printf(obj:section())
-  end
-  ```
-
 * In case of missing translation for a string, the engine will fallback to english text for this string.
 
 * Additional functions and console commands described in `lua_help_ex.script`
 
 * Additional callbacks described in `callbacks_gameobject.script`
-
-* Moved solution to Visual Studio 2022, In case you have problems, make sure you installed the latest Visual C++ Redistributables. You can find them here: https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/
 
 * Additional edits and bugfixes by demonized
   * Restored "Fatal Error" MessageBox popup in case of encountering fatal engine errors like it was on Windows 7 or lower
@@ -169,6 +156,10 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.05.11**
+* Fixed faulty xrs_facer.hit_callback function
+* VodoXleb: customizable `explode_effector` per grenade section with `explode_effector_sect_name = effector_sect` ltx parameter
+
 **2024.05.07**
 * Fixed CMovementManager parallel pathfinding that could lead to stuck monsters on the map
 * Reduced delay between pathfinding computations from 1.5-2.5 to 1-1.5 secs
