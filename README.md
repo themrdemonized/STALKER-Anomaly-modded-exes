@@ -159,6 +159,7 @@ How to compile exes:
 **2024.05.11**
 * Fixed faulty xrs_facer.hit_callback function
 * VodoXleb: customizable `explode_effector` per grenade section with `explode_effector_sect_name = effector_sect` ltx parameter
+* NLTP_ASHES: `actor_on_weapon_zoom_type_changed` Lua callback
 
 **2024.05.07**
 * Fixed CMovementManager parallel pathfinding that could lead to stuck monsters on the map
