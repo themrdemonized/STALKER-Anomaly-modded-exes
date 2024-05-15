@@ -156,6 +156,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.05.15**
+* NLTP_ASHES: hotfix(wpn-zoom-type-changed-with-gl): Fix On Weapon Zoom Type Changed With Grenade Launcher
+
 **2024.05.11**
 * Fixed faulty xrs_facer.hit_callback function
 * VodoXleb: customizable `explode_effector` per grenade section with `explode_effector_sect_name = effector_sect` ltx parameter
