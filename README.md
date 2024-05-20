@@ -156,6 +156,11 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.05.20**
+* NLTP_ASHES, GhenTuong:
+  * Fixed script_text node not working properly with parametrized dialogs (fix from GhenTuong);
+  * Rewrote (more so reformatted) parts of PhraseDialog.cpp in an attempt to make it more readable.
+
 **2024.05.15**
 * NLTP_ASHES: hotfix(wpn-zoom-type-changed-with-gl): Fix On Weapon Zoom Type Changed With Grenade Launcher
 
