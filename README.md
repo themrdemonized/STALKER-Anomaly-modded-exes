@@ -156,6 +156,11 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.05.21**
+* Support for arbitrary-count burst fire with `rpm_mode_2` with working `cycle_down` parameter
+* `cycle_down` and `rpm_mode_2` support for weapon upgrades
+* `db.actor:get_talking_npc()` function to return the object player talks to
+
 **2024.05.20**
 * NLTP_ASHES, GhenTuong:
   * Fixed script_text node not working properly with parametrized dialogs (fix from GhenTuong);
