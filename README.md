@@ -156,6 +156,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.05.23**
+* Fixed incorrect CUIListBox width if `complex_mode=1` is used in conjuction with colored text
+
 **2024.05.21**
 * Support for arbitrary-count burst fire with `rpm_mode_2` with working `cycle_down` parameter
 * `cycle_down` and `rpm_mode_2` support for weapon upgrades
