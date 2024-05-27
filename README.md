@@ -156,6 +156,30 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.05.27**
+* etapomom:
+  * Added console commands:
+    * `allow_outfit_control_inertion_factor` *
+    * `allow_weapon_control_inertion_factor` *
+    * `render_short_tracers` **
+  ```
+      (*) Weapon and outfit control_inertion_factor can affect mouse sens, toggleable with their respective commands.
+      (**) Tracers will be capped to their minimum length instead of not rendering with this command enabled.
+  ```
+
+  * Explosive shrapnel (frags) customization:
+    * `frags_ap`
+    * `frags_air_resistance`
+    * `frags_tracer`
+    * `frags_4to1_tracer`
+    * `frags_magnetic_beam_shot`
+    * `frags_tracer_color_ID`
+
+  * Outfit `control_inertion_factor` ltx field now read in-engine
+  * Silencers can hide bullet tracers, toggleable per ammo with the `tracer_silenced` ltx field
+  * Tracer length modifier added to the bullet_manager section, `tracer_length_k`
+* vegeta1k95: Change item `max_uses` and `remaining_uses` to the maximum of 65535 (u16)
+
 **2024.05.23**
 * Fixed incorrect CUIListBox width if `complex_mode=1` is used in conjuction with colored text
 
