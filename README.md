@@ -156,6 +156,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.05.30**
+* NLTP_ASHES: `obj:character_dialogs()` to get a list of available dialogs of character
+
 **2024.05.27**
 * etapomom:
   * Added console commands:
