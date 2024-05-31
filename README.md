@@ -156,6 +156,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.05.31**
+* Reverted "vegeta1k95: Change item `max_uses` and `remaining_uses` to the maximum of 65535 (u16)", the feature is incompatible with existing savefiles, breaking amount of uses and inventory weight calculation
+
 **2024.05.30**
 * NLTP_ASHES: `obj:character_dialogs()` to get a list of available dialogs of character
 
