@@ -156,6 +156,14 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.07.05**
+* New Lua functions:
+  * obj:get_scope_ui() Returns table containing this data
+    * `name` - name of scope_texture weapon currently uses
+    * `uiWindow` - CUIWindow instance of scope UI
+    * `statics` - array of CUIStatic that CUIWindow scope UI instance uses
+  * obj:set_scope_ui(string) to set scope UI by a texture name (for example `wpn_crosshair_mosin`)
+
 **2024.06.12**
 * GhenTuong: Fix crash related to PhraseDialog.cpp
 

@@ -291,6 +291,7 @@
         function angle()
         function force_set_angle(Fvector angle, bool bActivate)
         function set_enable_movement_collision(bool)
+        function character_dialogs()
 
         // Artefact
         function get_artefact_additional_inventory_weight()
@@ -415,6 +416,16 @@
         function SetZoomCamMaxAngleVert(float)
         function SetZoomCamMaxAngleHorz(float)
         function SetZoomCamStepAngleHorz(float)
+
+        //Scope UI
+        //Returns table containing this data
+        {
+            name - name of scope_texture weapon currently uses
+            uiWindow - CUIWindow instance of scope UI
+            statics - array of CUIStatic that CUIWindow scope UI instance uses
+        }
+        table get_scope_ui() 
+        function set_scope_ui(string)
     }
 
     enum rq_target { (sum them up to target multiple types)
