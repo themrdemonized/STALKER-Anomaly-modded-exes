@@ -156,6 +156,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.07.06**
+* Possible 0xffff address violation crash fix when using detector scopes on enemies
+
 **2024.07.05**
 * New Lua functions:
   * obj:get_scope_ui() Returns table containing this data
