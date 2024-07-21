@@ -156,6 +156,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.07.21**
+* VodoXleb: Add callbacks for getting artefact_count of outfit and getting belt_size in inventory.
+
 **2024.07.06**
 * Possible 0xffff address violation crash fix when using detector scopes on enemies
 
