@@ -156,6 +156,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.08.10**
+* Restored `VIEWPORT_NEAR` value to vanilla due to graphical issues
+
 **2024.08.04**
 * VodoXleb: Add viewport_near console command to change camera near value
 
