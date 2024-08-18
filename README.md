@@ -106,6 +106,8 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
   * Unified bone lua functions and made them safer
   * It's now possible to get player first person hands bone data in lua
 
+* LTX based patrol paths definitions: https://github.com/themrdemonized/xray-monolith/pull/61
+
 * Fixes and features by DPurple
   * Fix of using `%c[color]` tag with multibyte font causing unexpected line ending by DPurple
   * Ability to autosave the game before crash occurs, can be disabled with console command `crash_save 0` and enabled with `crash_save 1`. Maximum amount of saves can be specified with command `crash_save_count <number>`, where number is between 0 to 20 (default is 10)
@@ -156,6 +158,20 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.08.18**
+* NLTP_ASHES (https://github.com/themrdemonized/xray-monolith/pull/61):
+  * LTX based patrol paths definitions
+  * Support for custom first shot sound effect in `CWeaponMagazined`
+
+    Example:
+    ```![wpn_pkm]
+    snd_shoot_actor_first             = path\to\my_sfx
+    snd_silncer_shoot_actor_first     = path\to\my_sln_sfx
+    ```
+  * Support for inventory boxes in `game_object:object("section")` function
+  * Fix for `ActorMenu_on_item_after_move` callback sending nil values in obj argument
+  * Fix for `actor_on_item_take_from_box` callback not firing when item is moved from a slot
+
 **2024.08.10**
 * Restored `VIEWPORT_NEAR` value to vanilla due to graphical issues
 
