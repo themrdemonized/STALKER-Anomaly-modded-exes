@@ -158,6 +158,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.08.19**
+* SSS 21 Update
+
 **2024.08.18**
 * NLTP_ASHES (https://github.com/themrdemonized/xray-monolith/pull/61):
   * LTX based patrol paths definitions
