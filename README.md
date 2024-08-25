@@ -158,6 +158,12 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.08.25**
+* Redotix: 3D Shader scopes (3DSS) rendering adjustments:
+  * custom shader flags for 3DSS lenses with a custom render order
+  * a render phase for rendering the scope reticle
+  * a render target that samples the z buffer of the scene before hud rendering begins
+
 **2024.08.20**
 * SSS 21 Update
 
