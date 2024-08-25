@@ -106,7 +106,9 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
   * Unified bone lua functions and made them safer
   * It's now possible to get player first person hands bone data in lua
 
-* LTX based patrol paths definitions: https://github.com/themrdemonized/xray-monolith/pull/61
+* LTX based patrol paths definitions by NLTP_ASHES: https://github.com/themrdemonized/xray-monolith/pull/61
+
+* Redotix: 3D Shader scopes (3DSS) support
 
 * Fixes and features by DPurple
   * Fix of using `%c[color]` tag with multibyte font causing unexpected line ending by DPurple
