@@ -108,7 +108,10 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
 
 * LTX based patrol paths definitions by NLTP_ASHES: https://github.com/themrdemonized/xray-monolith/pull/61
 
-* Redotix: 3D Shader scopes (3DSS) support
+* Redotix: 3D Shader scopes (3DSS) support: https://github.com/themrdemonized/xray-monolith/pull/62
+
+* deggua: HDR10 output support to the DX11 renderer: https://github.com/themrdemonized/xray-monolith/pull/63
+  * Included shaders works with vanilla Anomaly. For compatibility with SSS and GAMMA, download GAMMA shaders from here https://github.com/deggua/xray-hdr10-shaders/releases/tag/v3
 
 * Fixes and features by DPurple
   * Fix of using `%c[color]` tag with multibyte font causing unexpected line ending by DPurple
@@ -160,8 +163,18 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.09.02**
+* deggua: HDR10 output support to the DX11 renderer (https://github.com/themrdemonized/xray-monolith/pull/63)
+  * Added HDR parameters to the console variables.
+  * `r4_hdr_on` command to enable HDR. Restart is required, default is disabled.
+  * `r4_hdr_whitepoint_nits` to set the monitor's HDR whitepoint (max brightness).
+  * `r4_hdr_ui_nits` to set the UI brightness in nits and should be set below the whitepoint at a level that is comfortable for the user.
+  * `r4_hdr_colorspace` to set HDR colorspace
+  * All options are available in Modded Exes options menu
+  * Included shaders works with vanilla Anomaly. For compatibility with SSS and GAMMA, download GAMMA shaders from here https://github.com/deggua/xray-hdr10-shaders/releases/tag/v3
+  
 **2024.08.25**
-* Redotix: 3D Shader scopes (3DSS) rendering adjustments:
+* Redotix: 3D Shader scopes (3DSS) rendering adjustments (https://github.com/themrdemonized/xray-monolith/pull/62):
   * custom shader flags for 3DSS lenses with a custom render order
   * a render phase for rendering the scope reticle
   * a render target that samples the z buffer of the scene before hud rendering begins
