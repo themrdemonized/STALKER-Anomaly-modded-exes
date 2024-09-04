@@ -163,6 +163,10 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.09.04**
+* damoldavskiy: Support for upcoming updates of Shader 3D Scopes (https://github.com/themrdemonized/xray-monolith/pull/64)
+* deggua: Fix HDR10 issues with HUD samplers and MSAA setting (https://github.com/themrdemonized/xray-monolith/pull/65)
+
 **2024.09.02**
 * deggua: HDR10 output support to the DX11 renderer (https://github.com/themrdemonized/xray-monolith/pull/63)
   * Added HDR parameters to the console variables.
