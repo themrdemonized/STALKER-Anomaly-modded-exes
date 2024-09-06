@@ -163,6 +163,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.09.06**
+* deggua: Fix for D3D management issues in dx10HW.cpp (https://github.com/themrdemonized/xray-monolith/pull/66)
+
 **2024.09.04**
 * damoldavskiy: Support for upcoming updates of Shader 3D Scopes (https://github.com/themrdemonized/xray-monolith/pull/64)
 * deggua: Fix HDR10 issues with HUD samplers and MSAA setting (https://github.com/themrdemonized/xray-monolith/pull/65)
