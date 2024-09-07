@@ -163,6 +163,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.09.07**
+* Ascii1457: fixed water rendering without SSS
+
 **2024.09.06**
 * deggua: Fix for D3D management issues in dx10HW.cpp (https://github.com/themrdemonized/xray-monolith/pull/66)
 
