@@ -163,6 +163,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.09.09**
+* Ascii1457: fixed FPS drops with weapons without SSS
+
 **2024.09.08**
 * Redotix: 3DSS SSS21 Compatibility and Modded exes menu toggle (https://github.com/themrdemonized/xray-monolith/pull/67)
 
