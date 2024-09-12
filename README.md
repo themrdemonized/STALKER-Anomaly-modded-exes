@@ -163,6 +163,18 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.09.12**
+* GhenTuong: 
+  * Fix particles flicking by using single threading update.
+  * Objects can use "ignore_collision" in section configs to ignore collision with another objects. Can be map geometry, other physic objects, and creatures.
+  `ignore_collision = map,obj,npc`
+  * Allow the use of "on_physic_contact" in section configs to run a script when collisions occur.
+  * Allow the use of "on_explode" in section configs to run a script when explosive objects explode.
+
+  * Fixed bug, when grenade launchers of all varieties spawn grenade objects to match the amount of ammo and don't release old grenade objects when unloading.
+  * Allow the use of "ammo_grenade_vel" in section configs for grenade ammo to have a different velocity
+* damoldavskiy: Option to make zombies invisible in heatvision (https://github.com/themrdemonized/xray-monolith/pull/69)
+
 **2024.09.09**
 * Ascii1457: fixed FPS drops with weapons without SSS
 
