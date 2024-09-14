@@ -163,7 +163,7 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
-**2024.09.14 (remove gamedata folder inside Anomaly folder before installation)**
+**2024.09.14 (remove gamedata/shaders/r3 folder inside Anomaly folder before installation)**
 * deggua: Fix HDR10 rendering (https://github.com/themrdemonized/xray-monolith/pull/71)
 
 **2024.09.12**
