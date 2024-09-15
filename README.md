@@ -163,6 +163,9 @@ How to compile exes:
 6. For successful compilation, **the latest build tools with MFC and ATL libraries is required**
 
 ## Changelog
+**2024.09.15**
+* deggua: DX11 DWM vsync fix for windowed modes + fix for broken blur passes (https://github.com/themrdemonized/xray-monolith/pull/72)
+
 **2024.09.14 (remove gamedata/shaders/r3 folder inside Anomaly folder before installation)**
 * deggua: Fix HDR10 rendering (https://github.com/themrdemonized/xray-monolith/pull/71)
 
