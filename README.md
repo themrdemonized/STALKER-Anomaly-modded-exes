@@ -111,7 +111,7 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
 * Redotix: 3D Shader scopes (3DSS) support: https://github.com/themrdemonized/xray-monolith/pull/62
 
 * deggua: HDR10 output support to the DX11 renderer: https://github.com/themrdemonized/xray-monolith/pull/63
-  * Included shaders works with vanilla Anomaly. For compatibility with SSS and GAMMA, download GAMMA shaders from here https://github.com/deggua/xray-hdr10-shaders/releases/tag/v3
+  * Included shaders works with vanilla Anomaly. For compatibility with SSS and GAMMA, download GAMMA shaders from here https://github.com/deggua/xray-hdr10-shaders/releases/latest
 
 * Fixes and features by DPurple
   * Fix of using `%c[color]` tag with multibyte font causing unexpected line ending by DPurple
@@ -143,6 +143,8 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
 ## TROUBLESHOOTING
 * Q: The game crashes when using reshade and trying to switch resolution/change graphics settings/init `vid_restart` command
 * A: This is due to Reshade versions shenanigans. The latest tested version that doesn't crash while doing stuff in question is 5.7.0, you can download it here: https://reshade.me/downloads/ReShade_Setup_5.7.0_Addon.exe. If you wish to use later versions, try not to change graphics settings with them.
+* Q: I have conflicts and bugs with shaders when i use Beef NVG, SSS, or Enhanced Shaders
+* A: If you are using those mods, install this package via MO2, and put it higher priority than those mods: https://github.com/deggua/xray-hdr10-shaders/releases/latest
 
 ## Below are the edits that are supplemental to the mods, the mods themselves **are not included**, download the mods by the links. If mods in the links provide their own exes, you can ignore them, all necessary edits are already included on this page. 
 
