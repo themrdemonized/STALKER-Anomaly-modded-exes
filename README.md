@@ -14,7 +14,8 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
 # TROUBLESHOOTING
 * Q: How to reinstall modded exes from scratch?
 * A: 
-  * Delete everything in gamedata/configs folder except `localization.ltx`, `axr_options.ltx` and `cache_dbg.ltx"` files
+  * Delete everything in `db/mods` folders
+  * Delete everything in `gamedata/configs` folder except `localization.ltx`, `axr_options.ltx` and `cache_dbg.ltx"` files
   * Delete these folders:
     * `gamedata/materials`
     * `gamedata/scripts`
