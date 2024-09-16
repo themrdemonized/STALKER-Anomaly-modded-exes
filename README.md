@@ -12,9 +12,19 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
 * Delete shader cache in launcher before first launch of the game with new exes. You only have to do it once.
 
 # TROUBLESHOOTING
+* Q: How to reinstall modded exes from scratch?
+* A: 
+  * Delete everything in gamedata/configs folder except `localization.ltx`, `axr_options.ltx` and `cache_dbg.ltx"` files
+  * Delete these folders:
+    * `gamedata/materials`
+    * `gamedata/scripts`
+    * `gamedata/shaders`
+  * Install modded exes following the instructions above
+
 * Q: The game crashes when using reshade and trying to switch resolution/change graphics settings/init `vid_restart` command
 * A: This is due to Reshade versions shenanigans. The latest tested version that doesn't crash while doing stuff in question is 5.7.0, you can download it here: https://reshade.me/downloads/ReShade_Setup_5.7.0_Addon.exe. If you wish to use later versions, try not to change graphics settings with them.
-* Q: I have conflicts and bugs with shaders when i use Beef NVG, SSS, or Enhanced Shaders
+
+* Q: I have conflicts, crashes and bugs with shaders when i use Beef NVG, SSS, or Enhanced Shaders
 * A: If you are using those mods, install this package via MO2, and put it higher priority than those mods: https://github.com/deggua/xray-hdr10-shaders/releases/latest
 
 # List of patches
