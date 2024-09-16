@@ -11,6 +11,12 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
 * Unpack all directories directly into your Anomaly game folder, overwrite files if requested.
 * Delete shader cache in launcher before first launch of the game with new exes. You only have to do it once.
 
+# TROUBLESHOOTING
+* Q: The game crashes when using reshade and trying to switch resolution/change graphics settings/init `vid_restart` command
+* A: This is due to Reshade versions shenanigans. The latest tested version that doesn't crash while doing stuff in question is 5.7.0, you can download it here: https://reshade.me/downloads/ReShade_Setup_5.7.0_Addon.exe. If you wish to use later versions, try not to change graphics settings with them.
+* Q: I have conflicts and bugs with shaders when i use Beef NVG, SSS, or Enhanced Shaders
+* A: If you are using those mods, install this package via MO2, and put it higher priority than those mods: https://github.com/deggua/xray-hdr10-shaders/releases/latest
+
 # List of patches
 
 * Moved solution to Visual Studio 2022, In case you have problems, make sure you installed the latest Visual C++ Redistributables. You can find them here: https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/
@@ -139,12 +145,6 @@ Here is list of exe files for Anomaly 1.5.2 that contains all engine patches by 
 
 * All settings can be edited from the game options in "Modded Exes" tab
 ![image](http://puu.sh/JC40Y/9315119150.jpg)
-
-## TROUBLESHOOTING
-* Q: The game crashes when using reshade and trying to switch resolution/change graphics settings/init `vid_restart` command
-* A: This is due to Reshade versions shenanigans. The latest tested version that doesn't crash while doing stuff in question is 5.7.0, you can download it here: https://reshade.me/downloads/ReShade_Setup_5.7.0_Addon.exe. If you wish to use later versions, try not to change graphics settings with them.
-* Q: I have conflicts and bugs with shaders when i use Beef NVG, SSS, or Enhanced Shaders
-* A: If you are using those mods, install this package via MO2, and put it higher priority than those mods: https://github.com/deggua/xray-hdr10-shaders/releases/latest
 
 ## Below are the edits that are supplemental to the mods, the mods themselves **are not included**, download the mods by the links. If mods in the links provide their own exes, you can ignore them, all necessary edits are already included on this page. 
 
